@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: fe164f3acd6d94d45acfaa5170678c70
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 9801397f829a1ed42984340315cbf362, type: 3}
+  iesMetaData:
+    FileFormatVersion: LM-63-2002
+    IESPhotometricType: Type C
+    IESMaximumIntensity: 39295.9
+    IESMaximumIntensityUnit: Candelas
+    Manufacturer: BEGA Copyright LUMCat V
+    LuminaireCatalogNumber: 
+    LuminaireDescription: 84693K4
+    LampCatalogNumber: LED  38,1W
+    LampDescription: 2044 lm,43 W
+    PrefabLightType: 0
+    SpotAngle: 120
+    iesSize: 128
+    ApplyLightAttenuation: 1
+    UseIESMaximumIntensity: 1
+    CookieCompression: 2
+    LightAimAxisRotation: -90

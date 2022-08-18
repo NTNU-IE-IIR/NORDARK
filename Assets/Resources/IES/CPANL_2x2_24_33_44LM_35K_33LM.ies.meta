@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: f23867693a9208d4481cb0a35a7e1869
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 9801397f829a1ed42984340315cbf362, type: 3}
+  iesMetaData:
+    FileFormatVersion: LM-63-2002
+    IESPhotometricType: Type C
+    IESMaximumIntensity: 1076.052
+    IESMaximumIntensityUnit: Candelas
+    Manufacturer: Lithonia Lighting
+    LuminaireCatalogNumber: CPANL 2x2 24/33/44LM 35K - 33LM
+    LuminaireDescription: CPANL Switchable Lumen LED Flat Panel, 2x2, 24/33/44LM,
+      3500 K CCT, - 33LM
+    LampCatalogNumber: 
+    LampDescription: LED
+    PrefabLightType: 0
+    SpotAngle: 120
+    iesSize: 128
+    ApplyLightAttenuation: 1
+    UseIESMaximumIntensity: 1
+    CookieCompression: 2
+    LightAimAxisRotation: -90

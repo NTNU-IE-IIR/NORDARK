@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13ade7ea2a146442b9575619cf724737, type: 3}
+  m_Name: LightCollection
+  m_EditorClassIdentifier: 
+  Active: 1
+  features:
+  - Name: Landmark
+    active: 1
+    prefab: {fileID: 3951737122125686947, guid: 42a4806b472fa4c479e6f7c36b1dfe14,
+      type: 3}
+    scaleDownWithWorld: 1
+    _prefabLocations:
+    - 62.4669465500501, 6.29516909238363
+    _explicitlyBlockedFeatureIds: []
