@@ -43,6 +43,9 @@ public class ShorcutsControl : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.M)) {
             lightsManager.MoveLight();
         }
+        if (Input.GetKeyDown(KeyCode.I)) {
+            lightsManager.InsertLight();
+        }
         if (Input.GetKeyDown(KeyCode.Insert)) {
             lightsManager.InsertLight();
         }

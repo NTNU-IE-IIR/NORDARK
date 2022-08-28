@@ -1,33 +1,19 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraNode: Node
 {
-    public Vector3 Position { get; set; }
     public Vector3 EulerAngles { get; set; }
     public CameraParameters CameraParameters { get; set; }
 
-    public CameraNode(string name, Vector3 position, Vector3 eulerAngles, CameraParameters cameraParameters)
+    public CameraNode(string name, Vector2d latLong, double altitude, Vector3 eulerAngles, CameraParameters cameraParameters)
     {
         Name = name;
-        Position = position;
+        LatLong = latLong;
+        Altitude = altitude;
         EulerAngles = eulerAngles;
         CameraParameters = cameraParameters;
-    }
-
-    public CameraNode(CameraNodeSerialized cameraNodeSerialized)
-    {
-        Name = cameraNodeSerialized.Name;
-        if (cameraNodeSerialized.Position.Count > 2) {
-            Position = new Vector3(cameraNodeSerialized.Position[0], cameraNodeSerialized.Position[1], cameraNodeSerialized.Position[2]);
-        } else {
-            Position = new Vector3(0, 0, 0);
-        }
-        if (cameraNodeSerialized.EulerAngles.Count > 2) {
-            EulerAngles = new Vector3(cameraNodeSerialized.EulerAngles[0], cameraNodeSerialized.EulerAngles[1], cameraNodeSerialized.EulerAngles[2]);
-        } else {
-            EulerAngles = new Vector3(0, 0, 0);
-        }
-        CameraParameters = new CameraParameters(cameraNodeSerialized.Parameters);
     }
 }
 
@@ -66,5 +52,29 @@ public class CameraParameters
         } else {
             Shift = new Vector2(0, 0);
         }
+    }
+}
+
+public class CameraParametersSerialized
+{
+    public List<float> SensorSize { get; set; }
+    public int ISO { get; set; }
+    public float ShutterSpeed { get; set; }
+    public float FocalLength { get; set; }
+    public float Aperture { get; set; }
+    public List<float> Shift { get; set; }
+
+    public CameraParametersSerialized()
+    {
+    }
+
+    public CameraParametersSerialized(CameraParameters cameraParameters)
+    {
+        SensorSize = new List<float>{cameraParameters.SensorSize.x, cameraParameters.SensorSize.y};
+        ISO = cameraParameters.ISO;
+        ShutterSpeed = cameraParameters.ShutterSpeed;
+        FocalLength = cameraParameters.FocalLength;
+        Aperture = cameraParameters.Aperture;
+        Shift = new List<float>{cameraParameters.Shift.x, cameraParameters.Shift.y};
     }
 }
