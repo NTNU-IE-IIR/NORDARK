@@ -7,6 +7,8 @@ using UnityEngine.Assertions;
 public class TabControl : MonoBehaviour
 {
     [SerializeField]
+    private LightsManager lightsManager;
+    [SerializeField]
     private Button sceneButton;
     [SerializeField]
     private Button lightButton;
@@ -19,41 +21,60 @@ public class TabControl : MonoBehaviour
     [SerializeField]
     private GameObject cameraTab;
 
-    private GameObject[] tabs;
-
     void Awake()
     {
+        Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(sceneButton);
         Assert.IsNotNull(lightButton);
         Assert.IsNotNull(cameraButton);
         Assert.IsNotNull(sceneTab);
         Assert.IsNotNull(lightTab);
         Assert.IsNotNull(cameraTab);
-
-        tabs = new GameObject[3];
-        tabs[0] = sceneTab;
-        tabs[1] = lightTab;
-        tabs[2] = cameraTab;
     }
 
     void Start()
     {
-        sceneButton.onClick.AddListener(delegate { ActivateTab(0); });
-        lightButton.onClick.AddListener(delegate { ActivateTab(1); });
-        cameraButton.onClick.AddListener(delegate { ActivateTab(2); });
+        sceneButton.onClick.AddListener(delegate { ActivateTab(Tab.Scene); });
+        lightButton.onClick.AddListener(delegate { ActivateTab(Tab.Light); });
+        cameraButton.onClick.AddListener(delegate { ActivateTab(Tab.Camera); });
     }
 
     public void ActivateDefaultTab()
     {
-        ActivateTab(0);
+        ActivateTab(Tab.Scene);
     }
 
-    private void ActivateTab(int tabIndex = 0)
+    private void ActivateTab(Tab tab)
     {
-        for (int i = 0; i < tabs.Length; i++)
-        {
-            tabs[i].SetActive(false);
+        Clear();
+        switch (tab) {
+            case Tab.Scene:
+                sceneTab.SetActive(true);
+                break;
+            case Tab.Light:
+                lightTab.SetActive(true);
+                break;
+            case Tab.Camera:
+                cameraTab.SetActive(true);
+                break;
+            default:
+                break;
         }
-        tabs[tabIndex].SetActive(true);
+    }
+
+    private void Clear()
+    {
+        sceneTab.SetActive(false);
+        lightTab.SetActive(false);
+        cameraTab.SetActive(false);
+
+        lightsManager.ClearSelectedLight();
+    }
+
+    enum Tab
+    {
+        Scene,
+        Light,
+        Camera
     }
 }

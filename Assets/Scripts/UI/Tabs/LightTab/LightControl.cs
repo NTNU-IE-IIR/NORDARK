@@ -9,6 +9,8 @@ public class LightControl : MonoBehaviour
     [SerializeField]
     private LightsManager lightsManager;
     [SerializeField]
+    private IESManager iesManager;
+    [SerializeField]
     private Dropdown lightType;
     [SerializeField]
     private Slider rotation;
@@ -31,6 +33,7 @@ public class LightControl : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(iesManager);
         Assert.IsNotNull(lightType);
         Assert.IsNotNull(rotation);
         Assert.IsNotNull(rotationValue);
@@ -54,7 +57,6 @@ public class LightControl : MonoBehaviour
             rotationValue.text = rotation.value.ToString();
         });
 
-        lightSource.AddOptions(lightsManager.GetIESNames());
         lightSource.onValueChanged.AddListener(delegate {
             lightsManager.ChangeLightSource(lightSource.options[lightSource.value].text);
         });
@@ -108,5 +110,11 @@ public class LightControl : MonoBehaviour
         if (lightTypeIndex >= 0) {
             lightType.value = lightTypeIndex;
         }
+    }
+
+    public void SetIESNames(List<string> iesNames)
+    {
+        lightSource.ClearOptions();
+        lightSource.AddOptions(iesNames);
     }
 }

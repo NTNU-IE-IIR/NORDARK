@@ -38,7 +38,7 @@ public class Scene3DManager : MonoBehaviour
 
     public Vector2d GetCoordinatesFromUnityPosition(Vector3 position)
     {
-        return new Vector2d(position.z / unityUnitsPerLatitude, position.x / unityUnitsPerLongitude);
+        return new Vector2d(mapCenterCoordinates.x + position.z / unityUnitsPerLatitude, mapCenterCoordinates.y + position.x / unityUnitsPerLongitude);
     }
 
     public double GetAltitudeFromUnityPosition(Vector3 position)

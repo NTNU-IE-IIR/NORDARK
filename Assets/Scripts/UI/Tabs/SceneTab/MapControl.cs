@@ -44,4 +44,14 @@ public class MapControl : MonoBehaviour
             mapManager.DisplayRoads(mapRoads.isOn);
         });
     }
+
+    public bool IsBuildingLayerActive()
+    {
+        return mapBuildings.isOn;
+    }
+
+    public bool IsRoadLayerActive()
+    {
+        return mapRoads.isOn;
+    }
 }

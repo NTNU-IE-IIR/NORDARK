@@ -26,4 +26,9 @@ public class Vector2d
             this.y = list[1];
         }
     }
+
+    override public string ToString()
+    {
+        return "{x:" + x.ToString() + "; y:" + y.ToString() + "}";
+    }
 }

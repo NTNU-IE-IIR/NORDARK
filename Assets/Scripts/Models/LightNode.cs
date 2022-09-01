@@ -18,11 +18,4 @@ public class LightNode: Node
         LatLong = latLong;
         Altitude = altitude;
     }
-
-    ~LightNode()
-    {
-        if (Light != null) {
-            Light.Destroy();
-        }
-    }
 }

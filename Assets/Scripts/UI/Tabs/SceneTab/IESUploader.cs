@@ -8,32 +8,26 @@ using SFB;
 public class IESUploader : MonoBehaviour
 {
     [SerializeField]
-    private LightsManager lightsManager;
+    private IESManager iesManager;
     [SerializeField]
     private Button upload;
-    [SerializeField]
-    private Dropdown IESList;
 
     void Awake()
     {
-        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(iesManager);
         Assert.IsNotNull(upload);
-        Assert.IsNotNull(IESList);
     }
 
     void Start()
     {
         upload.onClick.AddListener(OpenUploadWindow);
-
-        IESList.AddOptions(lightsManager.GetIESNames());
     }
 
-// TODO: voir ce qu'on fait lors d'un upload de IES
     private void OpenUploadWindow()
     {
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Upload a IES file", "", "ies", true);
         for (int i = 0; i < paths.Length; i++) {
-            UnityEditor.FileUtil.MoveFileOrDirectory(paths[i], "Assets/IES folder/");
+            iesManager.AddIES(paths[i]);
         }
     }
 }

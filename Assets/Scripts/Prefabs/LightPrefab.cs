@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class LightPrefab : MonoBehaviour
 {
+    private const float LIGHT_TEMPERATURE = 6500;
+
     bool isMoving;
     Vector3 baseScale;
     UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
@@ -20,9 +22,10 @@ public class LightPrefab : MonoBehaviour
     {
         if (isMoving)
         {
+            bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(ray, out hit, 10000, EnvironmentManager.GetEnvironmentLayer()))
+            if (!isOverUI && Physics.Raycast(ray, out hit, 10000, EnvironmentManager.GetEnvironmentLayer()))
             {
                 transform.position = hit.point;
             }
@@ -32,9 +35,10 @@ public class LightPrefab : MonoBehaviour
     public void Create(LightNode lightNode, Transform parent, Vector3 eulerAngles, EnvironmentManager environmentManager)
     {
         transform.parent = parent;
-        transform.position = environmentManager.GetUnityPositionFromCoordinatesAndAltitude(lightNode.LatLong, lightNode.Altitude);
+        transform.position = environmentManager.GetUnityPositionFromCoordinatesAndAltitude(lightNode.LatLong, lightNode.Altitude, true);
         transform.localScale = baseScale * environmentManager.GetWorldRelativeScale();
         transform.eulerAngles = eulerAngles;
+        hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);
     }
 
     public void SetMoving(bool moving)
@@ -68,6 +72,7 @@ public class LightPrefab : MonoBehaviour
     {
         this.iesLight = iesLight;
         hdAdditionalLightData.SetCookie(iesLight.Cookie);
+        hdAdditionalLightData.SetIntensity(iesLight.Intensity, UnityEngine.Rendering.HighDefinition.LightUnit.Candela);
     }
 
     public IESLight GetIESLight()

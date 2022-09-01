@@ -1,10 +1,3 @@
-/*
-https://assetstore.unity.com/packages/tools/utilities/photorealistic-lights-ies-59641#description
-https://unity.com/how-to/getting-started-high-definition-render-pipeline-hdrp-games
-https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@15.0/manual/index.html
-http://lumen.iee.put.poznan.pl/kw/iesna.txt
-*/
-
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -14,32 +7,25 @@ using UnityEngine.Assertions;
 public class LightsManager : MonoBehaviour
 {
     private const string LIGHTS_RESOURCES_FOLDER = "Lights";
-    private const string IES_RESOURCES_FOLDER = "IES";
 
     [SerializeField]
     private EnvironmentManager environmentManager;
+    [SerializeField]
+    private IESManager iesManager;
     [SerializeField]
     private LightControl lightControl;
     [SerializeField]
     private SelectionPin selectionPin;
 
-    private List<IESLight> IESLights;
     List<LightNode> lightNodes;
     private LightNode selectedLightNode;
 
     void Awake()
     {
         Assert.IsNotNull(environmentManager);
+        Assert.IsNotNull(iesManager);
         Assert.IsNotNull(lightControl);
         Assert.IsNotNull(selectionPin);
-
-        IESLights = new List<IESLight>();
-        Object[] IES = Resources.LoadAll(IES_RESOURCES_FOLDER);
-        foreach (Object ies in IES) {
-            if (ies.GetType().ToString() == "UnityEditor.Rendering.IESObject") {
-                IESLights.Add(new IESLight(ies.name, GetIESCookie(ies.name)));
-            }
-        }
         
         lightNodes = new List<LightNode>();
         selectedLightNode = null;
@@ -57,10 +43,7 @@ public class LightsManager : MonoBehaviour
         lightNode.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightNode.PrefabName)).GetComponent<LightPrefab>();
         lightNode.Light.Create(lightNode, transform, eulerAngles, environmentManager);
 
-        IESLight IES = FindIESLightFromName(IESName);
-        if (IES == null) {
-            IES = IESLights[0];
-        }
+        IESLight IES = iesManager.GetIESLightFromName(IESName);
         lightNode.Light.SetIESLight(IES);
 
         lightNodes.Add(lightNode);
@@ -86,6 +69,10 @@ public class LightsManager : MonoBehaviour
 
     public void ClearLights()
     {
+        ClearSelectedLight();
+        foreach (LightNode lightNode in lightNodes) {
+            lightNode.Light.Destroy();
+        }
         lightNodes.Clear();
     }
 
@@ -120,15 +107,6 @@ public class LightsManager : MonoBehaviour
         }
 
         return lightPrefabNames;
-    }
-
-    public List<string> GetIESNames()
-    {
-        List<string> IESNames = new List<string>();
-        foreach (IESLight IESLight in IESLights) {
-            IESNames.Add(IESLight.Name);
-        }
-        return IESNames;
     }
 
     public void UpdateLightsPositions()
@@ -181,7 +159,7 @@ public class LightsManager : MonoBehaviour
     public void ChangeLightSource(string newIESName)
     {
         if (selectedLightNode != null && newIESName != selectedLightNode.Light.GetIESLight().Name) {
-            IESLight newIES = FindIESLightFromName(newIESName);
+            IESLight newIES = iesManager.GetIESLightFromName(newIESName);
 
             if (newIES != null) {
                 selectedLightNode.Light.SetIESLight(newIES);
@@ -192,7 +170,8 @@ public class LightsManager : MonoBehaviour
     public void SelectLight()
     {
         RaycastHit hitInfo = new RaycastHit();
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 10000))
+        bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+        if (!isOverUI && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 10000))
         {
             LightPrefab lightPrefab = hitInfo.transform.gameObject.GetComponent<LightPrefab>();
             if (lightPrefab != null) {
@@ -223,60 +202,6 @@ public class LightsManager : MonoBehaviour
             selectionPin.SetActive(false);
         }
         lightControl.ClearSelectedLight();
-    }
-
-    private UnityEngine.Texture GetIESCookie(string filename)
-    {
-        
-        UnityEditor.Rendering.IESEngine engine = new UnityEditor.Rendering.IESEngine();
-        UnityEditor.Rendering.IESMetaData iesMetaData = new UnityEditor.Rendering.IESMetaData();
-        engine.TextureGenerationType = UnityEditor.TextureImporterType.Default;
-        
-        /*
-        IESEngine engine = new IESEngine();
-        IESMetaData iesMetaData = new IESMetaData();
-        engine.TextureGenerationType = TextureImporterType.Default;
-        */
-
-        UnityEngine.Texture cookieTexture2D = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-
-        string path = @"D:\\Research_Assistant\Nordark\Project\NORDARK\Assets\Resources\IES\";
-        string iesFilePath = path + filename + ".ies";
-        string errorMessage = engine.ReadFile(iesFilePath);
-
-        if (string.IsNullOrEmpty(errorMessage))
-        {
-            iesMetaData.FileFormatVersion = "LM-63-2002";
-            iesMetaData.IESPhotometricType = engine.GetPhotometricType();
-            iesMetaData.Manufacturer = engine.GetKeywordValue("MANUFAC");
-            iesMetaData.LuminaireCatalogNumber = engine.GetKeywordValue("LUMCAT");
-            iesMetaData.LuminaireDescription = engine.GetKeywordValue("LUMINAIRE");
-            iesMetaData.LampCatalogNumber = engine.GetKeywordValue("LAMPCAT");
-            iesMetaData.LampDescription = engine.GetKeywordValue("LAMP");
-
-            (iesMetaData.IESMaximumIntensity, iesMetaData.IESMaximumIntensityUnit) = engine.GetMaximumIntensity();
-
-            string warningMessage;
-
-            (warningMessage, cookieTexture2D) = engine.Generate2DCookie(iesMetaData.CookieCompression, iesMetaData.SpotAngle, (int)iesMetaData.iesSize, iesMetaData.ApplyLightAttenuation);
-        }
-        else
-        {
-            Debug.Log($"Cannot read IES file '{iesFilePath}': {errorMessage}");
-        }
-
-        return cookieTexture2D;
-    }
-
-    private IESLight FindIESLightFromName(string IESName)
-    {
-        IESLight IES = null;
-        foreach (IESLight ies in IESLights) {
-            if (ies.Name == IESName) {
-                IES = ies;
-            }
-        }
-        return IES;
     }
 
     private void SelectLight(LightNode lightNode)

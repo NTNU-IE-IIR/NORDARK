@@ -14,22 +14,23 @@ public class MapManager : MonoBehaviour
     private LightsManager lightsManager;
     [SerializeField]
     private CamerasManager camerasManager;
+    [SerializeField]
+    private MapControl mapControl;
 
     private AbstractMap map;
     private bool isMapInitialized;
-    private float altitudeUnityUnitsPerMeters;
 
     void Awake()
     {
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
+        Assert.IsNotNull(mapControl);
 
         map = GetComponent<AbstractMap>();
         map.Terrain.AddToUnityLayer(UNITY_LAYER_MAP);
         map.OnTileFinished += TileFinished;
 
         isMapInitialized = false;
-        altitudeUnityUnitsPerMeters = 0f;
     }
 
     public bool IsMapInitialized()
@@ -43,7 +44,7 @@ public class MapManager : MonoBehaviour
         if (stickToGround) {
             position.y = GetElevationInUnityUnitsFromCoordinates(latLong);
         } else {
-            position.y = GetAltitudeInUnityUnitsFromCoordinatesAndAltitude(latLong, altitude);
+            position.y = (float) altitude;
         }
         return position;
     }
@@ -60,15 +61,23 @@ public class MapManager : MonoBehaviour
 
     public float GetAltitudeFromUnityPosition(Vector3 position)
     {
-        return position.y / altitudeUnityUnitsPerMeters;
+        return position.y;
     }
 
     public void SetLocation(Vector2d coordinates)
     {
         map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(coordinates.x, coordinates.y));
+
         map.UpdateMap();
         lightsManager.UpdateLightsPositions();
         camerasManager.ResetMainCameraPosition();
+
+        bool buildingLayerActive = mapControl.IsBuildingLayerActive();
+        DisplayBuildings(!buildingLayerActive);
+        DisplayBuildings(buildingLayerActive);
+        bool roadLayerActive = mapControl.IsRoadLayerActive();
+        DisplayRoads(!roadLayerActive);
+        DisplayRoads(roadLayerActive);
     }
 
     public void SetStyle(int style)
@@ -84,6 +93,7 @@ public class MapManager : MonoBehaviour
             map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
         }
         lightsManager.UpdateLightsPositions();
+        camerasManager.ResetMainCameraPosition();
     }
 
     public float GetWorldRelativeScale()
@@ -109,15 +119,6 @@ public class MapManager : MonoBehaviour
         return feature;
     }
 
-    private float GetAltitudeInUnityUnitsFromCoordinatesAndAltitude(Vector2d latLong, double elevation)
-    {
-        if (map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation) {
-            return (float) elevation * altitudeUnityUnitsPerMeters;
-        } else {
-            return 0f;
-        }   
-    }
-
     private float GetElevationFromCoordinates(Vector2d latLong)
     {
         return map.QueryElevationInMetersAt(new Mapbox.Utils.Vector2d(latLong.x, latLong.y));
@@ -127,10 +128,6 @@ public class MapManager : MonoBehaviour
     {
         if (!isMapInitialized) {
             isMapInitialized = true;
-            
-            float mapAltitudeInUnityUnits = GetElevationInUnityUnitsFromCoordinates(new Vector2d(map.CenterLatitudeLongitude));
-            float mapAltitudeInMeters = GetElevationFromCoordinates(new Vector2d(map.CenterLatitudeLongitude));
-            altitudeUnityUnitsPerMeters = mapAltitudeInUnityUnits / mapAltitudeInMeters;
         }
     }
 }
