@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
+using SFB;
 
 public class IESManager : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class IESManager : MonoBehaviour
 
     [SerializeField]
     private LightControl lightControl;
+    [SerializeField]
+    private DialogControl dialogControl;
 
     private List<IESLight> IESs;
     private string IESDirectory;
@@ -18,6 +21,7 @@ public class IESManager : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(lightControl);
+        Assert.IsNotNull(dialogControl);
 
         IESDirectory = CreateAndGetDirectory();
         
@@ -35,19 +39,43 @@ public class IESManager : MonoBehaviour
         lightControl.SetIESNames(GetIESNames());
     }
 
-    public void AddIES(string path)
+    public void Upload()
     {
-        string iesName = Path.GetFileNameWithoutExtension(path);
-        string destFile = Path.Combine(IESDirectory, Path.GetFileName(path));
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Upload an IES file", "", "ies", true);
+        List<string> addedFiles = new List<string>();
+        List<string> notAddedFiles = new List<string>();
 
-        File.Copy(path, destFile, true);
-        Texture2D cookie = LoadCookie(iesName);
-        if (cookie != null) {
-            IESs.Add(new IESLight(iesName, cookie, GetIntensity(iesName)));
-            lightControl.SetIESNames(GetIESNames());
-        } else {
-            File.Delete(destFile);
-            Debug.Log("The IES file could not be read");
+        foreach (string path in paths) {
+            string iesName = Path.GetFileNameWithoutExtension(path);
+            string destFile = Path.Combine(IESDirectory, Path.GetFileName(path));
+
+            File.Copy(path, destFile, true);
+            Texture2D cookie = LoadCookie(iesName);
+            if (cookie != null) {
+                IESs.Add(new IESLight(iesName, cookie, GetIntensity(iesName)));
+                lightControl.SetIESNames(GetIESNames());
+                addedFiles.Add(iesName);
+            } else {
+                File.Delete(destFile);
+                notAddedFiles.Add(iesName);
+            }
+        }
+
+        string message = "";
+        if (addedFiles.Count > 0) {
+            message += "The following IES files were added:\n";
+            foreach (string file in addedFiles) {
+                message += file + "\n";
+            }
+        }
+        if (notAddedFiles.Count > 0) {
+            message += "The following IES files were not added:\n";
+            foreach (string file in notAddedFiles) {
+                message += file + "\n";
+            }
+        }
+        if (message != "") {
+            dialogControl.CreateInfoDialog(message);
         }
     }
 
@@ -73,13 +101,17 @@ public class IESManager : MonoBehaviour
         return IESLights.RuntimeIESImporter.ImportSpotlightCookie(path, 128, false, false);
     }
 
-    private float GetIntensity(string iesName)
+    private LightIntensity GetIntensity(string iesName)
     {
         string path = GetPathFromFileNameAndCreateFile(iesName);
 
         IESReader iesReader = new IESReader();
         iesReader.ReadFile(path);
-        return iesReader.MaxCandelas;
+        if (iesReader.TotalLumens != -1) {
+            return new LightIntensity(iesReader.TotalLumens, UnityEngine.Rendering.HighDefinition.LightUnit.Lumen);
+        } else {
+            return new LightIntensity(iesReader.MaxCandelas, UnityEngine.Rendering.HighDefinition.LightUnit.Candela);
+        }
     }
 
     private string GetPathFromFileNameAndCreateFile(string name)

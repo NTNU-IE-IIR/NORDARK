@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.Assertions;
 
 public class CameraParametersControl : MonoBehaviour
@@ -9,23 +10,23 @@ public class CameraParametersControl : MonoBehaviour
     [SerializeField]
     private CamerasManager camerasManager;
     [SerializeField]
-    private InputField sensorX;
+    private TMP_InputField sensorX;
     [SerializeField]
-    private InputField sensorY;
+    private TMP_InputField sensorY;
     [SerializeField]
-    private InputField ISO;
+    private TMP_InputField ISO;
     [SerializeField]
-    private InputField shutterSpeed;
+    private TMP_InputField shutterSpeed;
     [SerializeField]
-    private InputField focalLength;
+    private TMP_InputField focalLength;
     [SerializeField]
     private Slider apertureSlider;
     [SerializeField]
-    private InputField apertureInput;
+    private TMP_InputField apertureInput;
     [SerializeField]
-    private InputField shiftX;
+    private TMP_InputField shiftX;
     [SerializeField]
-    private InputField shiftY;
+    private TMP_InputField shiftY;
 
     void Awake()
     {
@@ -80,28 +81,43 @@ public class CameraParametersControl : MonoBehaviour
 
     private void SensorChanged()
     {
-        camerasManager.SetSensorSize(new Vector2(InputToFloat(sensorX), InputToFloat(sensorY)));
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetSensorSize(new Vector2(InputToFloat(sensorX), InputToFloat(sensorY)));
+        }
     }
 
     private void ISOChanged()
     {
-        camerasManager.SetISO((int) InputToFloat(ISO));
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetISO((int) InputToFloat(ISO));
+        }
     }
 
     private void ShutterSpeedChanged()
     {
-        camerasManager.SetShutterSpeed(InputToFloat(shutterSpeed));
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetShutterSpeed(InputToFloat(shutterSpeed));
+        }
     }
 
     private void FocalLengthChanged()
     {
-        camerasManager.SetFocalLength(InputToFloat(focalLength));
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetFocalLength(InputToFloat(focalLength));
+        }
     }
 
     private void ApertureSliderChanged()
     {
         apertureInput.text = apertureSlider.value.ToString();
-        camerasManager.SetAperture(apertureSlider.value);
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetAperture(apertureSlider.value);
+        }
     }
 
     private void ApertureInputChanged()
@@ -109,15 +125,21 @@ public class CameraParametersControl : MonoBehaviour
         float apertureValue = InputToFloat(apertureInput);
         apertureValue = System.Math.Max(apertureValue, apertureSlider.minValue);
         apertureSlider.value = apertureValue;
-        camerasManager.SetAperture(apertureValue);
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetAperture(apertureValue);
+        }
     }
 
     private void ShiftChanged()
     {
-        camerasManager.SetShift(new Vector2(InputToFloat(shiftX), InputToFloat(shiftY)));
+        CameraPrefab camera = camerasManager.GetCurrentCamera();
+        if (camera != null) {
+            camera.SetShift(new Vector2(InputToFloat(shiftX), InputToFloat(shiftY)));
+        }
     }
 
-    private float InputToFloat(InputField input)
+    private float InputToFloat(TMP_InputField input)
     {
         float value = 0;
         if (input.text != "") {

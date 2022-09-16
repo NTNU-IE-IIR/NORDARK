@@ -24,7 +24,9 @@ public class EnvironmentManager : MonoBehaviour
     [SerializeField]
     private CamerasManager camerasManager;
     [SerializeField]
-    private EnvironmentControl environmentControl;
+    private TreeManager treeManager;
+    [SerializeField]
+    private SiteControl siteControl;
 
     private List<Location> locations;
 
@@ -36,7 +38,8 @@ public class EnvironmentManager : MonoBehaviour
         Assert.IsNotNull(scene3DManager);
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
-        Assert.IsNotNull(environmentControl);
+        Assert.IsNotNull(treeManager);
+        Assert.IsNotNull(siteControl);
 
         locations = new List<Location>();
     }
@@ -100,7 +103,7 @@ public class EnvironmentManager : MonoBehaviour
     public void AddLocation(Location location)
     {
         locations.Add(location);
-        environmentControl.AddLocation(location.Name);
+        siteControl.AddLocation(location.Name);
 
         ChangeLocation(locations.Count - 1);
     }
@@ -109,6 +112,14 @@ public class EnvironmentManager : MonoBehaviour
     {
         mapManager.SetLocation(locations[locationIndex].Coordinates);
         scene3DManager.SetLocation(locations[locationIndex]);
+        camerasManager.SetMainCameraPosition(locations[locationIndex].CameraCoordinates, locations[locationIndex].CameraAltitude);
+        siteControl.ChangeLocation(locationIndex);
+    }
+
+    public void ClearLocation()
+    {
+        locations.Clear();
+        siteControl.ClearLocations();
     }
 
     public List<Feature> GetFeatures()
@@ -117,10 +128,12 @@ public class EnvironmentManager : MonoBehaviour
         foreach (Location location in locations) {
             Feature feature = new Feature();
             feature.Properties.Add("name", location.Name);
+            feature.Properties.Add("type", "location");
             feature.Properties.Add("unityUnitsPerLongitude", location.UnityUnitsPerLongitude);
             feature.Properties.Add("unityUnitsPerLatitude", location.UnityUnitsPerLatitude);
             feature.Properties.Add("unityUnitsPerMeters", location.UnityUnitsPerMeters);
             feature.Properties.Add("worldRelativeScale", location.WorldRelativeScale);
+            feature.Properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraAltitude});
             feature.Coordinates = new Vector3d(location.Coordinates, location.Altitude);
             features.Add(feature);
         }
@@ -139,11 +152,13 @@ public class EnvironmentManager : MonoBehaviour
 
         if (environment == Environment.Map) {
             map.SetActive(true);
+            treeManager.Show(true);
         } else {
             scene3D.SetActive(true);
+            treeManager.Show(false);
         }
 
         lightsManager.UpdateLightsPositions();
-        camerasManager.ResetMainCameraPosition();
+        camerasManager.UpdateCamerasPosition();
     }
 }

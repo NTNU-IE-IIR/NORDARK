@@ -8,67 +8,78 @@ public class CamerasManager : MonoBehaviour
     [SerializeField]
     private EnvironmentManager environmentManager;
     [SerializeField]
-    private MainCameraManager mainCameraManager;
-    [SerializeField]
     private CameraControl cameraControl;
     [SerializeField]
     private CameraParametersControl cameraParametersControl;
+    [SerializeField]
+    private GameObject cameraPreview;
+    [SerializeField]
+    private GameObject cameraObject;
+    [SerializeField]
+    private GameObject mainCamera;
 
     private List<CameraNode> cameras;
-    private int currentCameraIndex;
+    private CameraNode currentCamera;
 
     void Awake()
     {
         Assert.IsNotNull(environmentManager);
-        Assert.IsNotNull(mainCameraManager);
         Assert.IsNotNull(cameraControl);
         Assert.IsNotNull(cameraParametersControl);
+        Assert.IsNotNull(cameraPreview);
+        Assert.IsNotNull(cameraObject);
+        Assert.IsNotNull(mainCamera);
 
         cameras = new List<CameraNode>();
-        currentCameraIndex = -1;
+        currentCamera = null;
     }
 
-    public void AddCamera(string name)
+    public void CreateCamera()
     {
-        CreateCamera(new CameraNode(
-            name,
-            environmentManager.GetCoordinatesFromUnityPosition(mainCameraManager.GetPosition()),
-            environmentManager.GetAltitudeFromUnityPosition(mainCameraManager.GetPosition()),
-            mainCameraManager.GetEulerAngles(),
+        CreateCamera(
+            new CameraNode(
+                DetermineNewCameraName(),
+                environmentManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position),
+                environmentManager.GetAltitudeFromUnityPosition(mainCamera.transform.position)
+            ),
+            mainCamera.transform.eulerAngles,
             cameraParametersControl.GetCameraParameters()
-        ));
+        );
     }
 
-    public void CreateCamera(CameraNode camera)
+    public void CreateCamera(CameraNode camera, Vector3 eulerAngles, CameraParameters cameraParameters)
     {
-        cameras.Add(camera);
         cameraControl.AddCameraToList(camera.Name);
+        camera.Camera = (Instantiate(
+            cameraObject,
+            environmentManager.GetUnityPositionFromCoordinatesAndAltitude(camera.LatLong, camera.Altitude),
+            Quaternion.Euler(eulerAngles),
+            transform
+        ) as GameObject).GetComponent<CameraPrefab>();
+        camera.Camera.SetParameters(cameraParameters);
+        
+        cameras.Add(camera);
         ChangeCurrentCamera(cameras.Count - 1);
-    }
-
-    public void CreateDefaultCamera()
-    {
-        CameraParameters cameraParameters = new CameraParameters();
-        cameraParametersControl.UpdateParameters(cameraParameters);
-        CreateCamera(new CameraNode(
-            "New Camera",
-            environmentManager.GetCoordinatesFromUnityPosition(mainCameraManager.GetPosition()),
-            environmentManager.GetAltitudeFromUnityPosition(mainCameraManager.GetPosition()),
-            mainCameraManager.GetEulerAngles(),
-            cameraParameters
-        ));
     }
 
     public void ClearCameras()
     {
+        foreach (CameraNode camera in cameras) {
+            camera.Camera.Destroy();
+        }
         cameras.Clear();
         cameraControl.ClearCameras();
+        currentCamera = null;
     }
 
-    public void DeleteCamera(int cameraIndex)
+    public void DeleteCamera()
     {
-        cameras.RemoveAt(cameraIndex);
-        ChangeCurrentCamera(cameras.Count - 1);
+        if (currentCamera != null) {
+            currentCamera.Camera.Destroy();
+            cameras.Remove(currentCamera);
+            cameraControl.RemoveCamera();
+            ChangeCurrentCamera(cameras.Count - 1);
+        }
     }
 
     public List<Feature> GetFeatures()
@@ -78,74 +89,78 @@ public class CamerasManager : MonoBehaviour
             Feature feature = new Feature();
             feature.Properties.Add("type", "camera");
             feature.Properties.Add("name", camera.Name);
-            feature.Properties.Add("eulerAngles", new List<float>{camera.EulerAngles.x, camera.EulerAngles.y, camera.EulerAngles.z});
-            feature.Properties.Add("parameters", new CameraParametersSerialized(camera.CameraParameters));
+            Vector3 eulerAngles = camera.Camera.GetEulerAngles();
+            feature.Properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
+            feature.Properties.Add("parameters", camera.Camera.GetParametersSerialized());
             feature.Coordinates = new Vector3d(camera.LatLong, camera.Altitude);
             features.Add(feature);
         }
         return features;
     }
-
-    public void ResetMainCameraPosition()
-    {
-        if (currentCameraIndex > -1) {
-            Vector3 position = environmentManager.GetUnityPositionFromCoordinatesAndAltitude(cameras[currentCameraIndex].LatLong, cameras[currentCameraIndex].Altitude);
-            mainCameraManager.SetPosition(position);
-            mainCameraManager.SetEulerAngles(cameras[currentCameraIndex].EulerAngles);
-        }
-    }
     
-    public void UpdateCameraPosition()
+    public void SetCurrentCameraPositionFromMainCamera()
     {
-        cameras[currentCameraIndex].LatLong = environmentManager.GetCoordinatesFromUnityPosition(mainCameraManager.GetPosition());
-        cameras[currentCameraIndex].Altitude = environmentManager.GetAltitudeFromUnityPosition(mainCameraManager.GetPosition());
-        cameras[currentCameraIndex].EulerAngles = mainCameraManager.GetEulerAngles();
+        if (currentCamera != null) {
+            currentCamera.LatLong = environmentManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position);
+            currentCamera.Altitude = environmentManager.GetAltitudeFromUnityPosition(mainCamera.transform.position);
+            currentCamera.Camera.SetPosition(mainCamera.transform.position);
+            currentCamera.Camera.SetEulerAngles(mainCamera.transform.eulerAngles);
+        }
     }
 
     public void ChangeCurrentCamera(int newCameraIndex)
     {
-        if (newCameraIndex > -1 && newCameraIndex < cameras.Count) {
-            currentCameraIndex = newCameraIndex;
-            mainCameraManager.SetParameters(cameras[newCameraIndex].CameraParameters);
-            cameraParametersControl.UpdateParameters(cameras[newCameraIndex].CameraParameters);
+        if (newCameraIndex > -1) {
+            if (currentCamera != null) {
+                currentCamera.Camera.Show(false);
+            }
+            currentCamera = cameras[newCameraIndex];
+            currentCamera.Camera.Show(true);
+
+            cameraParametersControl.UpdateParameters(currentCamera.Camera.GetParameters());
             cameraControl.CameraChanged(newCameraIndex);
-            ResetMainCameraPosition();
+        } else {
+            currentCamera = null;
         }
     }
 
-    public void SetSensorSize(Vector2 sensorSize)
+    public void DisplayCameraPreview(bool display)
     {
-        mainCameraManager.SetSensorSize(sensorSize);
-        cameras[currentCameraIndex].CameraParameters.SensorSize = sensorSize;
+        cameraPreview.SetActive(display);
+
+        if (currentCamera != null) {
+            currentCamera.Camera.Show(display);
+        }
     }
 
-    public void SetISO(int ISO)
+    public CameraPrefab GetCurrentCamera()
     {
-        mainCameraManager.SetISO(ISO);
-        cameras[currentCameraIndex].CameraParameters.ISO = ISO;
+        if (currentCamera == null) {
+            return null;
+        } else {
+            return currentCamera.Camera;
+        }
     }
 
-    public void SetShutterSpeed(float shutterSpeed)
+    public void UpdateCamerasPosition()
     {
-        mainCameraManager.SetShutterSpeed(shutterSpeed);
-        cameras[currentCameraIndex].CameraParameters.ShutterSpeed = shutterSpeed;
+        foreach (CameraNode camera in cameras) {
+            camera.Camera.SetPosition(environmentManager.GetUnityPositionFromCoordinatesAndAltitude(camera.LatLong, camera.Altitude));
+        }
     }
 
-    public void SetFocalLength(float focalLength)
+    public void SetMainCameraPosition(Vector2d latLong, double altitude)
     {
-        mainCameraManager.SetFocalLength(focalLength);
-        cameras[currentCameraIndex].CameraParameters.FocalLength = focalLength;
+        mainCamera.transform.position = environmentManager.GetUnityPositionFromCoordinatesAndAltitude(latLong, altitude);
     }
 
-    public void SetAperture(float aperture)
+    private string DetermineNewCameraName(int index = 1)
     {
-        mainCameraManager.SetAperture(aperture);
-        cameras[currentCameraIndex].CameraParameters.Aperture = aperture;
-    }
-
-    public void SetShift(Vector2 shift)
-    {
-        mainCameraManager.SetShift(shift);
-        cameras[currentCameraIndex].CameraParameters.Shift = shift;
+        foreach (CameraNode camera in cameras) {
+            if (camera.Name == "New Camera " + index.ToString()) {
+                return DetermineNewCameraName(index + 1);
+            }
+        }
+        return "New Camera " + index.ToString();
     }
 }

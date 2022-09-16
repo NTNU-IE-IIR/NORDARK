@@ -7,35 +7,26 @@ using UnityEngine.Assertions;
 public class ShorcutsControl : MonoBehaviour
 {
     [SerializeField]
-    private LightsManager lightsManager;
+    private SceneManager sceneManager;
     [SerializeField]
-    private GameObject mainMenu;
+    private LightsManager lightsManager;
 
     void Awake()
     {
+        Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(lightsManager);
-        Assert.IsNotNull(mainMenu);
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1)) {
-            // Help
+        if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl)) && Input.GetKeyDown(KeyCode.O)) {
+            sceneManager.Load();
         }
-        if (Input.GetKeyDown(KeyCode.F2)) {
-            mainMenu.SetActive(!mainMenu.activeSelf);
+        if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl)) && Input.GetKeyDown(KeyCode.S)) {
+            sceneManager.Save();
         }
-        if (Input.GetKeyDown(KeyCode.F3)) {
-            // Screenshot
-        }
-        if (Input.GetKeyDown(KeyCode.F4)) {
-            // 
-        }
-        if (Input.GetKeyDown(KeyCode.F5)) {
-            // Compute
-        }
-        if (Input.GetKeyDown(KeyCode.F6)) {
-            // Save
+        if (Input.GetKeyDown(KeyCode.F12)) {
+            sceneManager.SaveAs();
         }
         if (Input.GetKeyDown(KeyCode.Delete)) {
             lightsManager.DeleteLight();

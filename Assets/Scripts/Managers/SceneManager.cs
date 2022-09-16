@@ -18,14 +18,20 @@ public class SceneManager : MonoBehaviour
     [SerializeField]
     private EnvironmentManager environmentManager;
     [SerializeField]
-    private MainCameraManager mainCameraManager;
+    private TreeManager treeManager;
+    [SerializeField]
+    private DialogControl dialogControl;
+    private string currentSave;
 
     void Awake()
     {
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
         Assert.IsNotNull(environmentManager);
-        Assert.IsNotNull(mainCameraManager);
+        Assert.IsNotNull(treeManager);
+        Assert.IsNotNull(dialogControl);
+
+        currentSave = "";
     }
 
     public void LoadDefaultScene()
@@ -38,8 +44,8 @@ public class SceneManager : MonoBehaviour
     public void Load()
     {
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "geojson", false);
-        if (paths.Length > 0)
-        {
+        if (paths.Length > 0) {
+            currentSave = paths[0];
             GeoJSON.Net.Feature.FeatureCollection featureCollection = ReadFile(paths[0]);
             LoadScene(featureCollection);
         }
@@ -47,14 +53,19 @@ public class SceneManager : MonoBehaviour
 
     public void Save()
     {
-        List<Feature> features = lightsManager.GetFeatures();
-        features.AddRange(camerasManager.GetFeatures());
-        features.AddRange(environmentManager.GetFeatures());
+        if (currentSave == "") {
+            SaveAs();
+        } else {
+            SaveScene();
+        }
+    }
 
+    public void SaveAs()
+    {
         string filename = StandaloneFileBrowser.SaveFilePanel("Save the current scene", "", "nordark", "geojson");
-        if (filename != "")
-        {
-            SaveToGeojson(filename, features);
+        if (filename != "") {
+            currentSave = filename;
+            SaveScene();
         }
     }
 
@@ -62,8 +73,8 @@ public class SceneManager : MonoBehaviour
     {
         lightsManager.ClearLights();
         camerasManager.ClearCameras();
-
-        bool atLeastOneCameraCreated = false;
+        treeManager.ClearTrees();
+        environmentManager.ClearLocation();
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "location")) {
@@ -89,10 +100,13 @@ public class SceneManager : MonoBehaviour
                 if (feature.Properties.ContainsKey("worldRelativeScale")) {
                     location.WorldRelativeScale = (float) System.Convert.ToDouble(feature.Properties["worldRelativeScale"]);
                 }
+                if (feature.Properties.ContainsKey("cameraCoordinates")) {
+                    List<double> cameraCoordinates = (feature.Properties["cameraCoordinates"] as Newtonsoft.Json.Linq.JArray).ToObject<List<double>>();
+                    location.CameraCoordinates = new Vector2d(cameraCoordinates[0], cameraCoordinates[1]);
+                    location.CameraAltitude = cameraCoordinates[2];
+                }
                 environmentManager.AddLocation(location);
             } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "camera")) {
-                atLeastOneCameraCreated = true;
-
                 string name = "";
                 if (feature.Properties.ContainsKey("name")) {
                     name = feature.Properties["name"] as string;
@@ -122,7 +136,16 @@ public class SceneManager : MonoBehaviour
                 catch (System.Exception)
                 {}
 
-                camerasManager.CreateCamera(new CameraNode(name, latLong, altitude, eulerAngles, cameraParameters));
+                camerasManager.CreateCamera(new CameraNode(name, latLong, altitude), eulerAngles, cameraParameters);
+            } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "tree")) {
+                GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+                Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
+                double altitude = 0;
+                if (point.Coordinates.Altitude != null) {
+                    altitude = (double) point.Coordinates.Altitude;
+                }
+
+                treeManager.CreateTree(latLong, altitude);
             } else {
                 GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
                 Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
@@ -136,8 +159,8 @@ public class SceneManager : MonoBehaviour
                     name = feature.Properties["name"] as string;
                 }
                 string prefabName = "";
-                if (feature.Properties.ContainsKey("LightPrefabName")) {
-                    prefabName = feature.Properties["LightPrefabName"] as string;
+                if (feature.Properties.ContainsKey("prefabName")) {
+                    prefabName = feature.Properties["prefabName"] as string;
                 }
 
                 Vector3 eulerAngles = new Vector3(0, 0);
@@ -161,9 +184,18 @@ public class SceneManager : MonoBehaviour
             }
         }
 
-        if (!atLeastOneCameraCreated) {
-            camerasManager.CreateDefaultCamera();
-        }
+        dialogControl.CreateInfoDialog("Scene loaded.");
+    }
+
+    private void SaveScene()
+    {
+        List<Feature> features = lightsManager.GetFeatures();
+        features.AddRange(camerasManager.GetFeatures());
+        features.AddRange(environmentManager.GetFeatures());
+        features.AddRange(treeManager.GetFeatures());
+        SaveToGeojson(currentSave, features);
+
+        dialogControl.CreateInfoDialog("Scene saved.");
     }
 
     private GeoJSON.Net.Feature.FeatureCollection ReadFile(string filename)

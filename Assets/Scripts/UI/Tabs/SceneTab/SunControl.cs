@@ -2,18 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.Assertions;
 
 public class SunControl : MonoBehaviour
 {
     [SerializeField]
-    private  Slider lightIntensity;
+    private Slider lightIntensity;
     [SerializeField]
-    private  Slider lightTemperature;
+    private Slider lightTemperature;
     [SerializeField]
-    private  Text lightIntensityText;
+    private TMP_Text lightIntensityText;
     [SerializeField]
-    private  Text lightTemperatureText;
+    private TMP_Text lightTemperatureText;
     [SerializeField]
     private SunManager sunManager;
 

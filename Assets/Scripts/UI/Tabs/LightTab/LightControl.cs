@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 
 public class LightControl : MonoBehaviour
 {
@@ -11,15 +13,15 @@ public class LightControl : MonoBehaviour
     [SerializeField]
     private IESManager iesManager;
     [SerializeField]
-    private Dropdown lightType;
+    private TMP_Dropdown lightType;
     [SerializeField]
     private Slider rotation;
     [SerializeField]
-    private Text rotationValue;
+    private TMP_Text rotationValue;
     [SerializeField]
-    private Dropdown lightSource;
+    private TMP_Dropdown lightSource;
     [SerializeField]
-    private Text lightObjectName;
+    private TMP_Text lightObjectName;
     [SerializeField]
     private Button insert;
     [SerializeField]
@@ -61,28 +63,23 @@ public class LightControl : MonoBehaviour
             lightsManager.ChangeLightSource(lightSource.options[lightSource.value].text);
         });
 
-        insert.onClick.AddListener(delegate { lightsManager.InsertLight(); });
-        move.onClick.AddListener(delegate { lightsManager.MoveLight(); });
-        delete.onClick.AddListener(delegate { lightsManager.DeleteLight(); });
+        insert.onClick.AddListener(lightsManager.InsertLight);
+        move.onClick.AddListener(lightsManager.MoveLight);
+        delete.onClick.AddListener(delegate {
+            lightsManager.DeleteLight();
+            EventSystem.current.SetSelectedGameObject(null);
+        });
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            t2 = Time.realtimeSinceStartup;
-            if (t2 - t1 < 0.5f) //<0.5s, considered double click
-            {
+        if (Input.GetMouseButtonDown(0)) {
+            if (isDoubleClick()) {
                 lightsManager.MoveLight();
-            }
-            else
-            {
+            } else {
                 lightsManager.SelectLight();
             }
-            t1 = t2;
-        }
-        else if (Input.GetMouseButtonDown(1))
-        {
+        } else if (Input.GetMouseButtonDown(1)) {
             lightsManager.ClearSelectedLight();
         }
     }
@@ -116,5 +113,13 @@ public class LightControl : MonoBehaviour
     {
         lightSource.ClearOptions();
         lightSource.AddOptions(iesNames);
+    }
+
+    private bool isDoubleClick()
+    {
+        t2 = Time.realtimeSinceStartup;
+        bool doubleClick = t2 - t1 < 0.5f;
+        t1 = t2;
+        return doubleClick;
     }
 }

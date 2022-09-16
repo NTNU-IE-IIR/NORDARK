@@ -7,6 +7,8 @@ public class Location
     public double UnityUnitsPerLatitude { get; set; }
     public double UnityUnitsPerMeters { get; set; }
     public float WorldRelativeScale { get; set; }
+    public Vector2d CameraCoordinates { get; set; }
+    public double CameraAltitude { get; set; }
 
     public Location()
     {
@@ -17,5 +19,7 @@ public class Location
         UnityUnitsPerLatitude = 0;
         UnityUnitsPerMeters = 0;
         WorldRelativeScale = 0f;
+        CameraCoordinates = new Vector2d(0, 0);
+        CameraAltitude = 0;
     }
 }

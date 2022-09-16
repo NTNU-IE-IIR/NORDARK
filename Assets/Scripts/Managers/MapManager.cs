@@ -15,7 +15,9 @@ public class MapManager : MonoBehaviour
     [SerializeField]
     private CamerasManager camerasManager;
     [SerializeField]
-    private MapControl mapControl;
+    private TreeManager treeManager;
+    [SerializeField]
+    private SiteControl siteControl;
 
     private AbstractMap map;
     private bool isMapInitialized;
@@ -24,7 +26,8 @@ public class MapManager : MonoBehaviour
     {
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
-        Assert.IsNotNull(mapControl);
+        Assert.IsNotNull(treeManager);
+        Assert.IsNotNull(siteControl);
 
         map = GetComponent<AbstractMap>();
         map.Terrain.AddToUnityLayer(UNITY_LAYER_MAP);
@@ -70,12 +73,13 @@ public class MapManager : MonoBehaviour
 
         map.UpdateMap();
         lightsManager.UpdateLightsPositions();
-        camerasManager.ResetMainCameraPosition();
+        treeManager.UpdateTreesPosition();
+        camerasManager.UpdateCamerasPosition();
 
-        bool buildingLayerActive = mapControl.IsBuildingLayerActive();
+        bool buildingLayerActive = siteControl.IsBuildingLayerActive();
         DisplayBuildings(!buildingLayerActive);
         DisplayBuildings(buildingLayerActive);
-        bool roadLayerActive = mapControl.IsRoadLayerActive();
+        bool roadLayerActive = siteControl.IsRoadLayerActive();
         DisplayRoads(!roadLayerActive);
         DisplayRoads(roadLayerActive);
     }
@@ -93,7 +97,8 @@ public class MapManager : MonoBehaviour
             map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
         }
         lightsManager.UpdateLightsPositions();
-        camerasManager.ResetMainCameraPosition();
+        camerasManager.UpdateCamerasPosition();
+        treeManager.UpdateTreesPosition();
     }
 
     public float GetWorldRelativeScale()

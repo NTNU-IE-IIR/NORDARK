@@ -72,7 +72,7 @@ public class LightPrefab : MonoBehaviour
     {
         this.iesLight = iesLight;
         hdAdditionalLightData.SetCookie(iesLight.Cookie);
-        hdAdditionalLightData.SetIntensity(iesLight.Intensity, UnityEngine.Rendering.HighDefinition.LightUnit.Candela);
+        hdAdditionalLightData.SetIntensity(iesLight.Intensity.Value, iesLight.Intensity.Unit);
     }
 
     public IESLight GetIESLight()

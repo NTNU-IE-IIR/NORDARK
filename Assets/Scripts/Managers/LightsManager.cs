@@ -149,7 +149,7 @@ public class LightsManager : MonoBehaviour
             feature.Properties.Add("name", lightNode.Name);
             feature.Properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
             feature.Properties.Add("IESfileName", lightNode.Light.GetIESLight().Name);
-            feature.Properties.Add("LightPrefabName", lightNode.PrefabName);
+            feature.Properties.Add("prefabName", lightNode.PrefabName);
             feature.Coordinates = new Vector3d(lightNode.LatLong, lightNode.Altitude);
             features.Add(feature);
         }

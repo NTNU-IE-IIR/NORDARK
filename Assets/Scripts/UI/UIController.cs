@@ -6,19 +6,19 @@ using UnityEngine.Assertions;
 public class UIController : MonoBehaviour
 {
     [SerializeField]
-    private TabControl tabControl;
+    private ToolBarTabsControl toolBarTabsControl;
     [SerializeField]
     private GameObject loadingPanel;
 
     void Awake()
     {
-        Assert.IsNotNull(tabControl);
+        Assert.IsNotNull(toolBarTabsControl);
         Assert.IsNotNull(loadingPanel);
     }
 
     public void SetUpUI()
     {
-        tabControl.ActivateDefaultTab();
+        toolBarTabsControl.ActivateDefaultTab();
         DisplayLoadingScreen(true);
     }
 
