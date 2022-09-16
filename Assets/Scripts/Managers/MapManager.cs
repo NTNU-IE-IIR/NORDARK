@@ -70,18 +70,29 @@ public class MapManager : MonoBehaviour
     public void SetLocation(Vector2d coordinates)
     {
         map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(coordinates.x, coordinates.y));
-
         map.UpdateMap();
-        lightsManager.UpdateLightsPositions();
-        treeManager.UpdateTreesPosition();
-        camerasManager.UpdateCamerasPosition();
 
+        // There is a Mapbox bug with the roads, buildings and elevation, so we reset them 
         bool buildingLayerActive = siteControl.IsBuildingLayerActive();
         DisplayBuildings(!buildingLayerActive);
         DisplayBuildings(buildingLayerActive);
+
         bool roadLayerActive = siteControl.IsRoadLayerActive();
         DisplayRoads(!roadLayerActive);
         DisplayRoads(roadLayerActive);
+
+        bool isTerrainElevated = map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation;
+        if (isTerrainElevated) {
+            map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+            map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
+        } else {
+            map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
+            map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+        }
+        
+        lightsManager.UpdateLightsPositions();
+        treeManager.UpdateTreesPosition();
+        camerasManager.UpdateCamerasPosition();
     }
 
     public void SetStyle(int style)
@@ -114,14 +125,6 @@ public class MapManager : MonoBehaviour
     public void DisplayRoads(bool display)
     {
         map.VectorData.GetFeatureSubLayerAtIndex(1).SetActive(display);
-    }
-
-    public Feature GetMapFeature()
-    {
-        Feature feature = new Feature();
-        feature.Coordinates = new Vector3d(map.CenterLatitudeLongitude);
-        feature.Properties.Add("type", "location");
-        return feature;
     }
 
     private float GetElevationFromCoordinates(Vector2d latLong)

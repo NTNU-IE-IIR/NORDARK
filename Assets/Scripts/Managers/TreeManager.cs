@@ -9,25 +9,31 @@ public class TreeManager : MonoBehaviour
     private GameObject treePrefab;
     [SerializeField]
     private MapManager mapManager;
+    private List<TreeNode> trees;
 
     void Awake()
     {
         Assert.IsNotNull(treePrefab);
         Assert.IsNotNull(mapManager);
+
+        trees = new List<TreeNode>();
     }
 
-    public void CreateTree(Vector2d latLong, double altitude)
+    public void CreateTree(TreeNode tree)
     {
-        Vector3 position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(latLong, altitude, true);
-        GameObject tree = Instantiate(treePrefab, position, Quaternion.identity, transform);
-        tree.transform.localScale *= mapManager.GetWorldRelativeScale();
+        trees.Add(tree);
+        Vector3 position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(tree.LatLong, tree.Altitude, true);
+        GameObject treeObject = Instantiate(treePrefab, position, Quaternion.identity, transform);
+        treeObject.transform.localScale *= mapManager.GetWorldRelativeScale();
+        tree.Tree = treeObject;
     }
 
     public void ClearTrees()
     {
-        foreach (Transform child in transform) {
-            GameObject.Destroy(child.gameObject);
+        foreach (TreeNode tree in trees) {
+            GameObject.Destroy(tree.Tree);
         }
+        trees.Clear();
     }
 
     public void Show(bool show)
@@ -37,10 +43,8 @@ public class TreeManager : MonoBehaviour
 
     public void UpdateTreesPosition()
     {
-        foreach (Transform child in transform) {
-            Vector2d coordinates = mapManager.GetCoordinatesFromUnityPosition(child.gameObject.transform.position);
-            Vector3 position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(coordinates, 0, true);
-            child.gameObject.transform.position = position;
+        foreach (TreeNode tree in trees) {
+            tree.Tree.transform.position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(tree.LatLong, tree.Altitude, true);
         }
     }
 
@@ -48,14 +52,11 @@ public class TreeManager : MonoBehaviour
     {
         List<Feature> features = new List<Feature>();
 
-        foreach (Transform child in transform) {
+        foreach (TreeNode tree in trees) {
             Feature feature = new Feature();
             feature.Properties.Add("type", "tree");
 
-            feature.Coordinates = new Vector3d(
-                mapManager.GetCoordinatesFromUnityPosition(child.position),
-                mapManager.GetAltitudeFromUnityPosition(child.position)
-            );
+            feature.Coordinates = new Vector3d(tree.LatLong, tree.Altitude);
             features.Add(feature);
         }
 

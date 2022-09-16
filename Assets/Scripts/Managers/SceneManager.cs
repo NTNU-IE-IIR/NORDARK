@@ -145,7 +145,7 @@ public class SceneManager : MonoBehaviour
                     altitude = (double) point.Coordinates.Altitude;
                 }
 
-                treeManager.CreateTree(latLong, altitude);
+                treeManager.CreateTree(new TreeNode(latLong, altitude));
             } else {
                 GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
                 Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
