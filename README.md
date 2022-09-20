@@ -1,7 +1,18 @@
 # NORDARK
 
-## WP 5: Digital twin-based simulation and visual analytics to assess outdoor conditions (Coordinated by Professor Ricardo Torres, Norwegian University of Science and Technology)
+## WP 5: Digital twin-based simulation and visual analytics to assess outdoor conditions
 
 In this WP, our objective is the specification and implementation of digital twin (DT) simulators to support the design, planning, and assessment of suitable outdoor lighting environments, as well as the specification and implementation of visual analytics tools to support data analysis. DT will be used for designing operations in the two study sites (pre-intervention phase) as well as supporting the analysis of results related to post-interventions. In the pre-intervention phase, the digital twin will be used to define the proper location and operation procedures related to both envisioned lighting solutions (WP4) and traps and acoustic sensors (WP3). In this stage, the goal is to support clarification of the problem domain, anticipation of problems, and proposition of ideas and solutions, possibly mitigating research risks. In the post-intervention analysis, the DT will used to visualize psychological (WP1) and physiological (WP2) data collected from the different study sites. Information visualization/visual analytics tools will be created, deployed, and validated in the context of supporting data understanding (e.g., identification of patterns of interest, trends, and correlations with other variables – environmental and climate data).
 
 The research questions posed by the other WPs and overall project demand the analysis of large volumes of heterogeneous data (e.g., conventional textual data, images, physiological time series, lighting sensor data, occurrence and spatial distribution, environmental and climate data, and elevation data). We expect to develop an information system for supporting the integration of these data into a single platform. This WP therefore also concerns tasks related to data modelling, data storage and retrieval. We expect to develop new as well as use state- of-the-art unsupervised approaches that exploit the similarity of entities, defined in terms of their attributes, to identify similar patterns and groups. The created information system will be exploited in WP6 and WP7 to communicate project’s results with stakeholders. Our methods for data collection and analysis consist of participatory design for the creation of DT for study sites and information visualization approaches involving interested parties; proposal and implementation of DTs and information visualization approaches for handling different lighting conditions in outdoor settings; proposal and implementation of visual analytics tools to support data analyses (the proposed approaches may benefit from recent results (Leite et al., 2016; Mariano et al., 2017; Mariano et al., 2018; Rodrigues et al., 2019)); proposal and implementation of an information system for data integration and analysis; software validation, considering the use of proposed tools in typical pre- and post- interventions scenarios. Subject-oriented evaluation protocols are expected to be employed.
+
+## Setup
+
+* Download the *NORDARK-WP5.zip* file from the [release page](https://github.com/Rylern/NORDARK/releases/tag/v0.2).
+* Extract the archive, and run the *NORDARK-WP5.exe* file.
+
+## Development
+
+* Download [Unity](https://unity.com/) **2022.2.0b4**.
+* Open the repository with Unity.
+* If you export the project for Windows 64 bit, some computers might not recognize the *sqlite3.dll* file shipped with the executable. To fix this, replace the *NORDARK-WP5\NORDARK-WP5_Data\Plugins\x86_64\sqlite3.dll* file of the exported project with the *AdditionalResources\sqlite3.dll* file of the repository.
