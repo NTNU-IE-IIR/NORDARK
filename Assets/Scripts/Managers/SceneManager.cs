@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -16,7 +15,7 @@ public class SceneManager : MonoBehaviour
     [SerializeField]
     private CamerasManager camerasManager;
     [SerializeField]
-    private EnvironmentManager environmentManager;
+    private MapManager mapManager;
     [SerializeField]
     private TreeManager treeManager;
     [SerializeField]
@@ -27,7 +26,7 @@ public class SceneManager : MonoBehaviour
     {
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
-        Assert.IsNotNull(environmentManager);
+        Assert.IsNotNull(mapManager);
         Assert.IsNotNull(treeManager);
         Assert.IsNotNull(dialogControl);
 
@@ -69,118 +68,42 @@ public class SceneManager : MonoBehaviour
         }
     }
 
+    public void AddLights()
+    {
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
+        foreach (string path in paths) {
+            GeoJSON.Net.Feature.FeatureCollection featureCollection = ReadFile(path);
+
+            foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+                AddLight(feature);
+            }
+        }
+    }
+
+    private GeoJSON.Net.Feature.FeatureCollection ReadFile(string filename)
+    {
+        StreamReader rd = new StreamReader(filename);
+        GeoJSON.Net.Feature.FeatureCollection featureCollection = JsonConvert.DeserializeObject<GeoJSON.Net.Feature.FeatureCollection>(rd.ReadToEnd());
+        rd.Close();
+        return featureCollection;
+    }
+
     private void LoadScene(GeoJSON.Net.Feature.FeatureCollection featureCollection)
     {
         lightsManager.ClearLights();
         camerasManager.ClearCameras();
         treeManager.ClearTrees();
-        environmentManager.ClearLocation();
+        mapManager.ClearLocation();
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "location")) {
-                GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-
-                Location location = new Location();
-                if (feature.Properties.ContainsKey("name")) {
-                    location.Name = feature.Properties["name"] as string;
-                }
-                location.Coordinates = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
-                if (point.Coordinates.Altitude != null) {
-                    location.Altitude = (double) point.Coordinates.Altitude;
-                }
-                if (feature.Properties.ContainsKey("unityUnitsPerLongitude")) {
-                    location.UnityUnitsPerLongitude = System.Convert.ToDouble(feature.Properties["unityUnitsPerLongitude"]);
-                }
-                if (feature.Properties.ContainsKey("unityUnitsPerLatitude")) {
-                    location.UnityUnitsPerLatitude = System.Convert.ToDouble(feature.Properties["unityUnitsPerLatitude"]);
-                }
-                if (feature.Properties.ContainsKey("unityUnitsPerMeters")) {
-                    location.UnityUnitsPerMeters = System.Convert.ToDouble(feature.Properties["unityUnitsPerMeters"]);
-                }
-                if (feature.Properties.ContainsKey("worldRelativeScale")) {
-                    location.WorldRelativeScale = (float) System.Convert.ToDouble(feature.Properties["worldRelativeScale"]);
-                }
-                if (feature.Properties.ContainsKey("cameraCoordinates")) {
-                    List<double> cameraCoordinates = (feature.Properties["cameraCoordinates"] as Newtonsoft.Json.Linq.JArray).ToObject<List<double>>();
-                    location.CameraCoordinates = new Vector2d(cameraCoordinates[0], cameraCoordinates[1]);
-                    location.CameraAltitude = cameraCoordinates[2];
-                }
-                environmentManager.AddLocation(location);
+                AddLocation(feature);
             } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "camera")) {
-                string name = "";
-                if (feature.Properties.ContainsKey("name")) {
-                    name = feature.Properties["name"] as string;
-                }
-
-                GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-                Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
-                double altitude = 0;
-                if (point.Coordinates.Altitude != null) {
-                    altitude = (double) point.Coordinates.Altitude;
-                }
-
-                Vector3 eulerAngles = new Vector3(0, 0, 0);
-                try
-                {
-                    List<float> eulerAnglesList = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
-                    eulerAngles = new Vector3(eulerAnglesList[0], eulerAnglesList[1], eulerAnglesList[2]);
-                }
-                catch (System.Exception)
-                {}
-
-                CameraParameters cameraParameters = new CameraParameters();
-                try
-                {
-                    cameraParameters = new CameraParameters((feature.Properties["parameters"] as Newtonsoft.Json.Linq.JObject).ToObject<CameraParametersSerialized>());
-                }
-                catch (System.Exception)
-                {}
-
-                camerasManager.CreateCamera(new CameraNode(name, latLong, altitude), eulerAngles, cameraParameters);
+                AddCamera(feature);
             } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "tree")) {
-                GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-                Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
-                double altitude = 0;
-                if (point.Coordinates.Altitude != null) {
-                    altitude = (double) point.Coordinates.Altitude;
-                }
-
-                treeManager.CreateTree(new TreeNode(latLong, altitude));
-            } else {
-                GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-                Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
-                double altitude = 0;
-                if (point.Coordinates.Altitude != null) {
-                    altitude = (double) point.Coordinates.Altitude;
-                }
-                
-                string name = "";
-                if (feature.Properties.ContainsKey("name")) {
-                    name = feature.Properties["name"] as string;
-                }
-                string prefabName = "";
-                if (feature.Properties.ContainsKey("prefabName")) {
-                    prefabName = feature.Properties["prefabName"] as string;
-                }
-
-                Vector3 eulerAngles = new Vector3(0, 0);
-                try
-                {
-                    List<float> eulerAnglesList = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
-                    eulerAngles = new Vector3(eulerAnglesList[0], eulerAnglesList[1], eulerAnglesList[2]);
-                }
-                catch (System.Exception)
-                {}
-
-                string IESName = "";
-                if (feature.Properties.ContainsKey("IESfileName")) {
-                    IESName = feature.Properties["IESfileName"] as string;
-                }
-
-                LightNode lightNode = new LightNode(latLong, altitude);
-                lightNode.Name = name;
-                lightNode.PrefabName = prefabName;
-                lightsManager.CreateLight(lightNode, eulerAngles, IESName);
+                AddTree(feature);
+            } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "light")) {
+                AddLight(feature);
             }
         }
 
@@ -191,19 +114,135 @@ public class SceneManager : MonoBehaviour
     {
         List<Feature> features = lightsManager.GetFeatures();
         features.AddRange(camerasManager.GetFeatures());
-        features.AddRange(environmentManager.GetFeatures());
+        features.AddRange(mapManager.GetFeatures());
         features.AddRange(treeManager.GetFeatures());
         SaveToGeojson(currentSave, features);
 
         dialogControl.CreateInfoDialog("Scene saved.");
     }
 
-    private GeoJSON.Net.Feature.FeatureCollection ReadFile(string filename)
+    private void AddLocation(GeoJSON.Net.Feature.Feature feature)
     {
-        StreamReader rd = new StreamReader(filename);
-        GeoJSON.Net.Feature.FeatureCollection featureCollection = JsonConvert.DeserializeObject<GeoJSON.Net.Feature.FeatureCollection>(rd.ReadToEnd());
-        rd.Close();
-        return featureCollection;
+        GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+
+        Location location = new Location();
+        if (feature.Properties.ContainsKey("name")) {
+            location.Name = feature.Properties["name"] as string;
+        }
+        location.Coordinates = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
+        if (point.Coordinates.Altitude != null) {
+            location.Altitude = (double) point.Coordinates.Altitude;
+        }
+        if (feature.Properties.ContainsKey("unityUnitsPerLongitude")) {
+            location.UnityUnitsPerLongitude = System.Convert.ToDouble(feature.Properties["unityUnitsPerLongitude"]);
+        }
+        if (feature.Properties.ContainsKey("unityUnitsPerLatitude")) {
+            location.UnityUnitsPerLatitude = System.Convert.ToDouble(feature.Properties["unityUnitsPerLatitude"]);
+        }
+        if (feature.Properties.ContainsKey("unityUnitsPerMeters")) {
+            location.UnityUnitsPerMeters = System.Convert.ToDouble(feature.Properties["unityUnitsPerMeters"]);
+        }
+        if (feature.Properties.ContainsKey("worldRelativeScale")) {
+            location.WorldRelativeScale = (float) System.Convert.ToDouble(feature.Properties["worldRelativeScale"]);
+        }
+        if (feature.Properties.ContainsKey("cameraCoordinates")) {
+            List<double> cameraCoordinates = (feature.Properties["cameraCoordinates"] as Newtonsoft.Json.Linq.JArray).ToObject<List<double>>();
+            location.CameraCoordinates = new Vector2d(cameraCoordinates[0], cameraCoordinates[1]);
+            location.CameraAltitude = cameraCoordinates[2];
+        }
+        mapManager.AddLocation(location);
+    }
+
+    private void AddCamera(GeoJSON.Net.Feature.Feature feature)
+    {
+        string name = "";
+        if (feature.Properties.ContainsKey("name")) {
+            name = feature.Properties["name"] as string;
+        }
+
+        GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+        Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
+        double altitude = 0;
+        if (point.Coordinates.Altitude != null) {
+            altitude = (double) point.Coordinates.Altitude;
+        }
+
+        Vector3 eulerAngles = new Vector3(0, 0, 0);
+        try
+        {
+            List<float> eulerAnglesList = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
+            eulerAngles = new Vector3(eulerAnglesList[0], eulerAnglesList[1], eulerAnglesList[2]);
+        }
+        catch (System.Exception)
+        {}
+
+        CameraParameters cameraParameters = new CameraParameters();
+        try
+        {
+            cameraParameters = new CameraParameters((feature.Properties["parameters"] as Newtonsoft.Json.Linq.JObject).ToObject<CameraParametersSerialized>());
+        }
+        catch (System.Exception)
+        {}
+
+        camerasManager.CreateCamera(new CameraNode(name, latLong, altitude), eulerAngles, cameraParameters);
+    }
+
+    private void AddTree(GeoJSON.Net.Feature.Feature feature)
+    {
+        GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+        Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
+        double altitude = 0;
+        if (point.Coordinates.Altitude != null) {
+            altitude = (double) point.Coordinates.Altitude;
+        }
+
+        treeManager.CreateTree(new TreeNode(latLong, altitude));
+    }
+
+    private void AddLight(GeoJSON.Net.Feature.Feature feature)
+    {
+        GeoJSON.Net.Geometry.Point point = null;
+        if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
+            point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+        } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiPoint")) {
+            point = (feature.Geometry as GeoJSON.Net.Geometry.MultiPoint).Coordinates[0];
+        }
+
+        if (point != null) {
+            Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
+            double altitude = 0;
+            if (point.Coordinates.Altitude != null) {
+                altitude = (double) point.Coordinates.Altitude;
+            }
+            
+            string name = "";
+            if (feature.Properties.ContainsKey("name")) {
+                name = feature.Properties["name"] as string;
+            }
+            string prefabName = "";
+            if (feature.Properties.ContainsKey("prefabName")) {
+                prefabName = feature.Properties["prefabName"] as string;
+            }
+
+            Vector3 eulerAngles = new Vector3(0, 0);
+            try
+            {
+                List<float> eulerAnglesList = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
+                eulerAngles = new Vector3(eulerAnglesList[0], eulerAnglesList[1], eulerAnglesList[2]);
+            }
+            catch (System.Exception)
+            {}
+
+            string IESName = "";
+            if (feature.Properties.ContainsKey("IESfileName")) {
+                IESName = feature.Properties["IESfileName"] as string;
+            }
+
+            LightNode lightNode = new LightNode(latLong, altitude);
+            lightNode.Name = name;
+            lightNode.PrefabName = prefabName;
+            lightsManager.CreateLight(lightNode, eulerAngles, IESName);
+        }
     }
 
     private void SaveToGeojson(string filename, List<Feature> features)

@@ -8,8 +8,6 @@ using UnityEngine.Assertions;
 public class SiteControl : MonoBehaviour
 {
     [SerializeField]
-    private EnvironmentManager environmentManager;
-    [SerializeField]
     private LightsManager lightsManager;
     [SerializeField]
     private MapManager mapManager;
@@ -28,7 +26,6 @@ public class SiteControl : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(environmentManager);
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(location);
@@ -42,7 +39,7 @@ public class SiteControl : MonoBehaviour
     void Start()
     {
         location.onValueChanged.AddListener(delegate {
-            environmentManager.ChangeLocation(location.value);
+            mapManager.ChangeLocation(location.value);
         });
 
         mapStyle.onValueChanged.AddListener(delegate {

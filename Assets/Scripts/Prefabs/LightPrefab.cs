@@ -25,18 +25,18 @@ public class LightPrefab : MonoBehaviour
             bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit = new RaycastHit();
-            if (!isOverUI && Physics.Raycast(ray, out hit, 10000, EnvironmentManager.GetEnvironmentLayer()))
+            if (!isOverUI && Physics.Raycast(ray, out hit, 10000, 1 << MapManager.UNITY_LAYER_MAP))
             {
                 transform.position = hit.point;
             }
         }
     }
 
-    public void Create(LightNode lightNode, Transform parent, Vector3 eulerAngles, EnvironmentManager environmentManager)
+    public void Create(LightNode lightNode, Transform parent, Vector3 eulerAngles, MapManager mapManager)
     {
         transform.parent = parent;
-        transform.position = environmentManager.GetUnityPositionFromCoordinatesAndAltitude(lightNode.LatLong, lightNode.Altitude, true);
-        transform.localScale = baseScale * environmentManager.GetWorldRelativeScale();
+        transform.position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(lightNode.LatLong, lightNode.Altitude, true);
+        transform.localScale = baseScale * mapManager.GetWorldRelativeScale();
         transform.eulerAngles = eulerAngles;
         hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);
     }

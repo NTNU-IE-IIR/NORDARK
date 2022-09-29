@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 public class CamerasManager : MonoBehaviour
 {
     [SerializeField]
-    private EnvironmentManager environmentManager;
+    private MapManager mapManager;
     [SerializeField]
     private CameraControl cameraControl;
     [SerializeField]
@@ -23,7 +23,7 @@ public class CamerasManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(environmentManager);
+        Assert.IsNotNull(mapManager);
         Assert.IsNotNull(cameraControl);
         Assert.IsNotNull(cameraParametersControl);
         Assert.IsNotNull(cameraPreview);
@@ -39,8 +39,8 @@ public class CamerasManager : MonoBehaviour
         CreateCamera(
             new CameraNode(
                 DetermineNewCameraName(),
-                environmentManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position),
-                environmentManager.GetAltitudeFromUnityPosition(mainCamera.transform.position)
+                mapManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position),
+                mapManager.GetAltitudeFromUnityPosition(mainCamera.transform.position)
             ),
             mainCamera.transform.eulerAngles,
             cameraParametersControl.GetCameraParameters()
@@ -52,7 +52,7 @@ public class CamerasManager : MonoBehaviour
         cameraControl.AddCameraToList(camera.Name);
         camera.Camera = (Instantiate(
             cameraObject,
-            environmentManager.GetUnityPositionFromCoordinatesAndAltitude(camera.LatLong, camera.Altitude),
+            mapManager.GetUnityPositionFromCoordinatesAndAltitude(camera.LatLong, camera.Altitude),
             Quaternion.Euler(eulerAngles),
             transform
         ) as GameObject).GetComponent<CameraPrefab>();
@@ -101,8 +101,8 @@ public class CamerasManager : MonoBehaviour
     public void SetCurrentCameraPositionFromMainCamera()
     {
         if (currentCamera != null) {
-            currentCamera.LatLong = environmentManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position);
-            currentCamera.Altitude = environmentManager.GetAltitudeFromUnityPosition(mainCamera.transform.position);
+            currentCamera.LatLong = mapManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position);
+            currentCamera.Altitude = mapManager.GetAltitudeFromUnityPosition(mainCamera.transform.position);
             currentCamera.Camera.SetPosition(mainCamera.transform.position);
             currentCamera.Camera.SetEulerAngles(mainCamera.transform.eulerAngles);
         }
@@ -145,13 +145,13 @@ public class CamerasManager : MonoBehaviour
     public void UpdateCamerasPosition()
     {
         foreach (CameraNode camera in cameras) {
-            camera.Camera.SetPosition(environmentManager.GetUnityPositionFromCoordinatesAndAltitude(camera.LatLong, camera.Altitude));
+            camera.Camera.SetPosition(mapManager.GetUnityPositionFromCoordinatesAndAltitude(camera.LatLong, camera.Altitude));
         }
     }
 
     public void SetMainCameraPosition(Vector2d latLong, double altitude)
     {
-        mainCamera.transform.position = environmentManager.GetUnityPositionFromCoordinatesAndAltitude(latLong, altitude);
+        mainCamera.transform.position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(latLong, altitude);
     }
 
     private string DetermineNewCameraName(int index = 1)

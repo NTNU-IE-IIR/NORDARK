@@ -21,6 +21,7 @@ public class MapManager : MonoBehaviour
 
     private AbstractMap map;
     private bool isMapInitialized;
+    private List<Location> locations;
 
     void Awake()
     {
@@ -34,6 +35,7 @@ public class MapManager : MonoBehaviour
         map.OnTileFinished += TileFinished;
 
         isMapInitialized = false;
+        locations = new List<Location>();
     }
 
     public bool IsMapInitialized()
@@ -41,35 +43,17 @@ public class MapManager : MonoBehaviour
         return isMapInitialized;
     }
 
-    public Vector3 GetUnityPositionFromCoordinatesAndAltitude(Vector2d latLong, double altitude, bool stickToGround)
+    public void AddLocation(Location location)
     {
-        Vector3 position = (new Vector2((float) latLong.x, (float) latLong.y)).AsUnityPosition(map.CenterMercator, map.WorldRelativeScale);
-        if (stickToGround) {
-            position.y = GetElevationInUnityUnitsFromCoordinates(latLong);
-        } else {
-            position.y = (float) altitude;
-        }
-        return position;
+        locations.Add(location);
+        siteControl.AddLocation(location.Name);
+
+        ChangeLocation(locations.Count - 1);
     }
 
-    public float GetElevationInUnityUnitsFromCoordinates(Vector2d latLong)
+    public void ChangeLocation(int locationIndex)
     {
-        return map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(latLong.x, latLong.y));
-    }
-
-    public Vector2d GetCoordinatesFromUnityPosition(Vector3 position)
-    {
-        return new Vector2d(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale));
-    }
-
-    public float GetAltitudeFromUnityPosition(Vector3 position)
-    {
-        return position.y;
-    }
-
-    public void SetLocation(Vector2d coordinates)
-    {
-        map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(coordinates.x, coordinates.y));
+        map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(locations[locationIndex].Coordinates.x, locations[locationIndex].Coordinates.y));
         map.UpdateMap();
 
         // There is a Mapbox bug with the roads, buildings and elevation, so we reset them 
@@ -93,6 +77,58 @@ public class MapManager : MonoBehaviour
         lightsManager.UpdateLightsPositions();
         treeManager.UpdateTreesPosition();
         camerasManager.UpdateCamerasPosition();
+        camerasManager.SetMainCameraPosition(locations[locationIndex].CameraCoordinates, locations[locationIndex].CameraAltitude);
+        siteControl.ChangeLocation(locationIndex);
+    }
+
+    public void ClearLocation()
+    {
+        locations.Clear();
+        siteControl.ClearLocations();
+    }
+
+    public List<Feature> GetFeatures()
+    {
+        List<Feature> features = new List<Feature>();
+        foreach (Location location in locations) {
+            Feature feature = new Feature();
+            feature.Properties.Add("name", location.Name);
+            feature.Properties.Add("type", "location");
+            feature.Properties.Add("unityUnitsPerLongitude", location.UnityUnitsPerLongitude);
+            feature.Properties.Add("unityUnitsPerLatitude", location.UnityUnitsPerLatitude);
+            feature.Properties.Add("unityUnitsPerMeters", location.UnityUnitsPerMeters);
+            feature.Properties.Add("worldRelativeScale", location.WorldRelativeScale);
+            feature.Properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraAltitude});
+            feature.Coordinates = new Vector3d(location.Coordinates, location.Altitude);
+            features.Add(feature);
+        }
+        return features;
+    }
+
+    public Vector3 GetUnityPositionFromCoordinatesAndAltitude(Vector2d latLong, double altitude, bool stickToGround = false)
+    {
+        Vector3 position = (new Vector2((float) latLong.x, (float) latLong.y)).AsUnityPosition(map.CenterMercator, map.WorldRelativeScale);
+        if (stickToGround) {
+            position.y = GetElevationInUnityUnitsFromCoordinates(latLong);
+        } else {
+            position.y = (float) altitude;
+        }
+        return position;
+    }
+
+    public float GetElevationInUnityUnitsFromCoordinates(Vector2d latLong)
+    {
+        return map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(latLong.x, latLong.y));
+    }
+
+    public Vector2d GetCoordinatesFromUnityPosition(Vector3 position)
+    {
+        return new Vector2d(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale));
+    }
+
+    public float GetAltitudeFromUnityPosition(Vector3 position)
+    {
+        return position.y;
     }
 
     public void SetStyle(int style)

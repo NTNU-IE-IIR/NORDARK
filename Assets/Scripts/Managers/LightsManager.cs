@@ -9,7 +9,7 @@ public class LightsManager : MonoBehaviour
     private const string LIGHTS_RESOURCES_FOLDER = "Lights";
 
     [SerializeField]
-    private EnvironmentManager environmentManager;
+    private MapManager mapManager;
     [SerializeField]
     private IESManager iesManager;
     [SerializeField]
@@ -22,7 +22,7 @@ public class LightsManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(environmentManager);
+        Assert.IsNotNull(mapManager);
         Assert.IsNotNull(iesManager);
         Assert.IsNotNull(lightControl);
         Assert.IsNotNull(selectionPin);
@@ -41,7 +41,7 @@ public class LightsManager : MonoBehaviour
         }
         
         lightNode.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightNode.PrefabName)).GetComponent<LightPrefab>();
-        lightNode.Light.Create(lightNode, transform, eulerAngles, environmentManager);
+        lightNode.Light.Create(lightNode, transform, eulerAngles, mapManager);
 
         IESLight IES = iesManager.GetIESLightFromName(IESName);
         lightNode.Light.SetIESLight(IES);
@@ -92,7 +92,7 @@ public class LightsManager : MonoBehaviour
 
             selectedLightNode.PrefabName = newLightType;
             selectedLightNode.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + newLightType)).GetComponent<LightPrefab>();
-            selectedLightNode.Light.Create(selectedLightNode, transform, eulerAngles, environmentManager);
+            selectedLightNode.Light.Create(selectedLightNode, transform, eulerAngles, mapManager);
             selectedLightNode.Light.SetIESLight(iesLight);
         }
     }
@@ -112,13 +112,13 @@ public class LightsManager : MonoBehaviour
     public void UpdateLightsPositions()
     {
         for (int i = 0; i < lightNodes.Count; i++) {
-            lightNodes[i].Light.SetPosition(environmentManager.GetUnityPositionFromCoordinatesAndAltitude(lightNodes[i].LatLong, lightNodes[i].Altitude, true));
-            lightNodes[i].Light.MultiplyScale(environmentManager.GetWorldRelativeScale());
+            lightNodes[i].Light.SetPosition(mapManager.GetUnityPositionFromCoordinatesAndAltitude(lightNodes[i].LatLong, lightNodes[i].Altitude, true));
+            lightNodes[i].Light.MultiplyScale(mapManager.GetWorldRelativeScale());
         }
 
         if (selectedLightNode != null) {
             selectionPin.SetPosition(selectedLightNode.Light.GetTransform().position);
-            selectionPin.MultiplyScale(environmentManager.GetWorldRelativeScale());
+            selectionPin.MultiplyScale(mapManager.GetWorldRelativeScale());
         }
     }
 
@@ -146,6 +146,7 @@ public class LightsManager : MonoBehaviour
         foreach (LightNode lightNode in lightNodes) {
             Feature feature = new Feature();
             Vector3 eulerAngles = lightNode.Light.GetTransform().eulerAngles;
+            feature.Properties.Add("type", "light");
             feature.Properties.Add("name", lightNode.Name);
             feature.Properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
             feature.Properties.Add("IESfileName", lightNode.Light.GetIESLight().Name);
@@ -195,8 +196,8 @@ public class LightsManager : MonoBehaviour
             selectedLightNode.Light.SetMoving(false);
 
             Vector3 lightPosition = selectedLightNode.Light.GetTransform().position;
-            selectedLightNode.LatLong = environmentManager.GetCoordinatesFromUnityPosition(lightPosition);
-            selectedLightNode.Altitude = environmentManager.GetAltitudeFromUnityPosition(lightPosition);
+            selectedLightNode.LatLong = mapManager.GetCoordinatesFromUnityPosition(lightPosition);
+            selectedLightNode.Altitude = mapManager.GetAltitudeFromUnityPosition(lightPosition);
 
             selectedLightNode = null;
             selectionPin.SetActive(false);
@@ -213,7 +214,7 @@ public class LightsManager : MonoBehaviour
         
         selectionPin.SetActive(true);
         selectionPin.SetPosition(selectedLightNode.Light.GetTransform().position);
-        selectionPin.MultiplyScale(environmentManager.GetWorldRelativeScale());
+        selectionPin.MultiplyScale(mapManager.GetWorldRelativeScale());
     }
 
     private void MoveCurrentLight()

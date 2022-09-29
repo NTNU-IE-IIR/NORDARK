@@ -8,28 +8,27 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private SceneManager sceneManager;
     [SerializeField]
-    private EnvironmentManager environmentManager;
+    private MapManager mapManager;
     [SerializeField]
     private UIController uIController;
 
     void Awake()
     {
         Assert.IsNotNull(sceneManager);
-        Assert.IsNotNull(environmentManager);
+        Assert.IsNotNull(mapManager);
         Assert.IsNotNull(uIController);
     }
 
     void Start()
     {
         uIController.SetUpUI();
-        environmentManager.SetDefaultEnvironment();
 
         StartCoroutine(LoadDefaultScene());
     }
 
     IEnumerator LoadDefaultScene()
     {
-        yield return new WaitUntil(() => environmentManager.isEnvironmentReady());
+        yield return new WaitUntil(() => mapManager.IsMapInitialized());
         sceneManager.LoadDefaultScene();
         uIController.DisplayLoadingScreen(false);
     }
