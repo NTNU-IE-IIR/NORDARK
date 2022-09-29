@@ -137,8 +137,7 @@ namespace IESLights
             GetIESConverterAndCubeSphere(out cubemapSphere, out iesConverter);
 
             // Parse all IES files in the folder hierarchy.
-            // removed because this feature is not used and it was creating an empty folder in the asset folder
-            //ParseFolderHierarchy(folder, iesConverter);
+            ParseFolderHierarchy(folder, iesConverter);
 
             // Clean up.
             DestroyImmediate(cubemapSphere);
