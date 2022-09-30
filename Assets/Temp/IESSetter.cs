@@ -5,6 +5,7 @@ using UnityEngine;
 public class IESSetter : MonoBehaviour
 {
     public bool texture2D = false;
+    private string file = "BE_99527K3";
     UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
 
     void Start()
@@ -12,10 +13,10 @@ public class IESSetter : MonoBehaviour
         hdAdditionalLightData = GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
 
         if (texture2D) {
-            Texture2D cookie = IESLights.RuntimeIESImporter.ImportSpotlightCookie(@"D:\Research_Assistant\Nordark\Project\NORDARK\Assets\Temp\BE_99527K3.ies");
+            Texture2D cookie = IESLights.RuntimeIESImporter.ImportSpotlightCookie(@"D:\Research_Assistant\Nordark\Project\NORDARK\Assets\Temp\" + file + ".ies");
             hdAdditionalLightData.SetCookie(cookie);
         } else {
-            Cubemap cookie = IESLights.RuntimeIESImporter.ImportPointLightCookie(@"D:\Research_Assistant\Nordark\Project\NORDARK\Assets\Temp\BE_99527K3.ies");
+            Cubemap cookie = IESLights.RuntimeIESImporter.ImportPointLightCookie(@"D:\Research_Assistant\Nordark\Project\NORDARK\Assets\Temp\" + file + ".ies");
             hdAdditionalLightData.SetCookie(cookie);
         }
     }

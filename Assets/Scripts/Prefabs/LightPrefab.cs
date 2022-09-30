@@ -15,7 +15,7 @@ public class LightPrefab : MonoBehaviour
     {
         isMoving = false;
         baseScale = transform.localScale;
-        hdAdditionalLightData = transform.Find("Spot Light").gameObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
+        hdAdditionalLightData = transform.Find("Light").gameObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
     }
 
     void Update()

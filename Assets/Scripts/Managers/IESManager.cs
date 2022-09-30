@@ -50,7 +50,7 @@ public class IESManager : MonoBehaviour
             string destFile = Path.Combine(IESDirectory, Path.GetFileName(path));
 
             File.Copy(path, destFile, true);
-            Texture2D cookie = LoadCookie(iesName);
+            Cubemap cookie = LoadCookie(iesName);
             if (cookie != null) {
                 IESs.Add(new IESLight(iesName, cookie, GetIntensity(iesName)));
                 lightControl.SetIESNames(GetIESNames());
@@ -95,10 +95,10 @@ public class IESManager : MonoBehaviour
         return directoryPath;
     }
 
-    private Texture2D LoadCookie(string iesName)
+    private Cubemap LoadCookie(string iesName)
     {
         string path = GetPathFromFileNameAndCreateFile(iesName);
-        return IESLights.RuntimeIESImporter.ImportSpotlightCookie(path, 128, false, false);
+        return IESLights.RuntimeIESImporter.ImportPointLightCookie(path, 128, false);
     }
 
     private LightIntensity GetIntensity(string iesName)
