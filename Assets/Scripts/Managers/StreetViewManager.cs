@@ -24,7 +24,8 @@ public class CharacterPreset
 public class SpawnLocation
 {
   public static readonly Dictionary<string, Vector3> defaultSpawnMap = new(){
-    {"Ålesund", new Vector3(402, 52, 41)}
+    {"Ålesund", new Vector3(402, 52, 41)},
+    {"Uppsala", new Vector3(36, 52, 3)}
   };
 }
 
@@ -62,6 +63,12 @@ public class StreetViewManager : MonoBehaviour
           {
             Debug.Log("SpawnLocation: " + SpawnLocation.defaultSpawnMap["Ålesund"]);
             rb.MovePosition(SpawnLocation.defaultSpawnMap["Ålesund"]);
+            break;
+          }
+        case "Uppsala":
+          {
+            Debug.Log("SpawnLocation: " + SpawnLocation.defaultSpawnMap["Uppsala"]);
+            rb.MovePosition(SpawnLocation.defaultSpawnMap["Uppsala"]);
             break;
           }
       }
@@ -121,10 +128,12 @@ public class StreetViewManager : MonoBehaviour
       {
         rb.velocity = new Vector3(rb.velocity.x, 5, rb.velocity.y);
       }
-
-      if (Input.GetKey(KeyCode.LeftControl))
+      else if (Input.GetKey(KeyCode.LeftControl))
       {
         rb.velocity = new Vector3(rb.velocity.x, -5, rb.velocity.y);
+      }
+      else {
+        rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.y);
       }
     }
     Look();
