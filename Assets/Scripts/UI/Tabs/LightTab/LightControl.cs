@@ -28,6 +28,8 @@ public class LightControl : MonoBehaviour
     private Button move;
     [SerializeField]
     private Button delete;
+    [SerializeField]
+    private Toggle hightlight;
 
     private double t1;
     private double t2;
@@ -44,6 +46,7 @@ public class LightControl : MonoBehaviour
         Assert.IsNotNull(insert);
         Assert.IsNotNull(move);
         Assert.IsNotNull(delete);
+        Assert.IsNotNull(hightlight);
     }
 
     void Start()
@@ -68,6 +71,10 @@ public class LightControl : MonoBehaviour
         delete.onClick.AddListener(delegate {
             lightsManager.DeleteLight();
             EventSystem.current.SetSelectedGameObject(null);
+        });
+
+        hightlight.onValueChanged.AddListener(delegate {
+            lightsManager.HighlightLights(hightlight.isOn);
         });
     }
 

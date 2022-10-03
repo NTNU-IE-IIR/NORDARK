@@ -16,6 +16,8 @@ public class LightsManager : MonoBehaviour
     private LightControl lightControl;
     [SerializeField]
     private SelectionPin selectionPin;
+    [SerializeField]
+    private Material highlightMaterial;
 
     List<LightNode> lightNodes;
     private LightNode selectedLightNode;
@@ -26,6 +28,7 @@ public class LightsManager : MonoBehaviour
         Assert.IsNotNull(iesManager);
         Assert.IsNotNull(lightControl);
         Assert.IsNotNull(selectionPin);
+        Assert.IsNotNull(highlightMaterial);
         
         lightNodes = new List<LightNode>();
         selectedLightNode = null;
@@ -203,6 +206,13 @@ public class LightsManager : MonoBehaviour
             selectionPin.SetActive(false);
         }
         lightControl.ClearSelectedLight();
+    }
+
+    public void HighlightLights(bool hightlight)
+    {
+        foreach (LightNode light in lightNodes) {
+            light.Light.Hightlight(hightlight, highlightMaterial);
+        }
     }
 
     private void SelectLight(LightNode lightNode)

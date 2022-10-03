@@ -10,12 +10,16 @@ public class LightPrefab : MonoBehaviour
     Vector3 baseScale;
     UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
     IESLight iesLight;
+    Renderer objectRenderer;
+    Material defaultMaterial;
 
     void Awake()
     {
         isMoving = false;
         baseScale = transform.localScale;
         hdAdditionalLightData = transform.Find("Light").gameObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
+        objectRenderer = GetComponent<Renderer>();
+        defaultMaterial = objectRenderer.material;
     }
 
     void Update()
@@ -87,5 +91,14 @@ public class LightPrefab : MonoBehaviour
     public void Destroy()
     {
         Destroy(gameObject);
+    }
+
+    public void Hightlight(bool hightlight, Material highlightMaterial)
+    {
+        if (hightlight) {
+            objectRenderer.material = highlightMaterial;
+        } else {
+            objectRenderer.material = defaultMaterial;
+        }
     }
 }
