@@ -21,12 +21,16 @@ public class StreetViewManager : MonoBehaviour
   public GameObject FPSCharacter;
   private GameObject FPSCamera;
 
+  private bool isStreetViewActive = false;
+
   public float walkSpeed = 4.0f;
   public float sensitivity = 5.0f;
   private float yaw = 0.0f;
   private float pitch = 0.0f;
   private Rigidbody rb;
   private bool canFly = false;
+
+  private bool cursorLock = false;
 
   const float MIN_HEIGHT = 124f;
   const float MAX_HEIGHT = 188f;
@@ -37,7 +41,13 @@ public class StreetViewManager : MonoBehaviour
   {
     if (shouldDisplay)
     {
-      // Cursor.lockState = CursorLockMode.Locked;
+      isStreetViewActive = true;
+
+      if (!cursorLock)
+      {
+        ToggleCursorLock();
+      }
+
       mainCamera.SetActive(false);
       FPSCharacter.SetActive(true);
 
@@ -61,6 +71,13 @@ public class StreetViewManager : MonoBehaviour
     }
     else
     {
+      isStreetViewActive = false;
+
+      if (cursorLock)
+      {
+        ToggleCursorLock();
+      }
+
       mainCamera.SetActive(true);
       FPSCharacter.SetActive(false);
     }
@@ -80,11 +97,13 @@ public class StreetViewManager : MonoBehaviour
 
   public void toggleSuperPower(bool isActive)
   {
-    if(isActive){
+    if (isActive)
+    {
       canFly = true;
       rb.useGravity = false;
     }
-    else{
+    else
+    {
       rb.useGravity = true;
       canFly = false;
     }
@@ -98,6 +117,14 @@ public class StreetViewManager : MonoBehaviour
 
   void Update()
   {
+    if (isStreetViewActive && Input.GetKeyDown(KeyCode.Escape))
+    {
+      Debug.Log("Escape pressed");
+      ToggleCursorLock();
+    }
+
+    if (!cursorLock) return;
+
     if (canFly)
     {
       if (Input.GetKey(KeyCode.Space))
@@ -118,7 +145,25 @@ public class StreetViewManager : MonoBehaviour
 
   void FixedUpdate()
   {
+    if (!cursorLock) return;
+
     Movement();
+  }
+
+  void ToggleCursorLock()
+  {
+    if (!cursorLock)
+    {
+      Cursor.lockState = CursorLockMode.Locked;
+      Cursor.visible = false;
+      cursorLock = true;
+    }
+    else
+    {
+      Cursor.lockState = CursorLockMode.None;
+      Cursor.visible = true;
+      cursorLock = false;
+    }
   }
 
   void Look()
