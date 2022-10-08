@@ -8,16 +8,18 @@ public class LightPrefab : MonoBehaviour
 
     bool isMoving;
     Vector3 baseScale;
-    UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
+    public UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
     IESLight iesLight;
     Renderer objectRenderer;
     Material defaultMaterial;
 
     void Awake()
     {
+        GameObject lightObject = transform.Find("Light").gameObject;
+
         isMoving = false;
         baseScale = transform.localScale;
-        hdAdditionalLightData = transform.Find("Light").gameObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
+        hdAdditionalLightData = lightObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
         objectRenderer = GetComponent<Renderer>();
         defaultMaterial = objectRenderer.material;
     }
@@ -43,6 +45,16 @@ public class LightPrefab : MonoBehaviour
         transform.localScale = baseScale * mapManager.GetWorldRelativeScale();
         transform.eulerAngles = eulerAngles;
         hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);
+    }
+
+    public void SetIntensity(float value){
+        GameObject lightObject = transform.Find("Light").gameObject;
+        Light light = lightObject.GetComponent<Light>();
+        light.intensity = value;
+    }
+
+    public float GetIntensity(){
+        return hdAdditionalLightData.intensity;
     }
 
     public void SetMoving(bool moving)
@@ -77,6 +89,14 @@ public class LightPrefab : MonoBehaviour
         this.iesLight = iesLight;
         hdAdditionalLightData.SetCookie(iesLight.Cookie);
         hdAdditionalLightData.SetIntensity(iesLight.Intensity.Value, iesLight.Intensity.Unit);
+    }
+
+    public void SetLightIntensity(float value){
+        hdAdditionalLightData.SetIntensity(value);
+    }
+
+    public void SetLightColor(Color color){
+        hdAdditionalLightData.SetColor(color);
     }
 
     public IESLight GetIESLight()

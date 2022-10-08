@@ -2,25 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class Character
-{
-  public float yScale;
-  public Character(float yScale)
-  {
-    this.yScale = yScale;
-  }
-
-}
-
-public class CharacterPreset
-{
-  public static readonly Dictionary<string, Character> defaultSpawnMap = new(){
-    {"Child", new Character(1f)},
-    {"Adult", new Character(1.5f)},
-    {"UFO", new Character(1.5f)}
-  };
-}
-
 public class SpawnLocation
 {
   public static readonly Dictionary<string, Vector3> defaultSpawnMap = new(){
@@ -47,6 +28,11 @@ public class StreetViewManager : MonoBehaviour
   private Rigidbody rb;
   private bool canFly = false;
 
+  const float MIN_HEIGHT = 124f;
+  const float MAX_HEIGHT = 188f;
+  const float MIN_SCALE = 0.7f;
+  const float MAX_SCALE = 1.75f;
+
   public void DisplayCameraPreview(bool shouldDisplay)
   {
     if (shouldDisplay)
@@ -55,13 +41,10 @@ public class StreetViewManager : MonoBehaviour
       mainCamera.SetActive(false);
       FPSCharacter.SetActive(true);
 
-      // Debug.Log("PresetDropdown: " + presetDropdown.options[presetDropdown.value].text);
-
       switch (locationDropdown.options[locationDropdown.value].text)
       {
         case "Ålesund":
           {
-            Debug.Log("SpawnLocation: " + SpawnLocation.defaultSpawnMap["Ålesund"]);
             rb.MovePosition(SpawnLocation.defaultSpawnMap["Ålesund"]);
             break;
           }
@@ -73,17 +56,8 @@ public class StreetViewManager : MonoBehaviour
           }
       }
 
-      // Hardcoded as of now to "Child"
-      rb.transform.localScale = new Vector3(
-        rb.transform.localScale.x,
-        CharacterPreset.defaultSpawnMap["Child"].yScale,
-        rb.transform.localScale.z
-      );
-
-      // TODO: List is empty for some odd reason
-      // foreach( TMP_Dropdown.OptionData option in presetDropdown.options){
-      //   Debug.Log("PresetDropdown: " + option.text);
-      // }
+      // Starting with the shortest height
+      this.ChangeHeight(MIN_HEIGHT);
     }
     else
     {
@@ -92,23 +66,25 @@ public class StreetViewManager : MonoBehaviour
     }
   }
 
-  public void ChangePreset(string value)
+  public void ChangeHeight(float value)
   {
-    Vector3 currentPosition = rb.transform.position;
-    rb.MovePosition(new Vector3(currentPosition.x, currentPosition.y + 3, currentPosition.z));
+    float multiplier = (value - MIN_HEIGHT) / (MAX_HEIGHT - MIN_HEIGHT);
+    float scale = MIN_SCALE + multiplier * (MAX_SCALE - MIN_SCALE);
+
     rb.transform.localScale = new Vector3(
       rb.transform.localScale.x,
-      CharacterPreset.defaultSpawnMap[value].yScale,
+      scale,
       rb.transform.localScale.z
     );
+  }
 
-    if (value == "UFO")
-    {
+  public void toggleSuperPower(bool isActive)
+  {
+    if(isActive){
       canFly = true;
       rb.useGravity = false;
     }
-    else
-    {
+    else{
       rb.useGravity = true;
       canFly = false;
     }
@@ -132,7 +108,8 @@ public class StreetViewManager : MonoBehaviour
       {
         rb.velocity = new Vector3(rb.velocity.x, -5, rb.velocity.y);
       }
-      else {
+      else
+      {
         rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.y);
       }
     }

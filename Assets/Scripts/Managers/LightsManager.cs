@@ -19,7 +19,7 @@ public class LightsManager : MonoBehaviour
     [SerializeField]
     private Material highlightMaterial;
 
-    List<LightNode> lightNodes;
+    public List<LightNode> lightNodes;
     private LightNode selectedLightNode;
 
     void Awake()
@@ -231,5 +231,23 @@ public class LightsManager : MonoBehaviour
     {
         selectedLightNode.Light.SetMoving(true);
         selectionPin.SetMoving(true);
+    }
+
+    public void changeAllLightIntensity(float value){
+        foreach (LightNode lightNode in lightNodes) {
+            lightNode.Light.SetLightIntensity(value);
+        }
+    }
+
+    public void changeAllLightHue(float hue){
+        foreach (LightNode lightNode in lightNodes) {
+            lightNode.Light.SetLightColor(Color.HSVToRGB(hue / 360.0f, 0.93f, 0.85f));
+        }
+    }
+
+    public void resetAllLightsHue(){
+        foreach (LightNode lightNode in lightNodes) {
+            lightNode.Light.SetLightColor(new Color(1, 1, 1));
+        }
     }
 }
