@@ -60,7 +60,6 @@ public class StreetViewManager : MonoBehaviour
           }
         case "Uppsala":
           {
-            Debug.Log("SpawnLocation: " + SpawnLocation.defaultSpawnMap["Uppsala"]);
             rb.MovePosition(SpawnLocation.defaultSpawnMap["Uppsala"]);
             break;
           }
