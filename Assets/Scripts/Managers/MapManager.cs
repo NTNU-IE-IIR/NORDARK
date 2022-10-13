@@ -94,10 +94,6 @@ public class MapManager : MonoBehaviour
             Feature feature = new Feature();
             feature.Properties.Add("name", location.Name);
             feature.Properties.Add("type", "location");
-            feature.Properties.Add("unityUnitsPerLongitude", location.UnityUnitsPerLongitude);
-            feature.Properties.Add("unityUnitsPerLatitude", location.UnityUnitsPerLatitude);
-            feature.Properties.Add("unityUnitsPerMeters", location.UnityUnitsPerMeters);
-            feature.Properties.Add("worldRelativeScale", location.WorldRelativeScale);
             feature.Properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraAltitude});
             feature.Coordinates = new Vector3d(location.Coordinates, location.Altitude);
             features.Add(feature);

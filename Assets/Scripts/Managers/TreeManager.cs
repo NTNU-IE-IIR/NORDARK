@@ -6,14 +6,14 @@ using UnityEngine.Assertions;
 public class TreeManager : MonoBehaviour
 {
     [SerializeField]
-    private GameObject treePrefab;
+    private List<GameObject> treePrefabs;
     [SerializeField]
     private MapManager mapManager;
     private List<TreeNode> trees;
 
     void Awake()
     {
-        Assert.IsNotNull(treePrefab);
+        Assert.IsNotNull(treePrefabs);
         Assert.IsNotNull(mapManager);
 
         trees = new List<TreeNode>();
@@ -23,7 +23,9 @@ public class TreeManager : MonoBehaviour
     {
         trees.Add(tree);
         Vector3 position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(tree.LatLong, tree.Altitude, true);
-        GameObject treeObject = Instantiate(treePrefab, position, Quaternion.identity, transform);
+
+        System.Random random = new System.Random();
+        GameObject treeObject = Instantiate(treePrefabs[random.Next(0, treePrefabs.Count)], position, Quaternion.identity, transform);
         treeObject.transform.localScale *= mapManager.GetWorldRelativeScale();
         tree.Tree = treeObject;
     }

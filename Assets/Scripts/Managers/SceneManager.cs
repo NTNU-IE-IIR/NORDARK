@@ -133,18 +133,6 @@ public class SceneManager : MonoBehaviour
         if (point.Coordinates.Altitude != null) {
             location.Altitude = (double) point.Coordinates.Altitude;
         }
-        if (feature.Properties.ContainsKey("unityUnitsPerLongitude")) {
-            location.UnityUnitsPerLongitude = System.Convert.ToDouble(feature.Properties["unityUnitsPerLongitude"]);
-        }
-        if (feature.Properties.ContainsKey("unityUnitsPerLatitude")) {
-            location.UnityUnitsPerLatitude = System.Convert.ToDouble(feature.Properties["unityUnitsPerLatitude"]);
-        }
-        if (feature.Properties.ContainsKey("unityUnitsPerMeters")) {
-            location.UnityUnitsPerMeters = System.Convert.ToDouble(feature.Properties["unityUnitsPerMeters"]);
-        }
-        if (feature.Properties.ContainsKey("worldRelativeScale")) {
-            location.WorldRelativeScale = (float) System.Convert.ToDouble(feature.Properties["worldRelativeScale"]);
-        }
         if (feature.Properties.ContainsKey("cameraCoordinates")) {
             List<double> cameraCoordinates = (feature.Properties["cameraCoordinates"] as Newtonsoft.Json.Linq.JArray).ToObject<List<double>>();
             location.CameraCoordinates = new Vector2d(cameraCoordinates[0], cameraCoordinates[1]);

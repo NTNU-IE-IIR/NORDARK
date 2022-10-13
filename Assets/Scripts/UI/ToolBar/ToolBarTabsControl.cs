@@ -19,6 +19,8 @@ public class ToolBarTabsControl : MonoBehaviour
     [SerializeField]
     private Button streetViewButton;
     [SerializeField]
+    private Button lightComputationButton;
+    [SerializeField]
     private GameObject sceneTab;
     [SerializeField]
     private GameObject lightTab;
@@ -26,6 +28,8 @@ public class ToolBarTabsControl : MonoBehaviour
     private GameObject cameraTab;
     [SerializeField]
     private GameObject streetViewTab;
+    [SerializeField]
+    private GameObject lightComputationTab;
 
     void Awake()
     {
@@ -36,10 +40,12 @@ public class ToolBarTabsControl : MonoBehaviour
         Assert.IsNotNull(lightButton);
         Assert.IsNotNull(cameraButton);
         Assert.IsNotNull(streetViewButton);
+        Assert.IsNotNull(lightComputationButton);
         Assert.IsNotNull(sceneTab);
         Assert.IsNotNull(lightTab);
         Assert.IsNotNull(cameraTab);
         Assert.IsNotNull(streetViewTab);
+        Assert.IsNotNull(lightComputationTab);
     }
 
     void Start()
@@ -48,6 +54,7 @@ public class ToolBarTabsControl : MonoBehaviour
         lightButton.onClick.AddListener(delegate { ActivateTab(Tab.Light); });
         cameraButton.onClick.AddListener(delegate { ActivateTab(Tab.Camera); });
         streetViewButton.onClick.AddListener(delegate { ActivateTab(Tab.StreetView); });
+        lightComputationButton.onClick.AddListener(delegate { ActivateTab(Tab.LightComputation); });
     }
 
     public void ActivateDefaultTab()
@@ -80,6 +87,10 @@ public class ToolBarTabsControl : MonoBehaviour
                 button = streetViewButton;
                 streetViewManager.DisplayCameraPreview(true);
                 break;
+            case Tab.LightComputation:
+                tabObject = lightComputationTab;
+                button = lightComputationButton;
+                break;
             default:
                 break;
         }
@@ -98,6 +109,7 @@ public class ToolBarTabsControl : MonoBehaviour
         lightTab.SetActive(false);
         cameraTab.SetActive(false);
         streetViewTab.SetActive(false);
+        lightComputationTab.SetActive(false);
 
         ColorBlock cbScene = sceneButton.colors;
         cbScene.normalColor = Color.clear;
@@ -114,6 +126,10 @@ public class ToolBarTabsControl : MonoBehaviour
         ColorBlock cbStreetView = streetViewButton.colors;
         cbStreetView.normalColor = Color.clear;
         streetViewButton.colors = cbStreetView;
+       
+        ColorBlock cbLightComputation = lightComputationButton.colors;
+        cbLightComputation.normalColor = Color.clear;
+        lightComputationButton.colors = cbLightComputation;
 
         lightsManager.ClearSelectedLight();
         camerasManager.DisplayCameraPreview(false);
@@ -125,6 +141,7 @@ public class ToolBarTabsControl : MonoBehaviour
         Scene,
         Light,
         Camera,
-        StreetView
+        StreetView,
+        LightComputation
     }
 }

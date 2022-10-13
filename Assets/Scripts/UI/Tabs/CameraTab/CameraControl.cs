@@ -18,6 +18,8 @@ public class CameraControl : MonoBehaviour
     private Button deleteCamera;
     [SerializeField]
     private Button updateCamera;
+    [SerializeField]
+    private Button moveToCamera;
 
     void Awake()
     {
@@ -26,6 +28,7 @@ public class CameraControl : MonoBehaviour
         Assert.IsNotNull(addCamera);
         Assert.IsNotNull(deleteCamera);
         Assert.IsNotNull(updateCamera);
+        Assert.IsNotNull(moveToCamera);
     }
     
     void Start()
@@ -41,6 +44,10 @@ public class CameraControl : MonoBehaviour
         });
         updateCamera.onClick.AddListener(delegate {
             camerasManager.SetCurrentCameraPositionFromMainCamera();
+            EventSystem.current.SetSelectedGameObject(null);
+        });
+        moveToCamera.onClick.AddListener(delegate {
+            camerasManager.SetMainCameraPositionFromCurrentCamera();
             EventSystem.current.SetSelectedGameObject(null);
         });
     }

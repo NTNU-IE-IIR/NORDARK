@@ -107,6 +107,14 @@ public class CamerasManager : MonoBehaviour
             currentCamera.Camera.SetEulerAngles(mainCamera.transform.eulerAngles);
         }
     }
+    
+    public void SetMainCameraPositionFromCurrentCamera()
+    {
+        if (currentCamera != null) {
+            mainCamera.transform.position = currentCamera.Camera.GetPosition();
+            mainCamera.transform.eulerAngles = currentCamera.Camera.GetEulerAngles();
+        }
+    }
 
     public void ChangeCurrentCamera(int newCameraIndex)
     {
@@ -157,10 +165,10 @@ public class CamerasManager : MonoBehaviour
     private string DetermineNewCameraName(int index = 1)
     {
         foreach (CameraNode camera in cameras) {
-            if (camera.Name == "New Camera " + index.ToString()) {
+            if (camera.Name == "Camera " + index.ToString()) {
                 return DetermineNewCameraName(index + 1);
             }
         }
-        return "New Camera " + index.ToString();
+        return "Camera " + index.ToString();
     }
 }

@@ -13,10 +13,10 @@ public class IESSetter : MonoBehaviour
         hdAdditionalLightData = GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
 
         if (texture2D) {
-            Texture2D cookie = IESLights.RuntimeIESImporter.ImportSpotlightCookie(@"D:\Research_Assistant\Nordark\Project\NORDARK\Assets\Temp\" + file + ".ies");
+            Texture2D cookie = IESLights.RuntimeIESImporter.ImportSpotlightCookie(@"C:\Users\leole\Documents\NORDARK\Assets\Temp\" + file + ".ies");
             hdAdditionalLightData.SetCookie(cookie);
         } else {
-            Cubemap cookie = IESLights.RuntimeIESImporter.ImportPointLightCookie(@"D:\Research_Assistant\Nordark\Project\NORDARK\Assets\Temp\" + file + ".ies");
+            Cubemap cookie = IESLights.RuntimeIESImporter.ImportPointLightCookie(@"C:\Users\leole\Documents\NORDARK\Assets\Temp\" + file + ".ies");
             hdAdditionalLightData.SetCookie(cookie);
         }
     }

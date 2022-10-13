@@ -12,6 +12,11 @@ public class CameraPrefab : MonoBehaviour
         Show(false);
     }
 
+    public Vector3 GetPosition()
+    {
+        return gameObject.transform.position;
+    }
+
     public void SetPosition(Vector3 position)
     {
         gameObject.transform.position = position;
