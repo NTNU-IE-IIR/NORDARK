@@ -2,7 +2,6 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
-using System.Collections.Generic;
 
 public class StreetViewControl : MonoBehaviour
 {
@@ -76,15 +75,22 @@ public class StreetViewControl : MonoBehaviour
     bool superPowers = superPowerCheckbox.isOn;
 
     string prefix = "";
-    string postfix = superPowers ? " with super powers" : "";
 
-    if (height < 170)
+    if(height < 30){
+      prefix = "Insect";
+    }
+    else if (height < 170)
     {
       prefix = "Child";
     }
     else
     {
       prefix = "Adult";
+    }
+
+    string postfix = superPowers ? " with super powers" : "";
+    if(prefix == "Insect" && superPowers){
+      postfix = " with wings";
     }
 
     characterTitleLabel.text = prefix + postfix;

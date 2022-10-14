@@ -32,9 +32,9 @@ public class StreetViewManager : MonoBehaviour
 
   private bool cursorLock = false;
 
-  const float MIN_HEIGHT = 124f;
+  const float MIN_HEIGHT = 2f;
   const float MAX_HEIGHT = 188f;
-  const float MIN_SCALE = 0.7f;
+  const float MIN_SCALE = 0.05f;
   const float MAX_SCALE = 1.75f;
 
   public void DisplayCameraPreview(bool shouldDisplay)
@@ -65,8 +65,8 @@ public class StreetViewManager : MonoBehaviour
           }
       }
 
-      // Starting with the shortest height
-      this.ChangeHeight(MIN_HEIGHT);
+      // Starting with the child height (124cm)
+      this.ChangeHeight(124);
     }
     else
     {
