@@ -18,14 +18,4 @@ public class SunManager : MonoBehaviour
     {
         return sun.intensity;
     }
-
-    public void SetTemperature(float temperature)
-    {
-        sun.colorTemperature = temperature;
-    }
-
-    public float GetTemperature()
-    {
-        return sun.colorTemperature;
-    }
 }
