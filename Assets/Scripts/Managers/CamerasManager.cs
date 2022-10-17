@@ -162,6 +162,11 @@ public class CamerasManager : MonoBehaviour
         mainCamera.transform.position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(latLong, altitude);
     }
 
+    public void SetMainCameraAngles(Vector3 angles)
+    {
+        mainCamera.transform.eulerAngles = angles;
+    }
+
     private string DetermineNewCameraName(int index = 1)
     {
         foreach (CameraNode camera in cameras) {

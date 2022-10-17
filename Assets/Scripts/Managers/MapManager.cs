@@ -78,6 +78,7 @@ public class MapManager : MonoBehaviour
         treeManager.UpdateTreesPosition();
         camerasManager.UpdateCamerasPosition();
         camerasManager.SetMainCameraPosition(locations[locationIndex].CameraCoordinates, locations[locationIndex].CameraAltitude);
+        camerasManager.SetMainCameraAngles(locations[locationIndex].CameraAngles);
         siteControl.ChangeLocation(locationIndex);
     }
 
@@ -95,6 +96,7 @@ public class MapManager : MonoBehaviour
             feature.Properties.Add("name", location.Name);
             feature.Properties.Add("type", "location");
             feature.Properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraAltitude});
+            feature.Properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
             feature.Coordinates = new Vector3d(location.Coordinates, location.Altitude);
             features.Add(feature);
         }

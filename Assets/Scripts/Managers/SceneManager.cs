@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
@@ -96,17 +95,18 @@ public class SceneManager : MonoBehaviour
         mapManager.ClearLocation();
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
-            if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "location")) {
-                AddLocation(feature);
-            } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "camera")) {
-                AddCamera(feature);
-            } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "tree")) {
-                AddTree(feature);
-            } else if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "light")) {
-                AddLight(feature);
+            if (feature.Properties.ContainsKey("type")) {
+                if (string.Equals(feature.Properties["type"] as string, "location")) {
+                    AddLocation(feature);
+                } else if (string.Equals(feature.Properties["type"] as string, "camera")) {
+                    AddCamera(feature);
+                } else if (string.Equals(feature.Properties["type"] as string, "tree")) {
+                    AddTree(feature);
+                } else if (string.Equals(feature.Properties["type"] as string, "light")) {
+                    AddLight(feature);
+                }
             }
         }
-
         dialogControl.CreateInfoDialog("Scene loaded.");
     }
 
@@ -137,6 +137,10 @@ public class SceneManager : MonoBehaviour
             List<double> cameraCoordinates = (feature.Properties["cameraCoordinates"] as Newtonsoft.Json.Linq.JArray).ToObject<List<double>>();
             location.CameraCoordinates = new Vector2d(cameraCoordinates[0], cameraCoordinates[1]);
             location.CameraAltitude = cameraCoordinates[2];
+        }
+        if (feature.Properties.ContainsKey("cameraAngles")) {
+            List<float> cameraAngles = (feature.Properties["cameraAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
+            location.CameraAngles = new Vector3(cameraAngles[0], cameraAngles[1], cameraAngles[2]);
         }
         mapManager.AddLocation(location);
     }

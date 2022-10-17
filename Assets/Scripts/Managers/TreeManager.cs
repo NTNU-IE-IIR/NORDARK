@@ -54,21 +54,11 @@ public class TreeManager : MonoBehaviour
     {
         List<Feature> features = new List<Feature>();
 
-        /*
         foreach (TreeNode tree in trees) {
             Feature feature = new Feature();
             feature.Properties.Add("type", "tree");
 
             feature.Coordinates = new Vector3d(tree.LatLong, tree.Altitude);
-            features.Add(feature);
-        }
-        */
-
-        foreach (Transform tree in transform) {
-            Feature feature = new Feature();
-            feature.Properties.Add("type", "tree");
-
-            feature.Coordinates = new Vector3d(mapManager.GetCoordinatesFromUnityPosition(tree.position), mapManager.GetAltitudeFromUnityPosition(tree.position));
             features.Add(feature);
         }
 

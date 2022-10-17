@@ -5,6 +5,7 @@ public class Location
     public double Altitude { get; set; }
     public Vector2d CameraCoordinates { get; set; }
     public double CameraAltitude { get; set; }
+    public UnityEngine.Vector3 CameraAngles { get; set; }
 
     public Location()
     {
@@ -13,5 +14,6 @@ public class Location
         Altitude = 0;
         CameraCoordinates = new Vector2d(0, 0);
         CameraAltitude = 0;
+        CameraAngles = new UnityEngine.Vector3(0, 0, 0);
     }
 }
