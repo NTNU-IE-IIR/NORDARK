@@ -6,7 +6,7 @@ public class SpawnLocation
 {
   public static readonly Dictionary<string, Vector3> defaultSpawnMap = new(){
     {"Ålesund", new Vector3(402, 52, 41)},
-    {"Uppsala", new Vector3(63, 52, 37)}
+    {"Uppsala", new Vector3(12.5f, 52, 9.6f)}
   };
 }
 
