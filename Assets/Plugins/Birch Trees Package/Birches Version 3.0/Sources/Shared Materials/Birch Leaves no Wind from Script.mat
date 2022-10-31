@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Birch Leaves no Wind from Script
+  m_Shader: {fileID: 4800000, guid: 6ae32366f15a64fc19f245f040af8f21, type: 3}
+  m_ShaderKeywords: GEOM_TYPE_LEAF GEOM_TYPE_MESH _ALPHAPREMULTIPLY_ON _EMISSION
+    _NORMALMAP _SPECULARHIGHLIGHTS_OFF
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpSpecAOMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpSpecAOMapArray:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpSpecMap:
+        m_Texture: {fileID: 2800000, guid: 7115078643a464249a1af11da27e308b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMapX:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 9b7b070c4b21e451abbfd41b3e991ae8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTexArray:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShadowMap:
+        m_Texture: {fileID: 2800000, guid: 101d3ce73bc99ab409c50a4427a7e973, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TranslucencyMap:
+        m_Texture: {fileID: 2800000, guid: 3da47e8d364e94e0ebb13a8a683ffe3c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _AmbientTranslucency: 3
+    - _AnimateNormal: 1
+    - _BackFaceSmoothness: 0.5
+    - _BackLight: -1
+    - _BranchWind: 0
+    - _BumpScale: 1
+    - _ColorContrast: 1
+    - _ColorMultiplier: 10
+    - _Culling: 0
+    - _Cutoff: 0.2
+    - _DebugBending: 2
+    - _DebugMode: 2
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 10
+    - _EdgeFlutterInfluence: 0
+    - _EnableAdvancedEdgeBending: 1
+    - _EnableLeafTurbulence: 1
+    - _EnableShadowMap: 1
+    - _EnableTransFade: 0
+    - _FadeOutWind: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _IsBark: 0
+    - _LODTerrain: 0
+    - _LeafTumbling: 0
+    - _LeafTurbulence: 0.08
+    - _MainWind: 0
+    - _Metallic: 0
+    - _Mode: 3
+    - _NormalLerp: 0.4
+    - _OcclusionStrength: 0.6
+    - _Parallax: 0.02
+    - _ShadowCulling: 0
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Tangents: 0
+    - _TimeOffset: 2
+    - _TranslucencyStrength: 0.6
+    - _TumbleFrequency: 0.6
+    - _TumbleStrength: 0.02
+    - _UVSec: 0
+    - _UseArrays: 0
+    - _UseDetails: 0
+    - _ViewDependency: 0.8
+    - _ZWrite: 0
+    m_Colors:
+    - _AdvancedEdgeBending: {r: 0.4, g: 0.87, b: 0, a: 0}
+    - _BaseWindMultipliers: {r: 1, g: 1, b: 1, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _HueVariation: {r: 0.45347512, g: 0.49264705, b: 0.43468857, a: 0.3137255}

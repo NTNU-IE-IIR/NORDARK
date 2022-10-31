@@ -1,0 +1,2 @@
+﻿
+The "Birch Trees Version 3.0 URP 7.unitypackage" contains tweaked shaders and prefabs for Unity 2019.4 and URP 7.5.3.

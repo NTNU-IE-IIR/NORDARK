@@ -8,17 +8,25 @@ public class UIController : MonoBehaviour
     [SerializeField]
     private ToolBarTabsControl toolBarTabsControl;
     [SerializeField]
+    private VegetationControl vegetationControl;
+    [SerializeField]
+    private SunControl sunControl;
+    [SerializeField]
     private GameObject loadingPanel;
 
     void Awake()
     {
         Assert.IsNotNull(toolBarTabsControl);
+        Assert.IsNotNull(vegetationControl);
+        Assert.IsNotNull(sunControl);
         Assert.IsNotNull(loadingPanel);
     }
 
     public void SetUpUI()
     {
         toolBarTabsControl.ActivateDefaultTab();
+        vegetationControl.SetUpUI();
+        sunControl.SetUpUI();
         DisplayLoadingScreen(true);
     }
 

@@ -92,7 +92,7 @@ public class CamerasManager : MonoBehaviour
             Vector3 eulerAngles = camera.Camera.GetEulerAngles();
             feature.Properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
             feature.Properties.Add("parameters", camera.Camera.GetParametersSerialized());
-            feature.Coordinates = new Vector3d(camera.LatLong, camera.Altitude);
+            feature.Coordinates = new List<Vector3d> {new Vector3d(camera.LatLong, camera.Altitude)};
             features.Add(feature);
         }
         return features;

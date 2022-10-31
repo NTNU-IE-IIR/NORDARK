@@ -15,25 +15,31 @@ public class MapManager : MonoBehaviour
     [SerializeField]
     private CamerasManager camerasManager;
     [SerializeField]
-    private TreeManager treeManager;
+    private VegetationManager vegetationManager;
     [SerializeField]
     private SiteControl siteControl;
 
     private AbstractMap map;
     private bool isMapInitialized;
     private List<Location> locations;
+    private int numberOfTiles;
+    private int numberOfTilesInitialized;
 
     void Awake()
     {
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
-        Assert.IsNotNull(treeManager);
+        Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(siteControl);
 
         map = GetComponent<AbstractMap>();
         map.Terrain.AddToUnityLayer(UNITY_LAYER_MAP);
         map.OnTileFinished += TileFinished;
 
+        Mapbox.Unity.Map.RangeTileProviderOptions extentOptions = (Mapbox.Unity.Map.RangeTileProviderOptions) map.Options.extentOptions.GetTileProviderOptions();
+        numberOfTiles = 1 + 2*extentOptions.north + 2*extentOptions.west + 2*extentOptions.south + 2*extentOptions.east;
+
+        numberOfTilesInitialized = 0;
         isMapInitialized = false;
         locations = new List<Location>();
     }
@@ -53,6 +59,8 @@ public class MapManager : MonoBehaviour
 
     public void ChangeLocation(int locationIndex)
     {
+        numberOfTilesInitialized = 0;
+
         map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(locations[locationIndex].Coordinates.x, locations[locationIndex].Coordinates.y));
         map.UpdateMap();
 
@@ -75,7 +83,6 @@ public class MapManager : MonoBehaviour
         }
         
         lightsManager.UpdateLightsPositions();
-        treeManager.UpdateTreesPosition();
         camerasManager.UpdateCamerasPosition();
         camerasManager.SetMainCameraPosition(locations[locationIndex].CameraCoordinates, locations[locationIndex].CameraAltitude);
         camerasManager.SetMainCameraAngles(locations[locationIndex].CameraAngles);
@@ -97,7 +104,7 @@ public class MapManager : MonoBehaviour
             feature.Properties.Add("type", "location");
             feature.Properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraAltitude});
             feature.Properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
-            feature.Coordinates = new Vector3d(location.Coordinates, location.Altitude);
+            feature.Coordinates = new List<Vector3d> {new Vector3d(location.Coordinates, location.Altitude)};
             features.Add(feature);
         }
         return features;
@@ -143,7 +150,6 @@ public class MapManager : MonoBehaviour
         }
         lightsManager.UpdateLightsPositions();
         camerasManager.UpdateCamerasPosition();
-        treeManager.UpdateTreesPosition();
     }
 
     public float GetWorldRelativeScale()
@@ -161,6 +167,23 @@ public class MapManager : MonoBehaviour
         map.VectorData.GetFeatureSubLayerAtIndex(1).SetActive(display);
     }
 
+    public List<MeshRenderer> GetTiles()
+    {
+        List<MeshRenderer> tiles = new List<MeshRenderer>();
+        foreach (Transform child in transform) {
+            MeshRenderer meshRenderer = child.gameObject.GetComponent<MeshRenderer>();
+            if (meshRenderer != null) {
+                tiles.Add(meshRenderer);
+            }
+        }
+        return tiles;
+    }
+
+    public Vector2d GetCurrentLocationCoordinates()
+    {
+        return new Vector2d(map.CenterLatitudeLongitude);
+    }
+
     private float GetElevationFromCoordinates(Vector2d latLong)
     {
         return map.QueryElevationInMetersAt(new Mapbox.Utils.Vector2d(latLong.x, latLong.y));
@@ -170,6 +193,14 @@ public class MapManager : MonoBehaviour
     {
         if (!isMapInitialized) {
             isMapInitialized = true;
+        }
+
+        if (tile.MeshRenderer.gameObject.transform.parent == transform) {
+            numberOfTilesInitialized++;
+
+            if (numberOfTilesInitialized == numberOfTiles) {
+                vegetationManager.GenerateBiomes();
+            }
         }
     }
 }

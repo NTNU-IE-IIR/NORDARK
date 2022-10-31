@@ -1,0 +1,2 @@
+﻿
+The "Birch Trees Version 3.0 HDRP 7.unitypackage" contains tweaked shaders and prefabs for Unity 2019.3.0b8 and HDRP 7.1.2.

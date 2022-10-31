@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!226 &22600000
+BillboardAsset:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Birch D_BillboardAsset HDRP
+  serializedVersion: 2
+  width: 6.5107255
+  bottom: -0.25816536
+  height: 6.5107255
+  imageTexCoords:
+  - {x: 0, y: 0, z: 0.25, w: 0.5}
+  vertices:
+  - {x: 0.448, y: 0}
+  - {x: 0, y: 0.308}
+  - {x: 0.092, y: 0.823}
+  - {x: 0.552, y: 0}
+  - {x: 1, y: 0.308}
+  - {x: 0.908, y: 0.823}
+  indices: 000003000400000004000100010004000500010005000200
+  material: {fileID: 2100000, guid: 9b61ad295f8dd6a41a9b3e54cb1a2622, type: 2}

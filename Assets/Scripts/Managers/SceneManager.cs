@@ -16,7 +16,7 @@ public class SceneManager : MonoBehaviour
     [SerializeField]
     private MapManager mapManager;
     [SerializeField]
-    private TreeManager treeManager;
+    private VegetationManager vegetationManager;
     [SerializeField]
     private DialogControl dialogControl;
     private string currentSave;
@@ -26,7 +26,7 @@ public class SceneManager : MonoBehaviour
         Assert.IsNotNull(lightsManager);
         Assert.IsNotNull(camerasManager);
         Assert.IsNotNull(mapManager);
-        Assert.IsNotNull(treeManager);
+        Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(dialogControl);
 
         currentSave = "";
@@ -91,8 +91,8 @@ public class SceneManager : MonoBehaviour
     {
         lightsManager.ClearLights();
         camerasManager.ClearCameras();
-        treeManager.ClearTrees();
         mapManager.ClearLocation();
+        vegetationManager.ClearBiomeAreas();
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             if (feature.Properties.ContainsKey("type")) {
@@ -100,10 +100,10 @@ public class SceneManager : MonoBehaviour
                     AddLocation(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "camera")) {
                     AddCamera(feature);
-                } else if (string.Equals(feature.Properties["type"] as string, "tree")) {
-                    AddTree(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "light")) {
                     AddLight(feature);
+                } else if (string.Equals(feature.Properties["type"] as string, "biomeArea")) {
+                    AddBiomeArea(feature);
                 }
             }
         }
@@ -115,7 +115,8 @@ public class SceneManager : MonoBehaviour
         List<Feature> features = lightsManager.GetFeatures();
         features.AddRange(camerasManager.GetFeatures());
         features.AddRange(mapManager.GetFeatures());
-        features.AddRange(treeManager.GetFeatures());
+        //features.AddRange(treeManager.GetFeatures());
+        features.AddRange(vegetationManager.GetFeatures());
         SaveToGeojson(currentSave, features);
 
         dialogControl.CreateInfoDialog("Scene saved.");
@@ -179,18 +180,6 @@ public class SceneManager : MonoBehaviour
         camerasManager.CreateCamera(new CameraNode(name, latLong, altitude), eulerAngles, cameraParameters);
     }
 
-    private void AddTree(GeoJSON.Net.Feature.Feature feature)
-    {
-        GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-        Vector2d latLong = new Vector2d(point.Coordinates.Latitude, point.Coordinates.Longitude);
-        double altitude = 0;
-        if (point.Coordinates.Altitude != null) {
-            altitude = (double) point.Coordinates.Altitude;
-        }
-
-        treeManager.CreateTree(new TreeNode(latLong, altitude));
-    }
-
     private void AddLight(GeoJSON.Net.Feature.Feature feature)
     {
         GeoJSON.Net.Geometry.Point point = null;
@@ -237,14 +226,47 @@ public class SceneManager : MonoBehaviour
         }
     }
 
+    private void AddBiomeArea(GeoJSON.Net.Feature.Feature feature)
+    {
+        if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Polygon")) {
+            GeoJSON.Net.Geometry.Polygon polygon = feature.Geometry as GeoJSON.Net.Geometry.Polygon;
+
+            BiomeArea biomeArea = new BiomeArea();
+
+            if (feature.Properties.ContainsKey("biome")) {
+                biomeArea.Biome = feature.Properties["biome"] as string;
+            }
+            if (feature.Properties.ContainsKey("name")) {
+                biomeArea.Name = feature.Properties["name"] as string;
+            }
+
+            // In a GeoJSON polygon, the first and last points are be same
+            for (int i=0; i<polygon.Coordinates[0].Coordinates.Count-1; i++) {
+                biomeArea.Coordinates.Add(new Vector2d(polygon.Coordinates[0].Coordinates[i].Latitude, polygon.Coordinates[0].Coordinates[i].Longitude));
+            }
+
+            vegetationManager.AddBiomeArea(biomeArea);
+        }
+    }
+
     private void SaveToGeojson(string filename, List<Feature> features)
     {
         GeoJSON.Net.Feature.FeatureCollection featureCollection = new GeoJSON.Net.Feature.FeatureCollection();
 
         for (int i = 0; i < features.Count; i++) {
-            GeoJSON.Net.Geometry.Point point = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(features[i].Coordinates.x, features[i].Coordinates.y, features[i].Coordinates.altitude));
+            GeoJSON.Net.Geometry.IGeometryObject geometry;
+            
+            if (features[i].Coordinates.Count > 1) {
+                List<List<List<double>>> coordinates = new List<List<List<double>>> {new List<List<double>>()};
+                foreach(Vector3d coordinate in features[i].Coordinates) {
+                    coordinates[0].Add(new List<double>{coordinate.x, coordinate.y, coordinate.altitude});
+                }
+                geometry = new GeoJSON.Net.Geometry.Polygon(coordinates);
+            } else {
+                geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(features[i].Coordinates[0].x, features[i].Coordinates[0].y, features[i].Coordinates[0].altitude));
+            }
 
-            GeoJSON.Net.Feature.Feature feature = new GeoJSON.Net.Feature.Feature(point, features[i].Properties, i.ToString());
+            GeoJSON.Net.Feature.Feature feature = new GeoJSON.Net.Feature.Feature(geometry, features[i].Properties, i.ToString());
             featureCollection.Features.Add(feature);
         }
 
