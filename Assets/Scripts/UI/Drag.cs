@@ -1,13 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 
 public class Drag : MonoBehaviour
 {
-    [SerializeField]
-    private Canvas canvas;
+    [SerializeField] private Canvas canvas;
 
     void Awake()
     {

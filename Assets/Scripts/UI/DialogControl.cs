@@ -1,12 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class DialogControl : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject dialogWindow;
+    [SerializeField] private GameObject dialogWindow;
 
     void Awake()
     {

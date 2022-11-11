@@ -8,6 +8,13 @@ public class Vector3d
     public double y { get; set; }
     public double altitude { get; set; }
     
+    public Vector3d()
+    {
+        this.x = 0;
+        this.y = 0;
+        this.altitude = 0;
+    }
+
     public Vector3d(double x, double y, double altitude)
     {
         this.x = x;
@@ -15,24 +22,15 @@ public class Vector3d
         this.altitude = altitude;
     }
 
-    public Vector3d(Vector2d latLong)
-    {
-        this.x = latLong.x;
-        this.y = latLong.y;
-        this.altitude = 0;
-    }
-
-    public Vector3d(Mapbox.Utils.Vector2d latLong)
-    {
-        this.x = latLong.x;
-        this.y = latLong.y;
-        this.altitude = 0;
-    }
-
-    public Vector3d(Vector2d latLong, double altitude)
+    public Vector3d(Mapbox.Utils.Vector2d latLong, double altitude)
     {
         this.x = latLong.x;
         this.y = latLong.y;
         this.altitude = altitude;
+    }
+
+    override public string ToString()
+    {
+        return "{x:" + x.ToString() + "; y:" + y.ToString() + "; altitude:" + altitude.ToString() + "}";
     }
 }

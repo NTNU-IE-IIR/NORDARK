@@ -3,10 +3,8 @@ using UnityEngine.Assertions;
 
 public class LightComputationManager : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject fullscreenPass;
-    [SerializeField]
-    private GameObject legend;
+    [SerializeField] private GameObject fullscreenPass;
+    [SerializeField] private GameObject legend;
 
     void Awake()
     {

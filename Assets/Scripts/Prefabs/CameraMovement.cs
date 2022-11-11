@@ -1,24 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    [SerializeField]
-    private float lookSpeedH = 5f;
-
-    [SerializeField]
-    private float lookSpeedV = 5f;
-
-    [SerializeField]
-    private float zoomSpeed = 10f;
-
-    [SerializeField]
-    private float dragSpeed = 5f;
-
-    [SerializeField]
-    private float dragSpeedY = 5f;
-
+    [SerializeField] private float lookSpeedH = 5f;
+    [SerializeField] private float lookSpeedV = 5f;
+    [SerializeField] private float zoomSpeed = 10f;
+    [SerializeField] private float dragSpeed = 5f;
+    [SerializeField] private float dragSpeedY = 5f;
     private float yaw;
     private float pitch;
 

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,29 +7,18 @@ using UnityEngine.EventSystems;
 
 public class LightControl : MonoBehaviour
 {
-    [SerializeField]
-    private LightsManager lightsManager;
-    [SerializeField]
-    private IESManager iesManager;
-    [SerializeField]
-    private TMP_Dropdown lightType;
-    [SerializeField]
-    private Slider rotation;
-    [SerializeField]
-    private TMP_Text rotationValue;
-    [SerializeField]
-    private TMP_Dropdown lightSource;
-    [SerializeField]
-    private TMP_Text lightObjectName;
-    [SerializeField]
-    private Button insert;
-    [SerializeField]
-    private Button move;
-    [SerializeField]
-    private Button delete;
-    [SerializeField]
-    private Toggle hightlight;
-
+    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private IESManager iesManager;
+    [SerializeField] private TMP_Dropdown lightType;
+    [SerializeField] private Slider rotation;
+    [SerializeField] private TMP_Text rotationValue;
+    [SerializeField] private TMP_Dropdown lightSource;
+    [SerializeField] private TMP_Text lightObjectName;
+    [SerializeField] private Button insert;
+    [SerializeField] private Button move;
+    [SerializeField] private Button delete;
+    [SerializeField] private Toggle hightlight;
+    [SerializeField] private Toggle display;
     private double t1;
     private double t2;
 
@@ -47,6 +35,7 @@ public class LightControl : MonoBehaviour
         Assert.IsNotNull(move);
         Assert.IsNotNull(delete);
         Assert.IsNotNull(hightlight);
+        Assert.IsNotNull(display);
     }
 
     void Start()
@@ -73,9 +62,8 @@ public class LightControl : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(null);
         });
 
-        hightlight.onValueChanged.AddListener(delegate {
-            lightsManager.HighlightLights(hightlight.isOn);
-        });
+        hightlight.onValueChanged.AddListener(lightsManager.HighlightLights);
+        display.onValueChanged.AddListener(lightsManager.ShowLights);
     }
 
     void Update()

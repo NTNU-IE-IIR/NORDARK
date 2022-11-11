@@ -7,30 +7,18 @@ using UnityEngine.EventSystems;
 
 public class VegetationControl : MonoBehaviour
 {
-    [SerializeField]
-    private VegetationManager vegetationManager;
-    [SerializeField]
-    private MapManager mapManager;
-    [SerializeField]
-    private Toggle displayVegetation;
-    [SerializeField]
-    private TMP_Dropdown biomeAreas;
-    [SerializeField]
-    private Button addBiomeArea;
-    [SerializeField]
-    private Button deleteBiomeArea;
-    [SerializeField]
-    private TMP_Dropdown biomes;
-    [SerializeField]
-    private Button addNode;
-    [SerializeField]
-    private Button deleteNode;
-    [SerializeField]
-    private Toggle displayNodes;
-    [SerializeField]
-    private GameObject selectionPin;
-    [SerializeField]
-    private Transform selectionPinContainer;
+    [SerializeField] private VegetationManager vegetationManager;
+    [SerializeField] private MapManager mapManager;
+    [SerializeField] private Toggle displayVegetation;
+    [SerializeField] private TMP_Dropdown biomeAreas;
+    [SerializeField] private Button addBiomeArea;
+    [SerializeField] private Button deleteBiomeArea;
+    [SerializeField] private TMP_Dropdown biomes;
+    [SerializeField] private Button addNode;
+    [SerializeField] private Button deleteNode;
+    [SerializeField] private Toggle displayNodes;
+    [SerializeField] private GameObject selectionPin;
+    [SerializeField] private Transform selectionPinContainer;
     private SelectionPin movingPin;
 
     void Awake()
@@ -65,11 +53,13 @@ public class VegetationControl : MonoBehaviour
 
     void Update()
     {
-        if (movingPin != null && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))) {
-            if (Input.GetMouseButtonDown(0)) {
+        if (movingPin != null && Input.GetMouseButtonDown(0)) {
+            bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+            if (!isOverUI) {
                 vegetationManager.AddNodeToCurrentBiomeArea(movingPin.gameObject.transform.position);
                 DisplayNodes();
             }
+            
             movingPin.gameObject.Destroy();
             movingPin = null;
         }

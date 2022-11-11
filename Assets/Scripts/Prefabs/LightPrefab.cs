@@ -1,11 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class LightPrefab : MonoBehaviour
 {
     private const float LIGHT_TEMPERATURE = 6500;
-
     bool isMoving;
     Vector3 baseScale;
     UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
@@ -39,7 +36,7 @@ public class LightPrefab : MonoBehaviour
     public void Create(LightNode lightNode, Transform parent, Vector3 eulerAngles, MapManager mapManager)
     {
         transform.parent = parent;
-        transform.position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(lightNode.LatLong, lightNode.Altitude, true);
+        transform.position = mapManager.GetUnityPositionFromCoordinates(lightNode.Coordinates, true);
         transform.localScale = baseScale * mapManager.GetWorldRelativeScale();
         transform.eulerAngles = eulerAngles;
         hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);

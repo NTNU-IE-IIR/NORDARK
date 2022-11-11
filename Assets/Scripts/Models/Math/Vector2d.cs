@@ -13,18 +13,10 @@ public class Vector2d
         this.y = y;
     }
 
-    public Vector2d(Mapbox.Utils.Vector2d vector)
+    public Vector2d(Vector3d vector)
     {
         this.x = vector.x;
         this.y = vector.y;
-    }
-
-    public Vector2d(List<double> list)
-    {
-        if (list.Count > 1) {
-            this.x = list[0];
-            this.y = list[1];
-        }
     }
 
     override public string ToString()

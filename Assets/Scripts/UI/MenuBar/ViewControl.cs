@@ -1,25 +1,18 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class ViewControl : MonoBehaviour
+public class ViewControl : MenuBarItemControl
 {
-    [SerializeField]
-    private Button fullscreen;
-    [SerializeField]
-    private Button windowed;
-    private Rect rectangle;
+    [SerializeField] private Button fullscreen;
+    [SerializeField] private Button windowed;
 
     void Awake()
     {
         Assert.IsNotNull(fullscreen);
         Assert.IsNotNull(windowed);
 
-        Vector3[] corners = new Vector3[4];
-        GetComponent<RectTransform>().GetWorldCorners(corners);
-        rectangle = new Rect(corners[0], corners[2]-corners[0]);
+        base.SetUp();
     }
     
     void Start()
@@ -38,10 +31,6 @@ public class ViewControl : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) {
-            if (!rectangle.Contains(Input.mousePosition)) {
-                gameObject.SetActive(false);
-            }
-        }
+        base.DeactivateIfCursorOutside();
     }
 }

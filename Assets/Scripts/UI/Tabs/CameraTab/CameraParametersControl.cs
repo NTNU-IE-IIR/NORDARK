@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -7,26 +5,16 @@ using UnityEngine.Assertions;
 
 public class CameraParametersControl : MonoBehaviour
 {
-    [SerializeField]
-    private CamerasManager camerasManager;
-    [SerializeField]
-    private TMP_InputField sensorX;
-    [SerializeField]
-    private TMP_InputField sensorY;
-    [SerializeField]
-    private TMP_InputField ISO;
-    [SerializeField]
-    private TMP_InputField shutterSpeed;
-    [SerializeField]
-    private TMP_InputField focalLength;
-    [SerializeField]
-    private Slider apertureSlider;
-    [SerializeField]
-    private TMP_InputField apertureInput;
-    [SerializeField]
-    private TMP_InputField shiftX;
-    [SerializeField]
-    private TMP_InputField shiftY;
+    [SerializeField] private CamerasManager camerasManager;
+    [SerializeField] private TMP_InputField sensorX;
+    [SerializeField] private TMP_InputField sensorY;
+    [SerializeField] private TMP_InputField ISO;
+    [SerializeField] private TMP_InputField shutterSpeed;
+    [SerializeField] private TMP_InputField focalLength;
+    [SerializeField] private Slider apertureSlider;
+    [SerializeField] private TMP_InputField apertureInput;
+    [SerializeField] private TMP_InputField shiftX;
+    [SerializeField] private TMP_InputField shiftY;
 
     void Awake()
     {

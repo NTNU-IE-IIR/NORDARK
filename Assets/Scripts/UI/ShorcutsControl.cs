@@ -1,15 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Assertions;
 
 public class ShorcutsControl : MonoBehaviour
 {
-    [SerializeField]
-    private SceneManager sceneManager;
-    [SerializeField]
-    private LightsManager lightsManager;
+    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private LightsManager lightsManager;
 
     void Awake()
     {

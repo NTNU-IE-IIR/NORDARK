@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -7,12 +5,9 @@ using UnityEngine.Assertions;
 
 public class Dialog : MonoBehaviour
 {
-    [SerializeField]
-    private Button close;
-    [SerializeField]
-    private Button OK;
-    [SerializeField]
-    private TMP_Text text;
+    [SerializeField] private Button close;
+    [SerializeField] private Button OK;
+    [SerializeField] private TMP_Text text;
 
     void Awake()
     {

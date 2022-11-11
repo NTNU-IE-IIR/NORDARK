@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -10,7 +8,7 @@ public class UIController : MonoBehaviour
     [SerializeField]
     private VegetationControl vegetationControl;
     [SerializeField]
-    private SunControl sunControl;
+    private SkyControl skyControl;
     [SerializeField]
     private GameObject loadingPanel;
 
@@ -18,7 +16,7 @@ public class UIController : MonoBehaviour
     {
         Assert.IsNotNull(toolBarTabsControl);
         Assert.IsNotNull(vegetationControl);
-        Assert.IsNotNull(sunControl);
+        Assert.IsNotNull(skyControl);
         Assert.IsNotNull(loadingPanel);
     }
 
@@ -26,7 +24,7 @@ public class UIController : MonoBehaviour
     {
         toolBarTabsControl.ActivateDefaultTab();
         vegetationControl.SetUpUI();
-        sunControl.SetUpUI();
+        skyControl.SetUpUI();
         DisplayLoadingScreen(true);
     }
 

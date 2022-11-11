@@ -1,15 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 public class CameraNode: Node
 {
     public CameraPrefab Camera { get; set; }
 
-    public CameraNode(string name, Vector2d latLong, double altitude)
+    public CameraNode(string name, Vector3d coordinates)
     {
         Name = name;
-        LatLong = latLong;
-        Altitude = altitude;
+        Coordinates = coordinates;
     }
 }

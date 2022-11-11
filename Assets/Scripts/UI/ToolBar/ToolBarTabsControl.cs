@@ -4,32 +4,19 @@ using UnityEngine.Assertions;
 
 public class ToolBarTabsControl : MonoBehaviour
 {
-    [SerializeField]
-    private LightsManager lightsManager;
-    [SerializeField]
-    private CamerasManager camerasManager;
-    [SerializeField]
-    private StreetViewManager streetViewManager;
-    [SerializeField]
-    private Button sceneButton;
-    [SerializeField]
-    private Button lightButton;
-    [SerializeField]
-    private Button cameraButton;
-    [SerializeField]
-    private Button streetViewButton;
-    [SerializeField]
-    private Button lightComputationButton;
-    [SerializeField]
-    private GameObject sceneTab;
-    [SerializeField]
-    private GameObject lightTab;
-    [SerializeField]
-    private GameObject cameraTab;
-    [SerializeField]
-    private GameObject streetViewTab;
-    [SerializeField]
-    private GameObject lightComputationTab;
+    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private CamerasManager camerasManager;
+    [SerializeField] private StreetViewManager streetViewManager;
+    [SerializeField] private Button sceneButton;
+    [SerializeField] private Button lightButton;
+    [SerializeField] private Button cameraButton;
+    [SerializeField] private Button streetViewButton;
+    [SerializeField] private Button lightComputationButton;
+    [SerializeField] private GameObject sceneTab;
+    [SerializeField] private GameObject lightTab;
+    [SerializeField] private GameObject cameraTab;
+    [SerializeField] private GameObject streetViewTab;
+    [SerializeField] private GameObject lightComputationTab;
 
     void Awake()
     {

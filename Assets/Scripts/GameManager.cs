@@ -1,16 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField]
-    private SceneManager sceneManager;
-    [SerializeField]
-    private MapManager mapManager;
-    [SerializeField]
-    private UIController uIController;
+    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private MapManager mapManager;
+    [SerializeField] private UIController uIController;
 
     void Awake()
     {

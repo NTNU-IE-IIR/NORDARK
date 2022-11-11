@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,18 +7,12 @@ using UnityEngine.EventSystems;
 
 public class CameraControl : MonoBehaviour
 {
-    [SerializeField]
-    private CamerasManager camerasManager;
-    [SerializeField]
-    private TMP_Dropdown cameras;
-    [SerializeField]
-    private Button addCamera;
-    [SerializeField]
-    private Button deleteCamera;
-    [SerializeField]
-    private Button updateCamera;
-    [SerializeField]
-    private Button moveToCamera;
+    [SerializeField] private CamerasManager camerasManager;
+    [SerializeField] private TMP_Dropdown cameras;
+    [SerializeField] private Button addCamera;
+    [SerializeField] private Button deleteCamera;
+    [SerializeField] private Button updateCamera;
+    [SerializeField] private Button moveToCamera;
 
     void Awake()
     {

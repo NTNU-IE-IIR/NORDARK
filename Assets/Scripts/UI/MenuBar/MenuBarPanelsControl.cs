@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
@@ -16,27 +14,16 @@ public class MenuBarPanelsControl : MonoBehaviour
         Help
     }
 
-    [SerializeField]
-    private Button file;
-    [SerializeField]
-    private Button insert;
-    [SerializeField]
-    private Button upload;
-    [SerializeField]
-    private Button view;
-    [SerializeField]
-    private Button help;
-    [SerializeField]
-    private GameObject filePanel;
-    [SerializeField]
-    private GameObject insertPanel;
-    [SerializeField]
-    private GameObject uploadPanel;
-    [SerializeField]
-    private GameObject viewPanel;
-    [SerializeField]
-    private GameObject helpPanel;
-
+    [SerializeField] private Button file;
+    [SerializeField] private Button insert;
+    [SerializeField] private Button upload;
+    [SerializeField] private Button view;
+    [SerializeField] private Button help;
+    [SerializeField] private GameObject filePanel;
+    [SerializeField] private GameObject insertPanel;
+    [SerializeField] private GameObject uploadPanel;
+    [SerializeField] private GameObject viewPanel;
+    [SerializeField] private GameObject helpPanel;
 
     void Awake()
     {

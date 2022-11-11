@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
@@ -7,10 +5,8 @@ using UnityEngine.EventSystems;
 
 public class IESControl : MonoBehaviour
 {
-    [SerializeField]
-    private IESManager iesManager;
-    [SerializeField]
-    private Button upload;
+    [SerializeField] private IESManager iesManager;
+    [SerializeField] private Button upload;
 
     void Awake()
     {

@@ -1,8 +1,5 @@
-using UnityEngine;
-
 public class Node
 {
-    public Vector2d LatLong { get; set; }
-    public double Altitude { get; set; }
+    public Vector3d Coordinates { get; set; }
     public string Name { get; set; }
 }

@@ -4,10 +4,8 @@ using UnityEngine.Assertions;
 
 public class LightComputationControl : MonoBehaviour
 {
-    [SerializeField]
-    private LightComputationManager lightComputationManager;
-    [SerializeField]
-    private Toggle lightResults;
+    [SerializeField] private LightComputationManager lightComputationManager;
+    [SerializeField] private Toggle lightResults;
 
     void Awake()
     {
@@ -17,8 +15,6 @@ public class LightComputationControl : MonoBehaviour
 
     void Start()
     {
-        lightResults.onValueChanged.AddListener(delegate {
-            lightComputationManager.DisplayLightResults(lightResults.isOn);
-        });
+        lightResults.onValueChanged.AddListener(lightComputationManager.DisplayLightResults);
     }
 }

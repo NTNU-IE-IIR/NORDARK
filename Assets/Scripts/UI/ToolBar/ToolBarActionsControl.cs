@@ -1,17 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
 public class ToolBarActionsControl : MonoBehaviour
 {
-    [SerializeField]
-    private SceneManager sceneManager;
-    [SerializeField]
-    private Button save;
-    [SerializeField]
-    private Button saveAs;
+    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private Button save;
+    [SerializeField] private Button saveAs;
 
     void Awake()
     {
@@ -22,11 +17,7 @@ public class ToolBarActionsControl : MonoBehaviour
 
     void Start()
     {
-        save.onClick.AddListener(delegate {
-            sceneManager.Save();
-        });
-        saveAs.onClick.AddListener(delegate {
-            sceneManager.SaveAs();
-        });
+        save.onClick.AddListener(sceneManager.Save);
+        saveAs.onClick.AddListener(sceneManager.SaveAs);
     }
 }

@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class LightNode: Node
 {
     public LightPrefab Light { get; set; }
@@ -7,15 +5,13 @@ public class LightNode: Node
 
     public LightNode()
     {
-        LatLong = new Vector2d(0, 0);
-        Altitude = 0;
+        Coordinates = new Vector3d();
         Name = "";
         PrefabName = "";
     }
 
-    public LightNode(Vector2d latLong, double altitude)
+    public LightNode(Vector3d coordinates)
     {
-        LatLong = latLong;
-        Altitude = altitude;
+        Coordinates = coordinates;
     }
 }
