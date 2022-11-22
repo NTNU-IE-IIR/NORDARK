@@ -6,24 +6,37 @@ using UnityEngine.UI;
 public class WeatherControl : MonoBehaviour
 {
     [SerializeField] private WeatherManager weatherManager;
-    [SerializeField] private TMP_Dropdown weatherInput;
-    [SerializeField] private Toggle toggleSnow;
+    [SerializeField] private TMP_Dropdown precipitationInput;
+    [SerializeField] private Slider precipitationValue;
+    [SerializeField] private Slider fogValue;
+    [SerializeField] private TMP_Dropdown cloudsValue;
 
     void Awake()
     {
         Assert.IsNotNull(weatherManager);
-        Assert.IsNotNull(weatherInput);
-        Assert.IsNotNull(toggleSnow);
+        Assert.IsNotNull(precipitationInput);
+        Assert.IsNotNull(precipitationValue);
+        Assert.IsNotNull(fogValue);
+        Assert.IsNotNull(cloudsValue);
+
+        cloudsValue.AddOptions(weatherManager.GetCloudsTypes());
     }
 
     void Start()
     {
-        weatherInput.onValueChanged.AddListener(change => ChangeWeather());
-        toggleSnow.onValueChanged.AddListener(weatherManager.SetSnow);
+        precipitationInput.onValueChanged.AddListener(change => ChangeWeather());
+        precipitationValue.onValueChanged.AddListener(change => ChangeWeather());
+        fogValue.onValueChanged.AddListener(change => ChangeWeather());
+        cloudsValue.onValueChanged.AddListener(change => ChangeWeather());
     }
 
     private void ChangeWeather()
     {
-        weatherManager.ChangeWeather((WeatherManager.Weather) weatherInput.value);
+        Weather weather = new Weather();
+        weather.Snow = precipitationInput.value == 1;
+        weather.Precipitation = precipitationValue.value;
+        weather.Fog = fogValue.value;
+        weather.Clouds = cloudsValue.options[cloudsValue.value].text;
+        weatherManager.ChangeWeather(weather);
     }
 }

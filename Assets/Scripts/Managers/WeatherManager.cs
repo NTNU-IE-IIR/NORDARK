@@ -1,87 +1,82 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Rendering;
 
 public class WeatherManager : MonoBehaviour
 {
-    public enum Weather
-    {
-        ClearSky,
-        PartlyCloudy,
-        Cloudy,
-        Foggy,
-        LightRain,
-        HeavyRain,
-        Snow
-    }
-
-    [SerializeField] Volume fogVolume;
-    [SerializeField] Volume sparseCloudVolume;
-    [SerializeField] Volume cloudyCloudVolume;
-    [SerializeField] Volume overcastCloudVolume;
-    [SerializeField] Volume stormyCloudVolume;
-    [SerializeField] GameObject lightRainParticles;
-    [SerializeField] GameObject heavyRainParticles;
-    [SerializeField] GameObject snowParticles;
-
+    private const int RAIN_MAX_PARTICULES = 10000;
+    private const int RAIN_MAX_RATE_OVER_TIME = 2000;
+    private const int SNOW_MAX_PARTICULES = 100000;
+    private const int SNOW_MAX_RATE_OVER_TIME = 2000;
+    [SerializeField] private Volume fogVolume;
+    [SerializeField] private ParticleSystem rainParticles;
+    [SerializeField] private ParticleSystem snowParticles;
+    [SerializeField] private Transform cloudsParent;
+    private Dictionary<string, Volume> clouds;
+    
     void Awake()
     {
         Assert.IsNotNull(fogVolume);
-        Assert.IsNotNull(sparseCloudVolume);
-        Assert.IsNotNull(cloudyCloudVolume);
-        Assert.IsNotNull(overcastCloudVolume);
-        Assert.IsNotNull(stormyCloudVolume);
-        Assert.IsNotNull(lightRainParticles);
-        Assert.IsNotNull(heavyRainParticles);
+        Assert.IsNotNull(rainParticles);
         Assert.IsNotNull(snowParticles);
+        Assert.IsNotNull(cloudsParent);
+
+        clouds = new Dictionary<string, Volume>();
+        foreach (Transform cloudVolume in cloudsParent) {
+            clouds.Add(cloudVolume.name, cloudVolume.GetComponent<Volume>());
+        }
     }
     
     void Start()
     {
-        ChangeWeather(Weather.ClearSky);
+        ChangeWeather(new Weather());
+    }
+
+    public List<string> GetCloudsTypes()
+    {
+        List<string> cloudsTypes = new List<string>{ "Clear" };
+        foreach (string cloudType in clouds.Keys) {
+            cloudsTypes.Add(cloudType);
+        }
+        return cloudsTypes;
     }
 
     public void ChangeWeather(Weather weather)
     {
-        fogVolume.weight = 0;
-        sparseCloudVolume.weight = 0;
-        cloudyCloudVolume.weight = 0;
-        overcastCloudVolume.weight = 0;
-        stormyCloudVolume.weight = 0;
-        lightRainParticles.SetActive(false);
-        heavyRainParticles.SetActive(false);
-        snowParticles.SetActive(false);
+        fogVolume.weight = weather.Fog;
 
-        switch (weather) {
-            case Weather.PartlyCloudy:
-                sparseCloudVolume.weight = 1;
-                break;
-            case Weather.Cloudy:
-                cloudyCloudVolume.weight = 1;
-                break;
-            case Weather.Foggy:
-                fogVolume.weight = 1;
-                overcastCloudVolume.weight = 1;
-                break;
-            case Weather.LightRain:
-                stormyCloudVolume.weight = 1;
-                lightRainParticles.SetActive(true);
-                break;
-            case Weather.HeavyRain:
-                overcastCloudVolume.weight = 1;
-                heavyRainParticles.SetActive(true);
-                break;
-            case Weather.Snow:
-                overcastCloudVolume.weight = 1;
-                snowParticles.SetActive(true);
-                break;
-            default:
-                break;
+        foreach (Volume cloudType in clouds.Values) {
+            cloudType.weight = 0;
         }
-    }
+        if (clouds.ContainsKey(weather.Clouds)) {
+            clouds[weather.Clouds].weight = 1;
+        }
 
-    public void SetSnow(bool snow)
-    {
-        Shader.SetGlobalFloat("_Snow_Opacity", snow? 1 : 0);
+        Shader.SetGlobalFloat("_Snow_Opacity", 0);
+        Shader.SetGlobalFloat("_Wetness", 0);
+        if (weather.Snow) {
+            Shader.SetGlobalFloat("_Snow_Opacity", weather.Precipitation);
+
+            rainParticles.gameObject.SetActive(false);
+            snowParticles.gameObject.SetActive(true);
+
+            ParticleSystem.MainModule mainParticule = snowParticles.main;
+            mainParticule.maxParticles = (int) Mathf.Lerp(0, SNOW_MAX_PARTICULES, weather.Precipitation);
+            
+            ParticleSystem.EmissionModule emissionParticule = snowParticles.emission;
+            emissionParticule.rateOverTime = (int) Mathf.Lerp(0, SNOW_MAX_RATE_OVER_TIME, weather.Precipitation);
+        } else {
+            Shader.SetGlobalFloat("_Wetness", weather.Precipitation);
+
+            rainParticles.gameObject.SetActive(true);
+            snowParticles.gameObject.SetActive(false);
+
+            ParticleSystem.MainModule mainParticule = rainParticles.main;
+            mainParticule.maxParticles = (int) Mathf.Lerp(0, RAIN_MAX_PARTICULES, weather.Precipitation);
+            
+            ParticleSystem.EmissionModule emissionParticule = rainParticles.emission;
+            emissionParticule.rateOverTime = (int) Mathf.Lerp(0, RAIN_MAX_RATE_OVER_TIME, weather.Precipitation);
+        }
     }
 }

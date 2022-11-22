@@ -104,11 +104,13 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
         }
 
         foreach(MeshRenderer tile in mapManager.GetTiles()) {
-            meshTerrain.MeshTerrainMeshSourceList.Add(new AwesomeTechnologies.MeshTerrains.MeshTerrainMeshSource() {
-                MeshRenderer = tile,
-                TerrainSourceID = AwesomeTechnologies.VegetationSystem.TerrainSourceID.TerrainSourceID1,
-                MaterialPropertyBlock = new MaterialPropertyBlock()
-            });
+            if(tile.gameObject.GetComponent<MeshFilter>() != null) {
+                meshTerrain.MeshTerrainMeshSourceList.Add(new AwesomeTechnologies.MeshTerrains.MeshTerrainMeshSource() {
+                    MeshRenderer = tile,
+                    TerrainSourceID = AwesomeTechnologies.VegetationSystem.TerrainSourceID.TerrainSourceID1,
+                    MaterialPropertyBlock = new MaterialPropertyBlock()
+                });
+            }
         }
         meshTerrain.GenerateMeshTerrain();
 

@@ -4,12 +4,14 @@ using UnityEngine.Assertions;
 
 public class SkyManager : MonoBehaviour
 {
+    private const float MOON_MAX_INTENSITY = 0.5f;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private Transform sun;
     [SerializeField] private Transform moon;
     private System.DateTime sceneDateTime;
     private List<Sampa.Timescale> timescales;
+    private UnityEngine.Rendering.HighDefinition.HDAdditionalLightData moonLight;
 
     void Awake()
     {
@@ -20,6 +22,7 @@ public class SkyManager : MonoBehaviour
 
         sceneDateTime = System.DateTime.Now;
         timescales = JsonUtility.FromJson<Sampa.Timescales>(Resources.Load<TextAsset>("Timescales").text).timescales;
+        moonLight = moon.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
     }
 
     public System.DateTime GetCurrentDateTime()
@@ -30,15 +33,15 @@ public class SkyManager : MonoBehaviour
     public void SetCurrentDateTime(System.DateTime newDateTime)
     {
         sceneDateTime = newDateTime;
-        SetSunAndMoonPosition();
+        UpdateSunAndMoon();
     }
 
     public void OnLocationChanged()
     {
-        SetSunAndMoonPosition();
+        UpdateSunAndMoon();
     }
 
-    private void SetSunAndMoonPosition()
+    private void UpdateSunAndMoon()
     {
         int i=0;
         while (i < timescales.Count-1 && sceneDateTime > timescales[i].dateTime) {
@@ -72,5 +75,7 @@ public class SkyManager : MonoBehaviour
         
         sun.localEulerAngles = new Vector3((float) sampa.spa.e, (float) sampa.spa.azimuth, 0);
         moon.localEulerAngles = new Vector3((float) sampa.mpa.e, (float) sampa.mpa.azimuth, 0);
+
+        moonLight.SetIntensity(Mathf.Lerp(0, MOON_MAX_INTENSITY, (float) MoonPhaseConsole.Moon.Calculate(sceneDateTime).Visibility/100));
     }
 }
