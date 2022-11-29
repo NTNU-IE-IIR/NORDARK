@@ -118,7 +118,6 @@ public class MapManager : MonoBehaviour
         foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
             objectsManager.OnLocationChanged();
         }
-        skyManager.OnLocationChanged();
     }
 
     public float GetWorldRelativeScale()

@@ -54,19 +54,18 @@ public class SkyControl : MonoBehaviour
 
     public void SetUpUI()
     {
-        System.DateTime sceneDateTime = skyManager.GetCurrentDateTime();
-        monthInput.value = sceneDateTime.Month-1;
-        yearInput.value = sceneDateTime.Year - STARTING_YEAR;
-        hourInput.value = sceneDateTime.Hour;
-        minuteInput.value = sceneDateTime.Minute;
-        UpdateDateDropdown(sceneDateTime.Day);
+        monthInput.value = skyManager.DateTime.Month-1;
+        yearInput.value = skyManager.DateTime.Year - STARTING_YEAR;
+        hourInput.value = skyManager.DateTime.Hour;
+        minuteInput.value = skyManager.DateTime.Minute;
+        UpdateDateDropdown(skyManager.DateTime.Day);
     }
 
     private void ChangeDateTime()
     {
         UpdateDateDropdown(dayInput.value+1);
         if (yearInput.value !=-1 && monthInput.value !=-1 && dayInput.value !=-1 && hourInput.value !=-1 && minuteInput.value !=-1) {
-            skyManager.SetCurrentDateTime(new System.DateTime(yearInput.value+STARTING_YEAR, monthInput.value+1, dayInput.value+1, hourInput.value, minuteInput.value, 0));
+            skyManager.DateTime = new System.DateTime(yearInput.value+STARTING_YEAR, monthInput.value+1, dayInput.value+1, hourInput.value, minuteInput.value, 0);
         }
     }
 

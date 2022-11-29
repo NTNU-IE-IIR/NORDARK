@@ -247,6 +247,18 @@ namespace Mapbox.Unity.MeshGeneration.Data
 				_heightTexture.LoadImage(data);
 				byte[] rgbData = _heightTexture.GetRawTextureData();
 
+
+/*
+				byte[] bytes2 = _heightTexture.EncodeToPNG();
+				var dirPath = Application.dataPath + "/SaveImages/";
+				if(!System.IO.Directory.Exists(dirPath)) {
+					System.IO.Directory.CreateDirectory(dirPath);
+				}
+				System.IO.File.WriteAllBytes(dirPath + "Elevation" + CanonicalTileId.X.ToString() + " " + CanonicalTileId.Y.ToString() + ".png", bytes2);
+*/
+
+
+
 				// Get rid of this temporary texture. We don't need to bloat memory.
 				_heightTexture.LoadImage(null);
 
@@ -302,6 +314,15 @@ namespace Mapbox.Unity.MeshGeneration.Data
 					_rasterData.Compress(false);
 				}
 
+/*
+				byte[] bytes2 = _rasterData.EncodeToPNG();
+				var dirPath = Application.dataPath + "/SaveImages/";
+				if(!System.IO.Directory.Exists(dirPath)) {
+					System.IO.Directory.CreateDirectory(dirPath);
+				}
+				System.IO.File.WriteAllBytes(dirPath + "Satellite" + CanonicalTileId.X.ToString() + " " + CanonicalTileId.Y.ToString() + ".png", bytes2);
+*/
+
 				MeshRenderer.sharedMaterial.mainTexture = _rasterData;
 
 				RasterDataState = TilePropertyState.Loaded;
@@ -313,6 +334,25 @@ namespace Mapbox.Unity.MeshGeneration.Data
 			if (VectorDataState != TilePropertyState.Unregistered)
 			{
 				VectorData = vectorTile;
+
+/*
+				try
+				{
+					var dirPath = Application.dataPath + "/SaveImages/";
+					if(!System.IO.Directory.Exists(dirPath)) {
+						System.IO.Directory.CreateDirectory(dirPath);
+					}
+					System.IO.StreamWriter writer = new System.IO.StreamWriter(dirPath + gameObject.name.Replace("/", String.Empty) + ".geojson", true);
+					writer.Write(vectorTile.GeoJson);
+				}
+				catch (System.Exception)
+				{
+					
+				}
+				*/
+				
+
+
 			}
 		}
 

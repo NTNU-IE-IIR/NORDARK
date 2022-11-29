@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
-using SFB;
 
 public class IESManager : MonoBehaviour
 {
@@ -36,7 +35,7 @@ public class IESManager : MonoBehaviour
 
     public void Upload()
     {
-        string[] paths = StandaloneFileBrowser.OpenFilePanel("Upload an IES file", "", "ies", true);
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Upload an IES file", "", "ies", true);
         List<string> addedFiles = new List<string>();
         List<string> notAddedFiles = new List<string>();
 

@@ -33,10 +33,10 @@ public class LightPrefab : MonoBehaviour
         }
     }
 
-    public void Create(LightNode lightNode, Transform parent, Vector3 eulerAngles, MapManager mapManager)
+    public void Create(LightPole lightPole, Transform parent, Vector3 eulerAngles, MapManager mapManager)
     {
         transform.parent = parent;
-        transform.position = mapManager.GetUnityPositionFromCoordinates(lightNode.Coordinates, true);
+        transform.position = mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true);
         transform.localScale = baseScale * mapManager.GetWorldRelativeScale();
         transform.eulerAngles = eulerAngles;
         hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);
@@ -45,6 +45,11 @@ public class LightPrefab : MonoBehaviour
     public void SetMoving(bool moving)
     {
         isMoving = moving;
+    }
+
+    public bool IsMoving()
+    {
+        return isMoving;
     }
 
     public void SetPosition(Vector3 position)

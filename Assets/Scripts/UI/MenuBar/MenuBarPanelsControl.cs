@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
@@ -5,123 +7,66 @@ using UnityEngine.EventSystems;
 
 public class MenuBarPanelsControl : MonoBehaviour
 {
-    enum Panel
-    {
-        File,
-        Insert,
-        Upload,
-        View,
-        Help
-    }
-
-    [SerializeField] private Button file;
-    [SerializeField] private Button insert;
-    [SerializeField] private Button upload;
-    [SerializeField] private Button view;
-    [SerializeField] private Button help;
-    [SerializeField] private GameObject filePanel;
-    [SerializeField] private GameObject insertPanel;
-    [SerializeField] private GameObject uploadPanel;
-    [SerializeField] private GameObject viewPanel;
-    [SerializeField] private GameObject helpPanel;
+    [SerializeField] private Transform bar;
+    [SerializeField] private Transform panelsParent;
+    private List<Button> buttons;
+    private List<GameObject> panels;
 
     void Awake()
     {
-        Assert.IsNotNull(file);
-        Assert.IsNotNull(insert);
-        Assert.IsNotNull(upload);
-        Assert.IsNotNull(view);
-        Assert.IsNotNull(help);
-        Assert.IsNotNull(filePanel);
-        Assert.IsNotNull(insertPanel);
-        Assert.IsNotNull(uploadPanel);
-        Assert.IsNotNull(viewPanel);
-        Assert.IsNotNull(helpPanel);
+        Assert.IsNotNull(bar);
+        Assert.IsNotNull(panelsParent);
+        
+        buttons = new List<Button>();
+        foreach (Transform child in bar) {
+            Button button = child.GetComponent<Button>();
+            Assert.IsNotNull(button);
+            buttons.Add(button);
+        }
+
+        panels = new List<GameObject>();
+        foreach (Transform panel in panelsParent) {
+            panels.Add(panel.gameObject);
+        }
+        Assert.IsTrue(buttons.Count == panels.Count);
     }
 
     void Start()
     {
-        file.onClick.AddListener(delegate { OpenPanel(Panel.File); });
-        insert.onClick.AddListener(delegate { OpenPanel(Panel.Insert); });
-        upload.onClick.AddListener(delegate { OpenPanel(Panel.Upload); });
-        view.onClick.AddListener(delegate { OpenPanel(Panel.View); });
-        help.onClick.AddListener(delegate { OpenPanel(Panel.Help); });
-    }
+        for (int i=0; i<buttons.Count; ++i) {
+            Button button = buttons[i];
+            GameObject panel = panels[i];
 
-    public void OnFilePanelHovered()
-    {
-        if (OnePanelOpened()) {
-            OpenPanel(Panel.File);
+            button.onClick.AddListener(() => OpenPanel(button, panel));
+
+            EventTrigger trigger = button.gameObject.AddComponent<EventTrigger>();
+            EventTrigger.Entry entry = new EventTrigger.Entry();
+            entry.eventID = EventTriggerType.PointerEnter;
+            entry.callback.AddListener((data) => { 
+                if (OnePanelOpened()) {
+                    OpenPanel(button, panel);
+                }
+            });
+            trigger.triggers.Add(entry);
         }
     }
 
-    public void OnInsertPanelHovered()
-    {
-        if (OnePanelOpened()) {
-            OpenPanel(Panel.Insert);
-        }
-    }
-
-    public void OnUploadPanelHovered()
-    {
-        if (OnePanelOpened()) {
-            OpenPanel(Panel.Upload);
-        }
-    }
-
-    public void OnViewPanelHovered()
-    {
-        if (OnePanelOpened()) {
-            OpenPanel(Panel.View);
-        }
-    }
-
-    public void OnHelpPanelHovered()
-    {
-        if (OnePanelOpened()) {
-            OpenPanel(Panel.Help);
-        }
-    }
-
-    private void OpenPanel(Panel panel)
-    {
+    private void OpenPanel(Button button, GameObject panel) {
         ClearPanels();
-        switch (panel) {
-            case Panel.File:
-                filePanel.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(file.gameObject);
-                break;
-            case Panel.Insert:
-                insertPanel.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(insert.gameObject);
-                break;
-            case Panel.Upload:
-                uploadPanel.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(upload.gameObject);
-                break;
-            case Panel.View:
-                viewPanel.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(view.gameObject);
-                break;
-            case Panel.Help:
-                helpPanel.SetActive(true);
-                EventSystem.current.SetSelectedGameObject(help.gameObject);
-                break;
-        }
+        panel.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(button.gameObject);
     }
 
     private bool OnePanelOpened()
     {
-        return filePanel.activeSelf || insertPanel.activeSelf || uploadPanel.activeSelf || viewPanel.activeSelf || helpPanel.activeSelf;
+        return panels.Any(panel => panel.activeSelf);
     }
 
     private void ClearPanels()
     {
-        filePanel.SetActive(false);
-        insertPanel.SetActive(false);
-        uploadPanel.SetActive(false);
-        viewPanel.SetActive(false);
-        helpPanel.SetActive(false);
+        foreach (GameObject panel in panels) {
+            panel.SetActive(false);
+        }
         EventSystem.current.SetSelectedGameObject(null);
     }
 }

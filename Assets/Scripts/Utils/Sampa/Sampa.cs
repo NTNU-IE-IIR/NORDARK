@@ -39,8 +39,30 @@ namespace Sampa {
         public Mpa mpa;     // Moon
         public Spa spa;     // Sun
 
-        public void Calculate()
+        public void Calculate(System.DateTime dateTime, Vector3d coordinates)
         {
+            int i=0;
+            while (i < Timescales.timescales.Count-1 && dateTime > Timescales.timescales[i].DateTime) {
+                i++;
+            }
+            Timescale timescale = Timescales.timescales[i];
+
+            year = dateTime.Year;
+            month = dateTime.Month;
+            day = dateTime.Day;
+            hour = dateTime.Hour;
+            minute = dateTime.Minute;
+            second = dateTime.Second;
+            timezone = System.TimeZoneInfo.Local.BaseUtcOffset.Hours;
+            delta_ut1 = timescale.Delta_ut1;
+            delta_t = timescale.Delta_t;
+            longitude = coordinates.y;
+            latitude = coordinates.x;
+            elevation = coordinates.altitude;
+            pressure = 1000;
+            temperature = 11;
+            atmos_refract = 0.5667;
+
             spa = new Spa();
             mpa = new Mpa();
 

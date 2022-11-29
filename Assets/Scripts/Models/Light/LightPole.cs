@@ -1,16 +1,18 @@
-public class LightNode: Node
+public class LightPole
 {
+    public Vector3d Coordinates { get; set; }
+    public string Name { get; set; }
     public LightPrefab Light { get; set; }
     public string PrefabName { get; set; }
 
-    public LightNode()
+    public LightPole()
     {
         Coordinates = new Vector3d();
         Name = "";
         PrefabName = "";
     }
 
-    public LightNode(Vector3d coordinates)
+    public LightPole(Vector3d coordinates): base()
     {
         Coordinates = coordinates;
     }

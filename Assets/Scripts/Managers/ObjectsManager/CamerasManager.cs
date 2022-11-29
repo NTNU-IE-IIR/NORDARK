@@ -40,7 +40,8 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         CreateCamera(
             cameraNode,
             new Vector3(eulerAngles[0], eulerAngles[1], eulerAngles[2]),
-            feature.Properties["parameters"] as CameraParameters);
+            feature.Properties["parameters"] as CameraParameters
+        );
     }
 
     public void Clear()

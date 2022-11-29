@@ -30,10 +30,10 @@ public class ShorcutsControl : MonoBehaviour
             lightsManager.MoveLight();
         }
         if (Input.GetKeyDown(KeyCode.I)) {
-            lightsManager.InsertLight();
+            lightsManager.Create();
         }
         if (Input.GetKeyDown(KeyCode.Insert)) {
-            lightsManager.InsertLight();
+            lightsManager.Create();
         }
     }
 }

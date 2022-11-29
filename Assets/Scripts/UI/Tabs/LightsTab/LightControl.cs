@@ -55,7 +55,7 @@ public class LightControl : MonoBehaviour
             lightsManager.ChangeLightSource(lightSource.options[lightSource.value].text);
         });
 
-        insert.onClick.AddListener(lightsManager.InsertLight);
+        insert.onClick.AddListener(lightsManager.Create);
         move.onClick.AddListener(lightsManager.MoveLight);
         delete.onClick.AddListener(delegate {
             lightsManager.DeleteLight();
@@ -86,13 +86,13 @@ public class LightControl : MonoBehaviour
         rotationValue.text = "";
     }
 
-    public void LightSelected(LightNode selectedLightNode)
+    public void LightSelected(LightPole selectedLightPole)
     {
-        float rotationSelected = System.Math.Max(0, selectedLightNode.Light.transform.eulerAngles.y);
-        int lightSourceIndex = lightSource.options.FindIndex((i) => { return i.text.Equals(selectedLightNode.Light.GetIESLight().Name); });
-        int lightTypeIndex = lightType.options.FindIndex((i) => { return i.text.Equals(selectedLightNode.PrefabName); });
+        float rotationSelected = System.Math.Max(0, selectedLightPole.Light.transform.eulerAngles.y);
+        int lightSourceIndex = lightSource.options.FindIndex((i) => { return i.text.Equals(selectedLightPole.Light.GetIESLight().Name); });
+        int lightTypeIndex = lightType.options.FindIndex((i) => { return i.text.Equals(selectedLightPole.PrefabName); });
 
-        lightObjectName.text = "Selected: " + selectedLightNode.Name;
+        lightObjectName.text = "Selected: " + selectedLightPole.Name;
         rotation.value = rotationSelected;
         rotationValue.text = rotationSelected.ToString();
         

@@ -1,134 +1,73 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
 public class ToolBarTabsControl : MonoBehaviour
 {
-    [SerializeField] private LightsManager lightsManager;
-    [SerializeField] private CamerasManager camerasManager;
-    [SerializeField] private StreetViewManager streetViewManager;
-    [SerializeField] private Button sceneButton;
-    [SerializeField] private Button lightButton;
-    [SerializeField] private Button cameraButton;
-    [SerializeField] private Button streetViewButton;
-    [SerializeField] private Button lightComputationButton;
-    [SerializeField] private GameObject sceneTab;
-    [SerializeField] private GameObject lightTab;
-    [SerializeField] private GameObject cameraTab;
-    [SerializeField] private GameObject streetViewTab;
-    [SerializeField] private GameObject lightComputationTab;
+    [SerializeField] private Transform tabsParent;
+    private List<Button> buttons;
+    private List<TabControl> tabs;
 
     void Awake()
     {
-        Assert.IsNotNull(lightsManager);
-        Assert.IsNotNull(camerasManager);
-        Assert.IsNotNull(streetViewManager);
-        Assert.IsNotNull(sceneButton);
-        Assert.IsNotNull(lightButton);
-        Assert.IsNotNull(cameraButton);
-        Assert.IsNotNull(streetViewButton);
-        Assert.IsNotNull(lightComputationButton);
-        Assert.IsNotNull(sceneTab);
-        Assert.IsNotNull(lightTab);
-        Assert.IsNotNull(cameraTab);
-        Assert.IsNotNull(streetViewTab);
-        Assert.IsNotNull(lightComputationTab);
+        Assert.IsNotNull(tabsParent);
+
+        buttons = new List<Button>();
+        foreach (Transform child in transform) {
+            Button button = child.GetComponent<Button>();
+            Assert.IsNotNull(button);
+            buttons.Add(button);
+        }
+
+        tabs = new List<TabControl>();
+        foreach (Transform child in tabsParent) {
+            TabControl tab = child.GetComponent<TabControl>();
+            Assert.IsNotNull(tab);
+            tabs.Add(tab);
+        }
+
+        Assert.IsTrue(buttons.Count == tabs.Count);
     }
 
     void Start()
     {
-        sceneButton.onClick.AddListener(delegate { ActivateTab(Tab.Scene); });
-        lightButton.onClick.AddListener(delegate { ActivateTab(Tab.Light); });
-        cameraButton.onClick.AddListener(delegate { ActivateTab(Tab.Camera); });
-        streetViewButton.onClick.AddListener(delegate { ActivateTab(Tab.StreetView); });
-        lightComputationButton.onClick.AddListener(delegate { ActivateTab(Tab.LightComputation); });
+        for (int i=0; i<buttons.Count; ++i) {
+            Button button = buttons[i];
+            TabControl tab = tabs[i];
+
+            button.onClick.AddListener(() => ActivateTab(button, tab));
+        }
     }
 
     public void ActivateDefaultTab()
     {
-        ActivateTab(Tab.Scene);
+        if (buttons.Count > 0) {
+            ActivateTab(buttons[0], tabs[0]);
+        }
     }
 
-    private void ActivateTab(Tab tab)
+    private void ActivateTab(Button button, TabControl tab)
     {
-        GameObject tabObject = null;
-        Button button = null;
-
         Clear();
-        switch (tab) {
-            case Tab.Scene:
-                tabObject = sceneTab;
-                button = sceneButton;
-                break;
-            case Tab.Light:
-                tabObject = lightTab;
-                button = lightButton;
-                break;
-            case Tab.Camera:
-                tabObject = cameraTab;
-                button = cameraButton;
-                camerasManager.DisplayCameraPreview(true);
-                break;
-            case Tab.StreetView:
-                tabObject = streetViewTab;
-                button = streetViewButton;
-                streetViewManager.DisplayCameraPreview(true);
-                break;
-            case Tab.LightComputation:
-                tabObject = lightComputationTab;
-                button = lightComputationButton;
-                break;
-            default:
-                break;
-        }
 
-        if (tabObject != null) {
-            tabObject.SetActive(true);
-            ColorBlock cb = button.colors;
-            cb.normalColor = Color.black;
-            button.colors = cb;
-        }
+        tab.gameObject.SetActive(true);
+        tab.OnTabOpened();
+
+        ColorBlock cb = button.colors;
+        cb.normalColor = Color.black;
+        button.colors = cb;
     }
 
     private void Clear()
     {
-        sceneTab.SetActive(false);
-        lightTab.SetActive(false);
-        cameraTab.SetActive(false);
-        streetViewTab.SetActive(false);
-        lightComputationTab.SetActive(false);
+        for (int i=0; i<tabs.Count; ++i) {
+            tabs[i].OnTabClosed();
+            tabs[i].gameObject.SetActive(false);
 
-        ColorBlock cbScene = sceneButton.colors;
-        cbScene.normalColor = Color.clear;
-        sceneButton.colors = cbScene;
-        
-        ColorBlock cbLight = lightButton.colors;
-        cbLight.normalColor = Color.clear;
-        lightButton.colors = cbLight;
-       
-        ColorBlock cbCamera = cameraButton.colors;
-        cbCamera.normalColor = Color.clear;
-        cameraButton.colors = cbCamera;
-       
-        ColorBlock cbStreetView = streetViewButton.colors;
-        cbStreetView.normalColor = Color.clear;
-        streetViewButton.colors = cbStreetView;
-       
-        ColorBlock cbLightComputation = lightComputationButton.colors;
-        cbLightComputation.normalColor = Color.clear;
-        lightComputationButton.colors = cbLightComputation;
-
-        lightsManager.ClearSelectedLight();
-        camerasManager.DisplayCameraPreview(false);
-        streetViewManager.DisplayCameraPreview(false);
-    }
-
-    enum Tab
-    {
-        Scene,
-        Light,
-        Camera,
-        StreetView,
-        LightComputation
+            ColorBlock colorBlock = buttons[i].colors;
+            colorBlock.normalColor = Color.clear;
+            buttons[i].colors = colorBlock;
+        }
     }
 }

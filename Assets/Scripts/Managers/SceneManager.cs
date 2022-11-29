@@ -3,7 +3,6 @@ using System.IO;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Assertions;
-using SFB;
 
 public class SceneManager : MonoBehaviour
 {
@@ -37,7 +36,7 @@ public class SceneManager : MonoBehaviour
 
     public void Load()
     {
-        string[] paths = StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "geojson", false);
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "geojson", false);
         if (paths.Length > 0) {
             currentSave = paths[0];
             GeoJSON.Net.Feature.FeatureCollection featureCollection = ReadFile(paths[0]);
@@ -56,7 +55,7 @@ public class SceneManager : MonoBehaviour
 
     public void SaveAs()
     {
-        string filename = StandaloneFileBrowser.SaveFilePanel("Save the current scene", "", "nordark", "geojson");
+        string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Save the current scene", "", "nordark", "geojson");
         if (filename != "") {
             currentSave = filename;
             SaveScene();
@@ -65,7 +64,7 @@ public class SceneManager : MonoBehaviour
 
     public void AddLights()
     {
-        string[] paths = StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
         foreach (string path in paths) {
             GeoJSON.Net.Feature.FeatureCollection featureCollection = ReadFile(path);
 
