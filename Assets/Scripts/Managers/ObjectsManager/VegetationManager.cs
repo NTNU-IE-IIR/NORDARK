@@ -129,7 +129,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             biomeArea.BiomeMaskArea.ClearNodes();
             foreach(Vector2d coordinate in biomeArea.Coordinates) {
                 AwesomeTechnologies.VegetationSystem.Biomes.Node node = new AwesomeTechnologies.VegetationSystem.Biomes.Node();
-                node.Position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(coordinate, 0);
+                node.Position = mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0));
                 biomeArea.BiomeMaskArea.Nodes.Add(node);
             }
             biomeArea.BiomeMaskArea.PositionNodes();
@@ -181,7 +181,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
 
             AwesomeTechnologies.VegetationSystem.Biomes.Node node = new AwesomeTechnologies.VegetationSystem.Biomes.Node();
-            node.Position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(coordinate, 0);
+            node.Position = mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0));
             biomeAreas[biomeAreaIndex].BiomeMaskArea.Nodes.Add(node);
             biomeAreas[biomeAreaIndex].BiomeMaskArea.PositionNodes();
         }

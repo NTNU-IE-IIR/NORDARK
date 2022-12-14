@@ -154,7 +154,7 @@ public class VegetationControl : MonoBehaviour
         if (displayNodes.isOn) {
             List<Vector2d> nodeCoordinates = vegetationManager.GetCoordinateOfCurrentBiomeArea();
             foreach(Vector2d coordinate in nodeCoordinates) {
-                Instantiate(selectionPin, mapManager.GetUnityPositionFromCoordinatesAndAltitude(coordinate, 0, true), Quaternion.Euler(-90, 0, 0), selectionPinContainer);
+                Instantiate(selectionPin, mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0), true), Quaternion.Euler(-90, 0, 0), selectionPinContainer);
             }
         }
     }

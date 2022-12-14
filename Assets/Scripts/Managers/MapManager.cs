@@ -70,31 +70,15 @@ public class MapManager : MonoBehaviour
         skyManager.OnLocationChanged();
     }
 
-    public Vector3 GetUnityPositionFromCoordinatesAndAltitude(Vector2d latLong, double altitude, bool stickToGround = false)
-    {
-        Vector3 position = (new Vector2((float) latLong.x, (float) latLong.y)).AsUnityPosition(map.CenterMercator, map.WorldRelativeScale);
-        if (stickToGround) {
-            position.y = GetElevationInUnityUnitsFromCoordinates(latLong);
-        } else {
-            position.y = (float) altitude;
-        }
-        return position;
-    }
-
     public Vector3 GetUnityPositionFromCoordinates(Vector3d coordinates, bool stickToGround = false)
     {
         Vector3 position = (new Vector2((float) coordinates.x, (float) coordinates.y)).AsUnityPosition(map.CenterMercator, map.WorldRelativeScale);
         if (stickToGround) {
-            position.y = GetElevationInUnityUnitsFromCoordinates(new Vector2d(coordinates.x, coordinates.y));
+            position.y = map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(coordinates.x, coordinates.y));
         } else {
             position.y = (float) coordinates.altitude;
         }
         return position;
-    }
-
-    public float GetElevationInUnityUnitsFromCoordinates(Vector2d latLong)
-    {
-        return map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(latLong.x, latLong.y));
     }
 
     public Vector3d GetCoordinatesFromUnityPosition(Vector3 position)

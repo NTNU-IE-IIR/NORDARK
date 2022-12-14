@@ -60,7 +60,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
             camera.Camera.SetPosition(mapManager.GetUnityPositionFromCoordinates(camera.Coordinates));
         }
         Location currentLocation = locationsManager.GetCurrentLocation();
-        mainCamera.transform.position = mapManager.GetUnityPositionFromCoordinatesAndAltitude(new Vector2d(currentLocation.CameraCoordinates), currentLocation.CameraCoordinates.altitude);
+        mainCamera.transform.position = mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates);
         mainCamera.transform.eulerAngles = currentLocation.CameraAngles;
     }
 

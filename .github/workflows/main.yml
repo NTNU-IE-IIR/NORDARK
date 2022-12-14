@@ -1,59 +1,59 @@
-# name: Actions
+name: Actions
 
-# env:
-#   BUILD_NAME: NORDARK-WP5
+env:
+  BUILD_NAME: NORDARK-WP5
 
-# on:
-#   push:
-#     tags:        
-#       - '*'
+on:
+  push:
+    tags:        
+      - '*'
 
-# jobs:
-#   build:
-#     name: Build for ${{ matrix.targetPlatform }}
-#     runs-on: ubuntu-latest
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         targetPlatform:
-#           - StandaloneOSX
-#           - StandaloneWindows64
-#           - StandaloneLinux64
+jobs:
+  build:
+    name: Build for ${{ matrix.targetPlatform }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - StandaloneOSX
+          - StandaloneWindows64
+          - StandaloneLinux64
 
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v2
-#         with:
-#           fetch-depth: 0
-#           lfs: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          lfs: true
 
-#       - name: Cache Library
-#         uses: actions/cache@v2
-#         with:
-#           path: Library
-#           key: Library-${{ matrix.targetPlatform }}
-#           restore-keys: |
-#             Library-
-#       - name: Build project
-#         uses: game-ci/unity-builder@v2
-#         env:
-#           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-#           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-#           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-#         with:
-#           targetPlatform: ${{ matrix.targetPlatform }}
-#           versioning: Semantic
-#           buildsPath: '.'
-#           buildName: ${{ env.BUILD_NAME }}
+      - name: Cache Library
+        uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-${{ matrix.targetPlatform }}
+          restore-keys: |
+            Library-
+      - name: Build project
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          versioning: Semantic
+          buildsPath: '.'
+          buildName: ${{ env.BUILD_NAME }}
           
-#       - name: Create Zip
-#         run: zip -r Build-${{ matrix.targetPlatform }}.zip ${{ matrix.targetPlatform }}
+      - name: Create Zip
+        run: zip -r Build-${{ matrix.targetPlatform }}.zip ${{ matrix.targetPlatform }}
         
-#       - name: Release
-#         uses: softprops/action-gh-release@v1
-#         if: startsWith(github.ref, 'refs/tags/')
-#         with:
-#           files: Build-${{ matrix.targetPlatform }}.zip
-#           draft: false
-#           prerelease: false
-#           generate_release_notes: true
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Build-${{ matrix.targetPlatform }}.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
