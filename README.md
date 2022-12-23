@@ -8,11 +8,11 @@ The research questions posed by the other WPs and overall project demand the ana
 
 ## Setup
 
-* Download the *NORDARK-WP5.zip* file from the [release page](https://github.com/Rylern/NORDARK/releases/tag/v0.2).
+* Download the *Build-Standalone*.zip* file corresponding to your operating system from the [release page](https://github.com/NTNU-IE-IIR/NORDARK/releases).
 * Extract the archive, and run the *NORDARK-WP5.exe* file.
 
 ## Development
 
-* Download [Unity](https://unity.com/) **2022.2.0b4**.
+* Download [Unity](https://unity.com/) **2022.2.0f1**.
 * Open the repository with Unity.
 * If you export the project for Windows 64 bit, some computers might not recognize the *sqlite3.dll* file shipped with the executable. To fix this, replace the *NORDARK-WP5\NORDARK-WP5_Data\Plugins\x86_64\sqlite3.dll* file of the exported project with the *AdditionalResources\sqlite3.dll* file of the repository.

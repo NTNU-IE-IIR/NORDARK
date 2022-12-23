@@ -6,11 +6,13 @@ public class InsertControl : MenuBarItemControl
 {
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private Button lights;
+    [SerializeField] private Button groundTextures;
 
     void Awake()
     {
         Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(lights);
+        Assert.IsNotNull(groundTextures);
 
         base.SetUp();
     }
@@ -19,6 +21,11 @@ public class InsertControl : MenuBarItemControl
     {
         lights.onClick.AddListener(delegate {
             sceneManager.AddLights();
+            gameObject.SetActive(false);
+        });
+
+        groundTextures.onClick.AddListener(delegate {
+            sceneManager.AddGroundTextures();
             gameObject.SetActive(false);
         });
     }

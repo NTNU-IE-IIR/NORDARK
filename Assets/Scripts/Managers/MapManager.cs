@@ -11,6 +11,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private SkyManager skyManager;
     [SerializeField] private MapControl mapControl;
+    [SerializeField] private GameObject locationUndefinedWindow;
     private AbstractMap map;
     private bool isMapInitialized;
     private int numberOfTiles;
@@ -22,9 +23,9 @@ public class MapManager : MonoBehaviour
         Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(skyManager);
         Assert.IsNotNull(mapControl);
+        Assert.IsNotNull(locationUndefinedWindow);
 
         map = GetComponent<AbstractMap>();
-        map.Terrain.AddToUnityLayer(UNITY_LAYER_MAP);
         map.OnTileFinished += TileFinished;
 
         Mapbox.Unity.Map.RangeTileProviderOptions extentOptions = (Mapbox.Unity.Map.RangeTileProviderOptions) map.Options.extentOptions.GetTileProviderOptions();
@@ -41,33 +42,37 @@ public class MapManager : MonoBehaviour
 
     public void ChangeLocation(Location location)
     {
-        numberOfTilesInitialized = 0;
+        locationUndefinedWindow.SetActive(location == null);
+        
+        if (location != null) {
+            numberOfTilesInitialized = 0;
 
-        map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(location.Coordinates.x, location.Coordinates.y));
-        map.UpdateMap();
+            map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(location.Coordinates.x, location.Coordinates.y));
+            map.UpdateMap();
 
-        // There is a Mapbox bug with the roads, buildings and elevation, so we reset them 
-        bool buildingLayerActive = mapControl.IsBuildingLayerActive();
-        DisplayBuildings(!buildingLayerActive);
-        DisplayBuildings(buildingLayerActive);
+            // There is a Mapbox bug with the roads, buildings and elevation, so we reset them 
+            bool buildingLayerActive = mapControl.IsBuildingLayerActive();
+            DisplayBuildings(!buildingLayerActive);
+            DisplayBuildings(buildingLayerActive);
 
-        bool roadLayerActive = mapControl.IsRoadLayerActive();
-        DisplayRoads(!roadLayerActive);
-        DisplayRoads(roadLayerActive);
+            bool roadLayerActive = mapControl.IsRoadLayerActive();
+            DisplayRoads(!roadLayerActive);
+            DisplayRoads(roadLayerActive);
 
-        bool isTerrainElevated = map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation;
-        if (isTerrainElevated) {
-            map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
-            map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
-        } else {
-            map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
-            map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+            bool isTerrainElevated = map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation;
+            if (isTerrainElevated) {
+                map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+                map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
+            } else {
+                map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
+                map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+            }
+
+            foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
+                objectsManager.OnLocationChanged();
+            }
+            skyManager.OnLocationChanged();
         }
-
-        foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
-            objectsManager.OnLocationChanged();
-        }
-        skyManager.OnLocationChanged();
     }
 
     public Vector3 GetUnityPositionFromCoordinates(Vector3d coordinates, bool stickToGround = false)
@@ -84,6 +89,12 @@ public class MapManager : MonoBehaviour
     public Vector3d GetCoordinatesFromUnityPosition(Vector3 position)
     {
         return new Vector3d(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale), position.y);
+    }
+
+    public bool IsCoordinateOnMap(Vector2d latlong)
+    {
+        Mapbox.Unity.MeshGeneration.Data.UnityTile tile;
+		return map.MapVisualizer.ActiveTiles.TryGetValue(Conversions.LatitudeLongitudeToTileId(latlong.x, latlong.y, (int)map.Zoom), out tile);
     }
 
     public void SetStyle(int style)
@@ -119,13 +130,25 @@ public class MapManager : MonoBehaviour
         map.VectorData.GetFeatureSubLayerAtIndex(1).SetActive(display);
     }
 
-    public List<MeshRenderer> GetTiles()
+    public List<MeshRenderer> GetTilesMeshRenderer()
     {
         List<MeshRenderer> tiles = new List<MeshRenderer>();
         foreach (Transform child in transform) {
             MeshRenderer meshRenderer = child.gameObject.GetComponent<MeshRenderer>();
             if (meshRenderer != null) {
                 tiles.Add(meshRenderer);
+            }
+        }
+        return tiles;
+    }
+
+    public List<Mapbox.Unity.MeshGeneration.Data.UnityTile> GetTiles()
+    {
+        List<Mapbox.Unity.MeshGeneration.Data.UnityTile> tiles = new List<Mapbox.Unity.MeshGeneration.Data.UnityTile>();
+        foreach (Transform child in transform) {
+            Mapbox.Unity.MeshGeneration.Data.UnityTile tile = child.gameObject.GetComponent<Mapbox.Unity.MeshGeneration.Data.UnityTile>();
+            if (tile != null) {
+                tiles.Add(tile);
             }
         }
         return tiles;

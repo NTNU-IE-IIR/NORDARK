@@ -1,44 +1,16 @@
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using UnityEngine.Assertions;
 
-public class Character
-{
-  public float yScale;
-  public Character(float yScale)
-  {
-    this.yScale = yScale;
-  }
-
-}
-
-public class CharacterPreset
-{
-  public static readonly Dictionary<string, Character> defaultSpawnMap = new(){
-    {"Child", new Character(1f)},
-    {"Adult", new Character(1.5f)},
-    {"UFO", new Character(1.5f)}
-  };
-}
-
-public class SpawnLocation
-{
-  public static readonly Dictionary<string, Vector3> defaultSpawnMap = new(){
-    {"Ålesund", new Vector3(402, 52, 41)},
-    {"Uppsala", new Vector3(36, 52, 3)}
-  };
-}
 
 public class StreetViewManager : MonoBehaviour
 {
-  // TODO: This should be changed - high coupling)
-  [SerializeField]
-  private TMP_Dropdown locationDropdown;
-  [SerializeField]
-  private TMP_Dropdown presetDropdown;
-  public GameObject mainCamera;
-  public GameObject FPSCharacter;
+  [SerializeField] private LocationsManager locationsManager;
+  [SerializeField] private MapManager mapManager;
+  [SerializeField] private GameObject mainCamera;
+  [SerializeField] private GameObject FPSCharacter;
   private GameObject FPSCamera;
+
+  private bool isStreetViewActive = false;
 
   public float walkSpeed = 4.0f;
   public float sensitivity = 5.0f;
@@ -47,62 +19,64 @@ public class StreetViewManager : MonoBehaviour
   private Rigidbody rb;
   private bool canFly = false;
 
+  private bool cursorLock = false;
+
+  const float MIN_HEIGHT = 2f;
+  const float MAX_HEIGHT = 188f;
+  const float MIN_SCALE = 0.05f;
+  const float MAX_SCALE = 1.75f;
+
   public void DisplayCameraPreview(bool shouldDisplay)
   {
     if (shouldDisplay)
     {
-      // Cursor.lockState = CursorLockMode.Locked;
+      isStreetViewActive = true;
+
+      if (!cursorLock)
+      {
+        ToggleCursorLock();
+      }
+
       mainCamera.SetActive(false);
       FPSCharacter.SetActive(true);
 
-      // Debug.Log("PresetDropdown: " + presetDropdown.options[presetDropdown.value].text);
-
-      switch (locationDropdown.options[locationDropdown.value].text)
-      {
-        case "Ålesund":
-          {
-            Debug.Log("SpawnLocation: " + SpawnLocation.defaultSpawnMap["Ålesund"]);
-            rb.MovePosition(SpawnLocation.defaultSpawnMap["Ålesund"]);
-            break;
-          }
-        case "Uppsala":
-          {
-            Debug.Log("SpawnLocation: " + SpawnLocation.defaultSpawnMap["Uppsala"]);
-            rb.MovePosition(SpawnLocation.defaultSpawnMap["Uppsala"]);
-            break;
-          }
+      Location currentLocation = locationsManager.GetCurrentLocation();
+      if (currentLocation != null) {
+        rb.MovePosition(mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates, true));
       }
 
-      // Hardcoded as of now to "Child"
-      rb.transform.localScale = new Vector3(
-        rb.transform.localScale.x,
-        CharacterPreset.defaultSpawnMap["Child"].yScale,
-        rb.transform.localScale.z
-      );
-
-      // TODO: List is empty for some odd reason
-      // foreach( TMP_Dropdown.OptionData option in presetDropdown.options){
-      //   Debug.Log("PresetDropdown: " + option.text);
-      // }
+      // Starting with the child height (124cm)
+      this.ChangeHeight(124);
     }
     else
     {
+      isStreetViewActive = false;
+
+      if (cursorLock)
+      {
+        ToggleCursorLock();
+      }
+
       mainCamera.SetActive(true);
       FPSCharacter.SetActive(false);
     }
   }
 
-  public void ChangePreset(string value)
+  public void ChangeHeight(float value)
   {
-    Vector3 currentPosition = rb.transform.position;
-    rb.MovePosition(new Vector3(currentPosition.x, currentPosition.y + 3, currentPosition.z));
+    float multiplier = (value - MIN_HEIGHT) / (MAX_HEIGHT - MIN_HEIGHT);
+    float scale = MIN_SCALE + multiplier * (MAX_SCALE - MIN_SCALE);
+
     rb.transform.localScale = new Vector3(
       rb.transform.localScale.x,
-      CharacterPreset.defaultSpawnMap[value].yScale,
+      scale,
       rb.transform.localScale.z
     );
+  }
 
-    if (value == "UFO")
+  public void toggleSuperPower(bool isActive)
+  {
+    if (isActive)
     {
       canFly = true;
       rb.useGravity = false;
@@ -114,6 +88,14 @@ public class StreetViewManager : MonoBehaviour
     }
   }
 
+  void Awake()
+  {
+    Assert.IsNotNull(locationsManager);
+    Assert.IsNotNull(mapManager);
+    Assert.IsNotNull(mainCamera);
+    Assert.IsNotNull(FPSCharacter);
+  }
+
   void Start()
   {
     rb = FPSCharacter.GetComponent<Rigidbody>();
@@ -122,6 +104,13 @@ public class StreetViewManager : MonoBehaviour
 
   void Update()
   {
+    if (isStreetViewActive && Input.GetKeyDown(KeyCode.Escape))
+    {
+      ToggleCursorLock();
+    }
+
+    if (!cursorLock) return;
+
     if (canFly)
     {
       if (Input.GetKey(KeyCode.Space))
@@ -132,7 +121,8 @@ public class StreetViewManager : MonoBehaviour
       {
         rb.velocity = new Vector3(rb.velocity.x, -5, rb.velocity.y);
       }
-      else {
+      else
+      {
         rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.y);
       }
     }
@@ -141,7 +131,25 @@ public class StreetViewManager : MonoBehaviour
 
   void FixedUpdate()
   {
+    if (!cursorLock) return;
+
     Movement();
+  }
+
+  void ToggleCursorLock()
+  {
+    if (!cursorLock)
+    {
+      Cursor.lockState = CursorLockMode.Locked;
+      Cursor.visible = false;
+      cursorLock = true;
+    }
+    else
+    {
+      Cursor.lockState = CursorLockMode.None;
+      Cursor.visible = true;
+      cursorLock = false;
+    }
   }
 
   void Look()

@@ -36,6 +36,13 @@ public class Vector3d
         this.altitude = altitude;
     }
 
+    public Vector3d(GeoJSON.Net.Geometry.IPosition position)
+    {
+        this.x = position.Latitude;
+        this.y = position.Longitude;
+        this.altitude = position.Altitude == null ? 0 : (double) position.Altitude;
+    }
+
     override public string ToString()
     {
         return "{x:" + x.ToString() + "; y:" + y.ToString() + "; altitude:" + altitude.ToString() + "}";

@@ -19,6 +19,12 @@ public class Vector2d
         this.y = vector.y;
     }
 
+    public Vector2d(GeoJSON.Net.Geometry.IPosition position)
+    {
+        this.x = position.Latitude;
+        this.y = position.Longitude;
+    }
+
     override public string ToString()
     {
         return "{x:" + x.ToString() + "; y:" + y.ToString() + "}";

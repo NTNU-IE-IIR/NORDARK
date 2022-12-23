@@ -35,9 +35,9 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
 
     public void Clear()
     {
-        currentLocationIndex = -1;
         locations.Clear();
         locationControl.ClearLocations();
+        ChangeLocation(-1);
     }
 
     public void OnLocationChanged()
@@ -62,12 +62,27 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
 
     public Location GetCurrentLocation()
     {
-        return locations[currentLocationIndex];
+        try {
+            return locations[currentLocationIndex];
+        } catch (System.ArgumentOutOfRangeException) {
+            return null;
+        }
     }
 
     public void ChangeLocation(int locationIndex)
     {
         currentLocationIndex = locationIndex;
         mapManager.ChangeLocation(GetCurrentLocation());
+    }
+
+    public void DeleteCurrentLocation(int locationIndex)
+    {
+        locations.RemoveAt(locationIndex);
+
+        if (locations.Count >= 0) {
+            ChangeLocation(0);
+        } else {
+            ChangeLocation(-1);
+        }
     }
 }

@@ -103,7 +103,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
         }
 
-        foreach(MeshRenderer tile in mapManager.GetTiles()) {
+        foreach(MeshRenderer tile in mapManager.GetTilesMeshRenderer()) {
             if(tile.gameObject.GetComponent<MeshFilter>() != null) {
                 meshTerrain.MeshTerrainMeshSourceList.Add(new AwesomeTechnologies.MeshTerrains.MeshTerrainMeshSource() {
                     MeshRenderer = tile,

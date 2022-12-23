@@ -11,6 +11,7 @@ public class SceneManager : MonoBehaviour
     [SerializeField] private CamerasManager camerasManager;
     [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private LocationsManager locationsManager;
+    [SerializeField] private GroundTexturesManager groundTexturesManager;
     [SerializeField] private DialogControl dialogControl;
     private string currentSave;
     private List<IObjectsManager> objectsManagers;
@@ -21,10 +22,11 @@ public class SceneManager : MonoBehaviour
         Assert.IsNotNull(camerasManager);
         Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(locationsManager);
+        Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(dialogControl);
 
         currentSave = "";
-        objectsManagers = new List<IObjectsManager>{lightsManager, camerasManager, vegetationManager, locationsManager};
+        objectsManagers = new List<IObjectsManager>{lightsManager, camerasManager, vegetationManager, locationsManager, groundTexturesManager};
     }
 
     public void LoadDefaultScene()
@@ -39,7 +41,7 @@ public class SceneManager : MonoBehaviour
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "geojson", false);
         if (paths.Length > 0) {
             currentSave = paths[0];
-            GeoJSON.Net.Feature.FeatureCollection featureCollection = ReadFile(paths[0]);
+            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONReader.ReadFile(paths[0]);
             LoadScene(featureCollection);
         }
     }
@@ -66,7 +68,7 @@ public class SceneManager : MonoBehaviour
     {
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
         foreach (string path in paths) {
-            GeoJSON.Net.Feature.FeatureCollection featureCollection = ReadFile(path);
+            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONReader.ReadFile(path);
 
             foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
                 AddLight(feature);
@@ -74,17 +76,21 @@ public class SceneManager : MonoBehaviour
         }
     }
 
+    public void AddGroundTextures()
+    {
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert ground textures to the scene", "", "geojson", true);
+        foreach (string path in paths) {
+            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONReader.ReadFile(path);
+
+            foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+                AddGroundTexture(feature);
+            }
+        }
+    }
+
     public List<IObjectsManager> GetObjectsManagers()
     {
         return objectsManagers;
-    }
-
-    private GeoJSON.Net.Feature.FeatureCollection ReadFile(string filename)
-    {
-        StreamReader rd = new StreamReader(filename);
-        GeoJSON.Net.Feature.FeatureCollection featureCollection = JsonConvert.DeserializeObject<GeoJSON.Net.Feature.FeatureCollection>(rd.ReadToEnd());
-        rd.Close();
-        return featureCollection;
     }
 
     private void LoadScene(GeoJSON.Net.Feature.FeatureCollection featureCollection)
@@ -103,6 +109,8 @@ public class SceneManager : MonoBehaviour
                     AddLight(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "biomeArea")) {
                     AddBiomeArea(feature);
+                } else if (string.Equals(feature.Properties["type"] as string, "groundTexture")) {
+                    AddGroundTexture(feature);
                 }
             }
         }
@@ -116,7 +124,7 @@ public class SceneManager : MonoBehaviour
             features.AddRange(objectsManager.GetFeatures());
         }
         
-        SaveToGeojson(currentSave, features);
+        GeoJSONReader.SaveToGeojson(currentSave, features);
         dialogControl.CreateInfoDialog("Scene saved.");
     }
 
@@ -145,9 +153,9 @@ public class SceneManager : MonoBehaviour
             cameraAngles = new List<float>{ 0, 0, 0 };
         }
 
-        double latitude = 0;
+        double altitude = 0;
         if (point.Coordinates.Altitude != null) {
-            latitude = (double) point.Coordinates.Altitude;
+            altitude = (double) point.Coordinates.Altitude;
         }
 
         Feature feature = new Feature();
@@ -155,7 +163,7 @@ public class SceneManager : MonoBehaviour
         feature.Properties.Add("name", name);
         feature.Properties.Add("cameraCoordinates", cameraCoordinates);
         feature.Properties.Add("cameraAngles", cameraAngles);
-        feature.Coordinates = new List<Vector3d> {new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, latitude)};
+        feature.Coordinates = new List<Vector3d> {new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude)};
         locationsManager.Create(feature);
     }
 
@@ -278,38 +286,23 @@ public class SceneManager : MonoBehaviour
         }
     }
 
-    private void SaveToGeojson(string filename, List<Feature> features)
+    private void AddGroundTexture(GeoJSON.Net.Feature.Feature geoJsonFeature)
     {
-        GeoJSON.Net.Feature.FeatureCollection featureCollection = new GeoJSON.Net.Feature.FeatureCollection();
-
-        for (int i = 0; i < features.Count; i++) {
-            GeoJSON.Net.Geometry.IGeometryObject geometry;
-            
-            if (features[i].Coordinates.Count > 1) {
-                List<List<List<double>>> coordinates = new List<List<List<double>>> {new List<List<double>>()};
-                foreach(Vector3d coordinate in features[i].Coordinates) {
-                    coordinates[0].Add(new List<double>{coordinate.x, coordinate.y, coordinate.altitude});
-                }
-                geometry = new GeoJSON.Net.Geometry.Polygon(coordinates);
-            } else {
-                geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(features[i].Coordinates[0].x, features[i].Coordinates[0].y, features[i].Coordinates[0].altitude));
+        if (string.Equals(geoJsonFeature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Polygon")) {
+            int texture = 1;
+            if (geoJsonFeature.Properties.ContainsKey("texture")) {
+                texture = System.Convert.ToInt32(geoJsonFeature.Properties["texture"]);
             }
 
-            GeoJSON.Net.Feature.Feature feature = new GeoJSON.Net.Feature.Feature(geometry, features[i].Properties, i.ToString());
-            featureCollection.Features.Add(feature);
+            GeoJSON.Net.Geometry.Polygon polygon = geoJsonFeature.Geometry as GeoJSON.Net.Geometry.Polygon;
+
+            Feature feature = new Feature();
+            feature.Properties.Add("type", "biomeArea");
+            feature.Properties.Add("texture", texture);
+            foreach (GeoJSON.Net.Geometry.Position coordinate in polygon.Coordinates[0].Coordinates) {
+                feature.Coordinates.Add(new Vector3d(coordinate.Latitude, coordinate.Longitude, 0));
+            }
+            groundTexturesManager.Create(feature);
         }
-
-        var json = JsonConvert.SerializeObject(featureCollection);
-
-        json = json.Replace("\"type\":8", "\"type\":\"FeatureCollection\"");
-        json = json.Replace("\"type\":7", "\"type\":\"Feature\"");
-        json = json.Replace("\"type\":5", "\"type\":\"MultiPolygon\"");
-        json = json.Replace("\"type\":4", "\"type\":\"Polygon\"");
-        json = json.Replace("\"type\":3", "\"type\":\"MultiLineString\"");
-        json = json.Replace("\"type\":0", "\"type\":\"Point\"");
-
-        StreamWriter sw = new StreamWriter(filename);
-        sw.WriteLine(json);
-        sw.Close();
     }
 }

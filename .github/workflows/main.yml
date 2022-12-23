@@ -34,6 +34,7 @@ jobs:
           key: Library-${{ matrix.targetPlatform }}
           restore-keys: |
             Library-
+
       - name: Build project
         uses: game-ci/unity-builder@v2
         env:
@@ -45,6 +46,10 @@ jobs:
           versioning: Semantic
           buildsPath: '.'
           buildName: ${{ env.BUILD_NAME }}
+
+      - name: sqlite3 fix
+        if: matrix.targetPlatform == 'StandaloneWindows64'
+        run: sudo cp AdditionalResources/sqlite3.dll ${{ matrix.targetPlatform }}/${{ env.BUILD_NAME }}_Data/Plugins/x86_64
           
       - name: Create Zip
         run: zip -r Build-${{ matrix.targetPlatform }}.zip ${{ matrix.targetPlatform }}
