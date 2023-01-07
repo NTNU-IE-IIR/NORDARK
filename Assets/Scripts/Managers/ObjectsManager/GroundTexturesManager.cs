@@ -7,132 +7,468 @@ using Assets.Mapbox.Unity.MeshGeneration.Modifiers.MeshModifiers;
 
 public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 {
-    private static int[] textures = {1, 2};
-    private const int RENDER_TEXTURE_SIZE = 512;
+    public const string CORRECT_CRS = "urn:ogc:def:crs:OGC:1.3:CRS84";
+    private const string TEXTURE_PROPERTY = "_Texture";
+    private const string DIFFUSE_PROPERTY = "_Diffuse";
+    private const string NORMAL_MAP_PROPERTY = "_NormalMap";
+    private const string HEIGHT_MAP_PROPERTY = "_HeightMap";
+    private const string MASK_MAP_PROPERTY = "_MaskMap";
+    private const string MASK_PROPERTY = "_Mask";
+    private const string MASK_FOLDER = "ground-textures";
+    private const int MASK_TEXTURE_SIZE = 512;
+    private const int NUMBER_OF_TEXTURES = 8;
+    private const int MAX_NUMBER_OF_COROUTINES = 10;
     [SerializeField] private MapManager mapManager;
-    [SerializeField] private Material meshMaskMaterial;
+    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private DialogControl dialogControl;
+    [SerializeField] private GroundTexturesWindow groundTexturesWindow;
+    [SerializeField] private GameObject maskMeshPrefab;
     [SerializeField] private GameObject maskCameraPrefab;
-    private List<GroundTexture> groundTextures;
+    [SerializeField] private ComputeShader combineMasksShader;
+    [SerializeField] private ComputeShader detectBlackMaskShader;
+    [SerializeField] private List<string> textureNames;
+    [SerializeField] private List<Texture2D> diffuseMaps;
+    [SerializeField] private List<Texture2D> normalMaps;
+    [SerializeField] private List<Texture2D> heightMaps;
+    [SerializeField] private List<Texture2D> maskMaps;
+    private List<GroundTextureCollection> groundTextureCollections;
+    private List<float> offsets;
+    private int indexOfCombineMaskKernel;
+    private int indexOfDetectBlackMaskKernel;
+    private int numberOfTextures;
+    private int numberOfSteps;
+    private int currentStep;
     
     void Awake()
     {
         Assert.IsNotNull(mapManager);
-        Assert.IsNotNull(meshMaskMaterial);
+        Assert.IsNotNull(sceneManager);
+        Assert.IsNotNull(dialogControl);
+        Assert.IsNotNull(groundTexturesWindow);
+        Assert.IsNotNull(maskMeshPrefab);
         Assert.IsNotNull(maskCameraPrefab);
+        Assert.IsNotNull(combineMasksShader);
+        Assert.IsNotNull(detectBlackMaskShader);
+        Assert.IsNotNull(textureNames);
+        Assert.IsNotNull(diffuseMaps);
+        Assert.IsNotNull(normalMaps);
+        Assert.IsNotNull(heightMaps);
+        Assert.IsNotNull(maskMaps);
 
-        groundTextures = new List<GroundTexture>();
+        for (int i=0; i<textureNames.Count; ++i) {
+            Assert.IsNotNull(textureNames[0]);
+            Assert.IsNotNull(diffuseMaps[0]);
+            Assert.IsNotNull(normalMaps[0]);
+            Assert.IsNotNull(heightMaps[0]);
+            Assert.IsNotNull(maskMaps[0]);
+        }
+
+        groundTextureCollections = new List<GroundTextureCollection>();
+        offsets = new List<float>();
+        indexOfCombineMaskKernel = combineMasksShader.FindKernel("CSMain");
+        indexOfDetectBlackMaskKernel = detectBlackMaskShader.FindKernel("CSMain");
+        numberOfTextures = diffuseMaps.Count;
+        numberOfSteps = 0;
+        currentStep = 0;
     }
 
-    public void Create(Feature feature)
+    public void Create(GeoJSON.Net.Feature.Feature feature)
     {
-        GroundTexture groundTexture = new GroundTexture(System.Convert.ToInt32(feature.Properties["texture"]));
-        for (int i=0; i<feature.Coordinates.Count; i++) {
-            groundTexture.Coordinates.Add(new Vector2d(feature.Coordinates[i].x, feature.Coordinates[i].y));
+        string content = "";
+        if (feature.Properties.ContainsKey("content")) {
+            content = feature.Properties["content"] as string;
         }
-        groundTextures.Add(groundTexture);
 
-        StartCoroutine(SetMasks());
+        if (content != "") {
+            AddGroundTextureFromFeatureCollection(GeoJSONParser.StringToFeatureCollection(content));
+        }
     }
 
     public void Clear()
     {
-        List<MeshRenderer> tiles = mapManager.GetTilesMeshRenderer();
-        foreach (MeshRenderer tile in tiles) {
-            foreach(int texture in textures) {
-                tile.material.SetTexture("_Mask" + texture.ToString(), Texture2D.blackTexture);
-            }
-        }
-        groundTextures.Clear();
+        ResetAllTileTextures();
+        groundTextureCollections.Clear();
     }
 
     public void OnLocationChanged()
     {
-        StartCoroutine(SetMasks());
+        ResetAllTileTextures();
+
+        foreach (GroundTextureCollection groundTextureCollection in groundTextureCollections) {
+            StartCoroutine(DisplayGroundTextureCollection(groundTextureCollection));
+        }
     }
 
-    public List<Feature> GetFeatures()
+    public List<GeoJSON.Net.Feature.Feature> GetFeatures()
     {
-        List<Feature> features = new List<Feature>();
-        foreach (GroundTexture groundTexture in groundTextures) {
-            Feature feature = new Feature();
-            feature.Properties.Add("type", "groundTexture");
-            feature.Properties.Add("texture", groundTexture.Texture);
+        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
 
-            foreach (Vector2d coordinate in groundTexture.Coordinates) {
-                feature.Coordinates.Add(new Vector3d(coordinate.y, coordinate.x, 0));
-            }
+        foreach (GroundTextureCollection groundTextureCollection in groundTextureCollections) {
+            GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(0, 0, 0));
 
-            features.Add(feature);
+            Dictionary<string, object> properties = new Dictionary<string, object>();
+            properties.Add("type", "groundTexture");
+            properties.Add("content", GeoJSONParser.FeatureCollectionToString(groundTextureCollection.FeatureCollection));
+
+            features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
+
         return features;
     }
 
-    private IEnumerator SetMasks()
+    public void AddGroundTexturesFromFile()
     {
-        foreach (GroundTexture groundTexture in groundTextures) {
-            CreateMaskMesh(groundTexture);
-            yield return CreateMask(groundTexture);
-            DeleteMaskMesh();
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert ground textures to the scene", "", "geojson", true);
+
+        foreach (string path in paths) {
+            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
+            string errorMessage = "";
+
+            try {
+                string crs = (featureCollection.CRS as GeoJSON.Net.CoordinateReferenceSystem.NamedCRS).Properties["name"] as string;
+                if (crs != CORRECT_CRS) {
+                    errorMessage = 
+                        System.IO.Path.GetFileName(path) + ":\n" + 
+                        "The CRS of the file must be defined as:\n" +
+                        CORRECT_CRS
+                    ;
+                }
+            } catch (System.Exception) {}
+
+            if (errorMessage == "") {
+                AddGroundTextureFromFeatureCollection(featureCollection);
+            } else {
+                dialogControl.CreateInfoDialog(errorMessage);
+            }
         }
     }
 
-    private void CreateMaskMesh(GroundTexture groundTexture)
+    private void AddGroundTextureFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection)
+    {
+        GroundTextureCollection groundTextureCollection = CreateGroundTextureCollectionFromFeatureCollection(featureCollection);
+        groundTextureCollections.Add(groundTextureCollection);
+        StartCoroutine(DisplayGroundTextureCollection(groundTextureCollection));
+    }
+
+    private GroundTextureCollection CreateGroundTextureCollectionFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection)
+    {
+        GroundTextureCollection groundTextureCollection = new GroundTextureCollection(featureCollection);
+
+        foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+            string texture = "";
+            if (feature.Properties.Count > 0) {
+                texture = feature.Properties.Values.First() as string;
+            }
+            
+            string geometryType = feature.Geometry.GetType().FullName;
+
+            if (string.Equals(geometryType, "GeoJSON.Net.Geometry.Polygon") || string.Equals(geometryType, "GeoJSON.Net.Geometry.MultiPolygon")) {
+                List<GeoJSON.Net.Geometry.Polygon> polygons = new List<GeoJSON.Net.Geometry.Polygon>();
+
+                if (string.Equals(geometryType, "GeoJSON.Net.Geometry.Polygon")) {
+                    polygons.Add(feature.Geometry as GeoJSON.Net.Geometry.Polygon);
+                } else {
+                    GeoJSON.Net.Geometry.MultiPolygon multiPolygon = feature.Geometry as GeoJSON.Net.Geometry.MultiPolygon;
+                    polygons.AddRange(multiPolygon.Coordinates);
+                }
+
+                foreach (GeoJSON.Net.Geometry.Polygon polygon in polygons) {
+                    if (polygon.Coordinates[0].Coordinates.Count > 1) {
+                        GroundTexture groundTexture = new GroundTexture(texture, polygon.Coordinates[0].Coordinates);
+                        groundTextureCollection.GroundTextures.Add(groundTexture);
+                    }
+                }
+            }
+        }
+
+        return groundTextureCollection;
+    }
+
+    private IEnumerator DisplayGroundTextureCollection(GroundTextureCollection groundTextureCollection)
+    {
+        if (!AreMasksCreated(groundTextureCollection)) {
+            yield return CreateMasks(groundTextureCollection);
+        }
+        
+        SetMasks(groundTextureCollection);
+    }
+
+    private bool AreMasksCreated(GroundTextureCollection groundTextureCollection)
+    {
+        List<Tile> tiles = mapManager.GetTiles();
+        foreach (Tile tile in tiles) {
+            string path = System.IO.Path.Combine(Application.persistentDataPath, MASK_FOLDER, tile.Id, groundTextureCollection.Id);
+            if (!System.IO.Directory.Exists(path)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private IEnumerator CreateMasks(GroundTextureCollection groundTextureCollection)
+    {
+        List<Tile> tiles = mapManager.GetTiles();
+
+        groundTexturesWindow.Show(true);
+        groundTexturesWindow.SetDescription("Adding ground textures...");
+        numberOfSteps = tiles.Count * groundTextureCollection.GroundTextures.Count;
+        currentStep = 0;
+
+        int index = 0;
+        while (index < groundTextureCollection.GroundTextures.Count) {
+            yield return CreateNextMasks(groundTextureCollection, tiles, index);
+            index += MAX_NUMBER_OF_COROUTINES;
+        }
+
+        groundTexturesWindow.Show(false);
+    }
+
+    private void SetMasks(GroundTextureCollection groundTextureCollection)
+    {
+        RenderTexture oldRenderTexture = RenderTexture.active;
+        Texture2D currentMask;
+
+        RenderTexture resultCombine = new RenderTexture(MASK_TEXTURE_SIZE, MASK_TEXTURE_SIZE, 0);
+        resultCombine.enableRandomWrite = true;
+        resultCombine.Create();
+
+        List<Tile> tiles = mapManager.GetTiles();
+
+        foreach (Tile tile in tiles) {
+            string path = System.IO.Path.Combine(GetGroundTextureCollectionPath(tile.Id, groundTextureCollection.Id));
+            string[] files = System.IO.Directory.GetFiles(path);
+
+            Dictionary<string, int> textureNamesToTextureShaderIndex = new Dictionary<string, int>();
+            for (int i=1; i<=NUMBER_OF_TEXTURES; ++i) {
+                int texture = (int) tile.MeshRenderer.material.GetFloat(TEXTURE_PROPERTY + i);
+
+                if (texture >= 0 && texture < numberOfTextures) {
+                    textureNamesToTextureShaderIndex[textureNames[texture]] = i;
+                }
+            }
+
+            foreach (string file in files) {
+                string textureName = System.IO.Path.GetFileNameWithoutExtension(file).Split('.')[0];
+
+                if (textureNames.Contains(textureName)) {
+                    Texture2D newMask = new Texture2D(MASK_TEXTURE_SIZE, MASK_TEXTURE_SIZE);
+                    newMask.LoadImage(System.IO.File.ReadAllBytes(file));
+
+                    if (!IsMaskBlack(newMask)) {
+                        string textureShaderName = MASK_PROPERTY;
+                        if (textureNamesToTextureShaderIndex.ContainsKey(textureName)) {
+                            textureShaderName += textureNamesToTextureShaderIndex[textureName];
+                        } else {
+                            int i = 1;
+                            while (textureNamesToTextureShaderIndex.ContainsValue(i)) {
+                                i++;
+                            }
+
+                            if (i <= NUMBER_OF_TEXTURES) {
+                                textureShaderName += i.ToString();
+                                textureNamesToTextureShaderIndex[textureName] = i;
+                                
+                                int textureIndex = textureNames.FindIndex(x => x.Equals(textureName));
+                                tile.MeshRenderer.material.SetTexture(DIFFUSE_PROPERTY + i.ToString(), diffuseMaps[textureIndex]);
+                                tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), normalMaps[textureIndex]);
+                                tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), heightMaps[textureIndex]);
+                                tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), maskMaps[textureIndex]);
+                            } else {
+                                textureShaderName = "";
+                            }
+                        }
+
+                        if (textureShaderName != "") {
+                            currentMask = tile.MeshRenderer.material.GetTexture(textureShaderName) as Texture2D;
+                            if (currentMask != null) {
+                                combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask1", newMask);
+                                combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask2", currentMask);
+                                combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Result", resultCombine);
+                                combineMasksShader.Dispatch(indexOfCombineMaskKernel, resultCombine.width / 32, resultCombine.height / 32, 1);
+
+                                RenderTexture.active = resultCombine;
+                                newMask.ReadPixels(new Rect(0, 0, resultCombine.width, resultCombine.height), 0, 0);
+                                newMask.Apply();
+
+                                Destroy(currentMask);
+                            }
+                            tile.MeshRenderer.material.SetTexture(textureShaderName, newMask);
+                        }
+                    }
+                }
+            }
+        }
+
+        RenderTexture.active = oldRenderTexture;
+        resultCombine.Release();
+    }
+
+    private IEnumerator CreateNextMasks(GroundTextureCollection groundTextureCollection, List<Tile> tiles, int index)
+    {
+        List<Coroutine> coroutines = new List<Coroutine>();
+        int i = index;
+        while (i < groundTextureCollection.GroundTextures.Count && i < index + MAX_NUMBER_OF_COROUTINES) {
+            coroutines.Add(StartCoroutine(CreateMask(groundTextureCollection, groundTextureCollection.GroundTextures[i], tiles)));
+            i++;
+        }
+
+        foreach (Coroutine coroutine in coroutines) {
+            yield return coroutine;
+        }
+    }
+
+    private IEnumerator CreateMask(GroundTextureCollection groundTextureCollection, GroundTexture groundTexture, List<Tile> tiles)
+    {
+        if (IsGroundTextureOnMap(groundTexture)) {
+            RenderTexture oldRenderTexture = RenderTexture.active;
+
+            RenderTexture resultCombine = new RenderTexture(MASK_TEXTURE_SIZE, MASK_TEXTURE_SIZE, 0);
+            resultCombine.enableRandomWrite = true;
+            resultCombine.Create();
+
+            Camera maskCamera = Instantiate(maskCameraPrefab, transform).GetComponent<Camera>();
+            RenderTexture maskCameraTexture = new RenderTexture(MASK_TEXTURE_SIZE, MASK_TEXTURE_SIZE, 0);
+            maskCamera.targetTexture = maskCameraTexture;
+
+            GameObject maskMesh = CreateMaskMesh(groundTexture);
+
+            foreach (Tile tile in tiles) {
+                maskCamera.transform.position = new Vector3(
+                    tile.Transform.position.x + maskMesh.transform.position.x,
+                    maskCamera.transform.position.y,
+                    tile.Transform.position.z + maskMesh.transform.position.z
+                );
+                maskCamera.orthographicSize = tile.MeshFilter.mesh.bounds.size.x / 2;
+
+                yield return null;
+
+                Texture2D newMask = new Texture2D(maskCameraTexture.width, maskCameraTexture.height, TextureFormat.RGB24, false);
+                RenderTexture.active = maskCameraTexture;
+                newMask.ReadPixels(new Rect(0, 0, maskCameraTexture.width, maskCameraTexture.height), 0, 0);
+                newMask.Apply();
+
+                string maskPath = System.IO.Path.Combine(GetGroundTextureCollectionPath(tile.Id, groundTextureCollection.Id), groundTexture.Texture + ".png");
+                if (System.IO.File.Exists(maskPath)) {
+                    Texture2D currentMask = new Texture2D(maskCameraTexture.width, maskCameraTexture.height);
+                    currentMask.LoadImage(System.IO.File.ReadAllBytes(maskPath));
+                    
+                    combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask1", newMask);
+                    combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask2", currentMask);
+                    combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Result", resultCombine);
+                    combineMasksShader.Dispatch(indexOfCombineMaskKernel, resultCombine.width / 32, resultCombine.height / 32, 1);
+
+                    RenderTexture.active = resultCombine;
+                    newMask.ReadPixels(new Rect(0, 0, resultCombine.width, resultCombine.height), 0, 0);
+                    newMask.Apply();
+
+                    Destroy(currentMask);
+                }
+
+                System.IO.File.WriteAllBytes(maskPath, newMask.EncodeToPNG());
+                Destroy(newMask);
+
+                currentStep++;
+                groundTexturesWindow.SetProgress((float) currentStep / numberOfSteps);
+            }
+            DeleteMaskMesh(maskMesh);
+            
+            RenderTexture.active = oldRenderTexture;
+            resultCombine.Release();
+            maskCameraTexture.Release();
+            Destroy(maskCamera.gameObject);
+        }
+    }
+
+    private bool IsGroundTextureOnMap(GroundTexture groundTexture)
+    {
+        Vector3 mapBounds = mapManager.GetMapSize();
+
+        List<Vector3> points = groundTexture.Coordinates.Select(
+            coordinate => mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate))
+        ).ToList();
+
+        foreach (Vector3 point in points) {
+            if (-mapBounds.x/2 <= point.x && point.x <= mapBounds.x/2 && -mapBounds.z/2 <= point.z && point.z <= mapBounds.z/2) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private GameObject CreateMaskMesh(GroundTexture groundTexture)
     {
         List<Vector3> points = groundTexture.Coordinates.Select(
-            coordinate => mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0))
+            coordinate => mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate))
         ).ToList();
 
         var flatData = EarcutLibrary.Flatten(new List<List<Vector3>>() { points });
-		var triangles = EarcutLibrary.Earcut(flatData.Vertices, flatData.Holes, flatData.Dim);
+		List<int> triangles = EarcutLibrary.Earcut(flatData.Vertices, flatData.Holes, flatData.Dim);
 
-        MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
-        meshRenderer.sharedMaterial = meshMaskMaterial;
+        GameObject maskMesh = Instantiate(maskMeshPrefab, transform);
+        float offset = 0;
+        if (offsets.Count > 0) {
+            Vector3 mapBounds = mapManager.GetMapSize();
+            offset = offsets.Max() + Mathf.Max(mapBounds.x, mapBounds.z);
+        }
+        
+        maskMesh.transform.position += new Vector3(offset, 0, offset);
+        offsets.Add(offset);
 
-        MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
         Mesh mesh = new Mesh();
         mesh.vertices = points.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.normals = points.Select(point => Vector3.up).ToArray();
-        meshFilter.mesh = mesh;
+        maskMesh.GetComponent<MeshFilter>().mesh = mesh;
+        
+        return maskMesh;
     }
 
-    private IEnumerator CreateMask(GroundTexture groundTexture)
+    private void DeleteMaskMesh(GameObject maskMesh)
     {
-        List<Mapbox.Unity.MeshGeneration.Data.UnityTile> tiles = mapManager.GetTiles();
+        offsets.Remove(maskMesh.transform.position.x);
+        Destroy(maskMesh);
+    }
 
-        Camera maskCamera = Instantiate(maskCameraPrefab).GetComponent<Camera>();
-        RenderTexture renderTexture = new RenderTexture(RENDER_TEXTURE_SIZE, RENDER_TEXTURE_SIZE, 0);
-        maskCamera.targetTexture = renderTexture;
+    private string GetGroundTextureCollectionPath(string tileId, string groundTextureCollectionId)
+    {
+        string folderPath = System.IO.Path.Combine(Application.persistentDataPath, MASK_FOLDER, tileId, groundTextureCollectionId);
+        System.IO.Directory.CreateDirectory(folderPath);
+        return folderPath;
+    }
 
-        foreach (Mapbox.Unity.MeshGeneration.Data.UnityTile tile in tiles) {
-            maskCamera.transform.position = new Vector3(
-                tile.transform.position.x,
-                maskCamera.transform.position.y,
-                tile.transform.position.z
-            );
-            maskCamera.orthographicSize = tile.GetComponent<MeshFilter>().mesh.bounds.size.x / 2;
+    private bool IsMaskBlack(Texture2D mask)
+    {
+        int[] result = new int[1];
+        result[0] = 0;
 
-            yield return null;
+        ComputeBuffer computeBuffer = new ComputeBuffer(1, 4);
+        computeBuffer.SetData(result);
 
-            RenderTexture oldRenderTexture = RenderTexture.active;
-            RenderTexture.active = renderTexture;
+        detectBlackMaskShader.SetTexture(indexOfCombineMaskKernel, "Mask", mask);
+        detectBlackMaskShader.SetBuffer(indexOfDetectBlackMaskKernel, "Result", computeBuffer);
+        detectBlackMaskShader.Dispatch(indexOfCombineMaskKernel, MASK_TEXTURE_SIZE / 32, MASK_TEXTURE_SIZE / 32, 1);
 
-            Texture2D texture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
-            texture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-            texture.Apply();
-                        
-            RenderTexture.active = oldRenderTexture;
+        computeBuffer.GetData(result);
+        bool maskBlack = result[0] == 0;
+        computeBuffer.Release();
 
-            tile.gameObject.GetComponent<MeshRenderer>().material.SetTexture("_Mask" + groundTexture.Texture.ToString(), texture);
+        return maskBlack;
+    }
+
+    private void ResetAllTileTextures()
+    {
+        List<Tile> tiles = mapManager.GetTiles();
+        foreach (Tile tile in tiles) {
+            for (int i=1; i<=NUMBER_OF_TEXTURES; ++i) {
+                Destroy(tile.MeshRenderer.material.GetTexture(MASK_PROPERTY + i.ToString()));
+                tile.MeshRenderer.material.SetTexture(MASK_PROPERTY + i.ToString(), null);
+
+                tile.MeshRenderer.material.SetTexture(DIFFUSE_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), null);
+            }
         }
-
-        renderTexture.Release();
-        Destroy(maskCamera.gameObject);
-    }
-
-    private void DeleteMaskMesh()
-    {
-        Destroy(gameObject.GetComponent<MeshRenderer>());
-        Destroy(gameObject.GetComponent<MeshFilter>());
     }
 }

@@ -1,0 +1,11 @@
+#pragma kernel CSMain
+
+Texture2D<float4> Mask;
+RWStructuredBuffer<int> Result;
+
+
+[numthreads(32,32,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    InterlockedOr(Result[0], Mask[id.xy].r > 0);
+}

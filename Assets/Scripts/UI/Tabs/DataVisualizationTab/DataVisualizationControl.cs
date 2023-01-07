@@ -8,10 +8,6 @@ using Newtonsoft.Json;
 
 public class DataVisualizationControl : MonoBehaviour
 {
-    public bool start = false;
-    public string indicators = "indicators";
-
-
     [SerializeField] private DataVisualizationManager dataVisualizationManager;
     [SerializeField] private RectTransform indicatorsHolder;
     [SerializeField] private DialogControl dialogControl;
@@ -37,52 +33,45 @@ public class DataVisualizationControl : MonoBehaviour
         addDataset.onClick.AddListener(AddDataSets);
         displayDatasets.onValueChanged.AddListener(dataVisualizationManager.DisplayDatasets);
     }
-    
-    void Update()
-    {
-        if (start) {
-            start = false;
-            AddDataSets();
-        }
-    }
 
-    public void AddDataset(string dataset, List<string> indicators)
+    public void AddDataset(string datasetName, List<string> indicators)
     {
         DatasetControl datasetControl = Instantiate(indicatorPrefab, indicatorsHolder).GetComponent<DatasetControl>();
-        datasetControl.Create(dataset, indicators, isOn => {
-            dataVisualizationManager.DisplayDataset(dataset, isOn);
+        datasetControl.Create(datasetName, indicators, isOn => {
+            dataVisualizationManager.DisplayDataset(datasetName, isOn);
         }, indicator => {
-            dataVisualizationManager.SetCurrentIndicator(dataset, indicator);
+            dataVisualizationManager.SetCurrentIndicator(datasetName, indicator);
         }, () => {
-            dataVisualizationManager.DeleteDataset(dataset);
+            dataVisualizationManager.DeleteDataset(datasetName);
         });
-        datasetControls.Add(dataset, datasetControl);
+        datasetControls.Add(datasetName, datasetControl);
 
-        indicatorsHolder.sizeDelta = indicatorsHolder.sizeDelta + new Vector2(0, datasetControl.GetHeight());
+        indicatorsHolder.sizeDelta += new Vector2(0, datasetControl.GetHeight());
     }
 
-    public void DeleteDataset(string dataset)
+    public void DeleteDataset(string datasetName)
     {
-        Destroy(datasetControls[dataset].gameObject);
-        datasetControls.Remove(dataset);
+        indicatorsHolder.sizeDelta -= new Vector2(0, datasetControls[datasetName].GetHeight());
+
+        Destroy(datasetControls[datasetName].gameObject);
+        datasetControls.Remove(datasetName);
     }
 
     private void AddDataSets()
     {
         displayDatasets.isOn = true;
-
+        
         List<string> addedDatasets = new List<string>();
         List<string> notAddedDatasets = new List<string>();
 
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a GeoJSON file", "", "geojson", false);
         foreach (string path in paths) {
-            string dataset = System.IO.Path.GetFileNameWithoutExtension(path);
-            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONReader.ReadFile(path);
+            string datasetName = System.IO.Path.GetFileNameWithoutExtension(path);
 
-            if (dataVisualizationManager.AddDataset(dataset, featureCollection)) {
-                addedDatasets.Add(dataset);
+            if (dataVisualizationManager.CreateDatasetFromNameAndPath(datasetName, path)) {
+                addedDatasets.Add(datasetName);
             } else {
-                notAddedDatasets.Add(dataset);
+                notAddedDatasets.Add(datasetName);
             }
         }
         

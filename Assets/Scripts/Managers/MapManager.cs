@@ -8,7 +8,6 @@ public class MapManager : MonoBehaviour
 {
     public const int UNITY_LAYER_MAP = 6;
     [SerializeField] private SceneManager sceneManager;
-    [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private SkyManager skyManager;
     [SerializeField] private MapControl mapControl;
     [SerializeField] private GameObject locationUndefinedWindow;
@@ -16,11 +15,11 @@ public class MapManager : MonoBehaviour
     private bool isMapInitialized;
     private int numberOfTiles;
     private int numberOfTilesInitialized;
+    private List<Tile> tiles;
 
     void Awake()
     {
         Assert.IsNotNull(sceneManager);
-        Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(skyManager);
         Assert.IsNotNull(mapControl);
         Assert.IsNotNull(locationUndefinedWindow);
@@ -29,10 +28,11 @@ public class MapManager : MonoBehaviour
         map.OnTileFinished += TileFinished;
 
         Mapbox.Unity.Map.RangeTileProviderOptions extentOptions = (Mapbox.Unity.Map.RangeTileProviderOptions) map.Options.extentOptions.GetTileProviderOptions();
-        numberOfTiles = 1 + 2*extentOptions.north + 2*extentOptions.west + 2*extentOptions.south + 2*extentOptions.east;
+        numberOfTiles = (extentOptions.north + 1 + extentOptions.south) * (extentOptions.west + 1 + extentOptions.east);;
 
         numberOfTilesInitialized = 0;
         isMapInitialized = false;
+        tiles = new List<Tile>();
     }
 
     public bool IsMapInitialized()
@@ -42,6 +42,7 @@ public class MapManager : MonoBehaviour
 
     public void ChangeLocation(Location location)
     {
+        tiles.Clear();
         locationUndefinedWindow.SetActive(location == null);
         
         if (location != null) {
@@ -67,11 +68,6 @@ public class MapManager : MonoBehaviour
                 map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
                 map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
             }
-
-            foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
-                objectsManager.OnLocationChanged();
-            }
-            skyManager.OnLocationChanged();
         }
     }
 
@@ -91,7 +87,7 @@ public class MapManager : MonoBehaviour
         return new Vector3d(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale), position.y);
     }
 
-    public bool IsCoordinateOnMap(Vector2d latlong)
+    public bool IsCoordinateOnMap(Vector3d latlong)
     {
         Mapbox.Unity.MeshGeneration.Data.UnityTile tile;
 		return map.MapVisualizer.ActiveTiles.TryGetValue(Conversions.LatitudeLongitudeToTileId(latlong.x, latlong.y, (int)map.Zoom), out tile);
@@ -130,41 +126,47 @@ public class MapManager : MonoBehaviour
         map.VectorData.GetFeatureSubLayerAtIndex(1).SetActive(display);
     }
 
-    public List<MeshRenderer> GetTilesMeshRenderer()
+    public List<Tile> GetTiles()
     {
-        List<MeshRenderer> tiles = new List<MeshRenderer>();
-        foreach (Transform child in transform) {
-            MeshRenderer meshRenderer = child.gameObject.GetComponent<MeshRenderer>();
-            if (meshRenderer != null) {
-                tiles.Add(meshRenderer);
+        if (tiles.Count == 0) {
+            foreach (Transform child in transform) {
+                Mapbox.Unity.MeshGeneration.Data.UnityTile tile = child.gameObject.GetComponent<Mapbox.Unity.MeshGeneration.Data.UnityTile>();
+                
+                if (tile != null) {
+                    tiles.Add(new Tile(tile));
+                }
             }
         }
+
         return tiles;
     }
 
-    public List<Mapbox.Unity.MeshGeneration.Data.UnityTile> GetTiles()
+    public Vector3 GetMapSize()
     {
-        List<Mapbox.Unity.MeshGeneration.Data.UnityTile> tiles = new List<Mapbox.Unity.MeshGeneration.Data.UnityTile>();
-        foreach (Transform child in transform) {
-            Mapbox.Unity.MeshGeneration.Data.UnityTile tile = child.gameObject.GetComponent<Mapbox.Unity.MeshGeneration.Data.UnityTile>();
-            if (tile != null) {
-                tiles.Add(tile);
-            }
+        List<Tile> tiles = GetTiles();
+
+        float tileSize = 0;
+        if (tiles.Count > 0) {
+            tileSize = tiles[0].MeshFilter.mesh.bounds.size.x;
         }
-        return tiles;
+        
+        Mapbox.Unity.Map.RangeTileProviderOptions extentOptions = (Mapbox.Unity.Map.RangeTileProviderOptions) map.Options.extentOptions.GetTileProviderOptions();
+        return tileSize * new Vector3(1 + extentOptions.west + extentOptions.east, 0, 1 + extentOptions.north + extentOptions.south);
     }
 
     private void TileFinished(Mapbox.Unity.MeshGeneration.Data.UnityTile tile)
     {
-        if (!isMapInitialized) {
-            isMapInitialized = true;
-        }
+        if (tile.TileState == Mapbox.Unity.MeshGeneration.Enums.TilePropertyState.Loaded) {
+            if (!isMapInitialized) {
+                isMapInitialized = true;
+            }
 
-        if (tile.MeshRenderer.gameObject.transform.parent == transform) {
             numberOfTilesInitialized++;
-
             if (numberOfTilesInitialized == numberOfTiles) {
-                vegetationManager.GenerateBiomes();
+                foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
+                    objectsManager.OnLocationChanged();
+                }
+                skyManager.OnLocationChanged();
             }
         }
     }

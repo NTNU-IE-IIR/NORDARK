@@ -37,7 +37,7 @@ public class LocationControl : MonoBehaviour
 
     public void ChangeLocation(int locationIndex)
     {
-        location.value = locationIndex;
+        location.SetValueWithoutNotify(locationIndex);
     }
 
     public void ClearLocations()

@@ -5,11 +5,13 @@ using UnityEngine.Assertions;
 
 public class VisualizationFeature : MonoBehaviour
 {
-    [SerializeField] private Material material;
     private const float VISUALIZATION_BLOCK_WIDTH = 5;
     private const float VISUALIZATION_BLOCK_HEIGHT = 5;
+    [SerializeField] private Material material;
     private MeshRenderer meshRenderer;
     private Dictionary<string, object> properties;
+    private string currentIndicator;
+    private bool isCreated;
 
     void Awake()
     {
@@ -17,9 +19,11 @@ public class VisualizationFeature : MonoBehaviour
 
         meshRenderer = GetComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = new Material(material);
+        currentIndicator = "";
+        isCreated = false;
     }
 
-    public bool Create(GeoJSON.Net.Feature.Feature feature, MapManager mapManager)
+    public void Create(GeoJSON.Net.Feature.Feature feature, MapManager mapManager)
     {
         properties = feature.Properties;
 
@@ -30,9 +34,13 @@ public class VisualizationFeature : MonoBehaviour
 
         GeoJSON.Net.Geometry.LineString lineString = feature.Geometry as GeoJSON.Net.Geometry.LineString;
         for (int i=0; i<lineString.Coordinates.Count-1; ++i) {
-            if (mapManager.IsCoordinateOnMap(new Vector2d(lineString.Coordinates[i])) && mapManager.IsCoordinateOnMap(new Vector2d(lineString.Coordinates[i+1]))) {
-                Vector3 currentPosition = mapManager.GetUnityPositionFromCoordinates(new Vector3d(lineString.Coordinates[i]), true);
-                Vector3 nextPosition = mapManager.GetUnityPositionFromCoordinates(new Vector3d(lineString.Coordinates[i+1]), true);
+            Vector3d currentCoordinate = new Vector3d(lineString.Coordinates[i]);
+            Vector3d nextCoordinate = new Vector3d(lineString.Coordinates[i+1]);
+
+            if (mapManager.IsCoordinateOnMap(currentCoordinate) && mapManager.IsCoordinateOnMap(nextCoordinate)) {
+                Vector3 currentPosition = mapManager.GetUnityPositionFromCoordinates(currentCoordinate, true);
+                Vector3 nextPosition = mapManager.GetUnityPositionFromCoordinates(nextCoordinate, true);
+
                 float angle = Mathf.Atan2(nextPosition.z - currentPosition.z, nextPosition.x - currentPosition.x);
                 float xShift = VISUALIZATION_BLOCK_WIDTH * Mathf.Sin(angle);
                 float zShift = VISUALIZATION_BLOCK_WIDTH * Mathf.Cos(angle);
@@ -92,25 +100,45 @@ public class VisualizationFeature : MonoBehaviour
 
         if (vertices.Count < 1) {
             Destroy(gameObject);
-            return false;
         } else {
             Mesh mesh = new Mesh();
             mesh.vertices = vertices.ToArray();
             mesh.uv = uv.ToArray();
             mesh.triangles = triangles.ToArray();
-            gameObject.GetComponent<MeshFilter>().mesh = mesh;
-            return true;
+            GetComponent<MeshFilter>().mesh = mesh;
+            GetComponent<MeshCollider>().sharedMesh = mesh;
         }
+        isCreated = vertices.Count > 0;
     }
 
     public void SetCurrentIndicator(string indicatorName)
     {
         if (properties.ContainsKey(indicatorName)) {
             float indicator = (float) (double) properties[indicatorName];
+            currentIndicator = indicatorName + "\n" + indicator.ToString();
+
             indicator = Mathf.Max(indicator, 0.01f);
             indicator = Mathf.Min(indicator, 0.99f);
 
             meshRenderer.sharedMaterial.SetTextureOffset("_UnlitColorMap", new Vector2(indicator, 0.5f));
+        } else {
+            currentIndicator = indicatorName + "\nNo value";
+            meshRenderer.sharedMaterial.SetTextureOffset("_UnlitColorMap", new Vector2(0, 0.5f));
         }
+    }
+
+    public bool IsCreated()
+    {
+        return isCreated;
+    }
+
+    void OnMouseEnter()
+    {
+        TooltipControl.DisplayTooltip(true, currentIndicator);
+    }
+
+    void OnMouseExit()
+    {
+        TooltipControl.DisplayTooltip(false);
     }
 }

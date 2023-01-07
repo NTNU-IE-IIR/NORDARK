@@ -17,20 +17,40 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
         currentLocationIndex = -1;
     }
 
-    public void Create(Feature feature)
+    public void Create(GeoJSON.Net.Feature.Feature feature)
     {
         Location location = new Location();
-        location.Name = feature.Properties["name"] as string;
-        location.Coordinates = feature.Coordinates[0];
-        List<double> cameraCoordinates = feature.Properties["cameraCoordinates"] as List<double>;
+
+        if (feature.Properties.ContainsKey("name")) {
+            location.Name = feature.Properties["name"] as string;
+        }
+        
+        GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+        double altitude = 0;
+        if (point.Coordinates.Altitude != null) {
+            altitude = (double) point.Coordinates.Altitude;
+        }
+        location.Coordinates = new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude);
+
+        List<double> cameraCoordinates = new List<double>();
+        if (feature.Properties.ContainsKey("cameraCoordinates")) {
+            cameraCoordinates = (feature.Properties["cameraCoordinates"] as Newtonsoft.Json.Linq.JArray).ToObject<List<double>>();
+        }
+        if (cameraCoordinates.Count < 3) {
+            cameraCoordinates = new List<double>{ 0, 0, 0 };
+        }
         location.CameraCoordinates = new Vector3d(cameraCoordinates[0], cameraCoordinates[1], cameraCoordinates[2]);
-        List<float> cameraAngles = feature.Properties["cameraAngles"] as List<float>;
+
+        List<float> cameraAngles = new List<float>();
+        if (feature.Properties.ContainsKey("cameraAngles")) {
+            cameraAngles = (feature.Properties["cameraAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
+        }
+        if (cameraAngles.Count < 3) {
+            cameraAngles = new List<float>{ 0, 0, 0 };
+        }
         location.CameraAngles = new Vector3(cameraAngles[0], cameraAngles[1], cameraAngles[2]);
 
-        locations.Add(location);
-        locationControl.AddLocation(location.Name);
-
-        ChangeLocation(locations.Count - 1);
+        AddLocation(location);
     }
 
     public void Clear()
@@ -45,19 +65,34 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
         locationControl.ChangeLocation(currentLocationIndex);
     }
 
-    public List<Feature> GetFeatures()
+    public List<GeoJSON.Net.Feature.Feature> GetFeatures()
     {
-        List<Feature> features = new List<Feature>();
+        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
+
         foreach (Location location in locations) {
-            Feature feature = new Feature();
-            feature.Properties.Add("name", location.Name);
-            feature.Properties.Add("type", "location");
-            feature.Properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraCoordinates.altitude});
-            feature.Properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
-            feature.Coordinates = new List<Vector3d> {location.Coordinates};
-            features.Add(feature);
+            GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
+                location.Coordinates.x,
+                location.Coordinates.y,
+                location.Coordinates.altitude
+            ));
+            
+            Dictionary<string, object> properties = new Dictionary<string, object>();
+            properties.Add("type", "location");
+            properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraCoordinates.altitude});
+            properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
+
+            features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
+
         return features;
+    }
+
+    public void AddLocation(Location location)
+    {
+        locations.Add(location);
+        locationControl.AddLocation(location.Name);
+
+        ChangeLocation(locations.Count - 1);
     }
 
     public Location GetCurrentLocation()

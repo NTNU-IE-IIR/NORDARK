@@ -19,8 +19,6 @@ public class DatasetControl : MonoBehaviour
         Assert.IsNotNull(indicators);
         Assert.IsNotNull(enable);
         Assert.IsNotNull(delete);
-
-        rectTransform = GetComponent<RectTransform>();
     }
 
     public void Create(
@@ -30,6 +28,8 @@ public class DatasetControl : MonoBehaviour
         System.Action<string> onIndicatorChanged,
         System.Action onDelete)
     {
+        rectTransform = GetComponent<RectTransform>();
+
         title.text = datasetName;
         indicators.AddOptions(indicatorNames);
 

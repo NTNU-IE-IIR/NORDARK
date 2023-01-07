@@ -2,8 +2,8 @@ using System.Collections.Generic;
 
 public interface IObjectsManager
 {
-    void Create(Feature feature);
+    void Create(GeoJSON.Net.Feature.Feature feature);
     void Clear();
     void OnLocationChanged();
-    List<Feature> GetFeatures();
+    List<GeoJSON.Net.Feature.Feature> GetFeatures();
 }

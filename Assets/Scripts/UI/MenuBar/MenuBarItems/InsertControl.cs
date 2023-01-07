@@ -4,13 +4,15 @@ using UnityEngine.Assertions;
 
 public class InsertControl : MenuBarItemControl
 {
-    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private GroundTexturesManager groundTexturesManager;
     [SerializeField] private Button lights;
     [SerializeField] private Button groundTextures;
 
     void Awake()
     {
-        Assert.IsNotNull(sceneManager);
+        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(lights);
         Assert.IsNotNull(groundTextures);
 
@@ -20,12 +22,12 @@ public class InsertControl : MenuBarItemControl
     void Start()
     {
         lights.onClick.AddListener(delegate {
-            sceneManager.AddLights();
+            lightsManager.AddLightsFromFile();
             gameObject.SetActive(false);
         });
 
         groundTextures.onClick.AddListener(delegate {
-            sceneManager.AddGroundTextures();
+            groundTexturesManager.AddGroundTexturesFromFile();
             gameObject.SetActive(false);
         });
     }

@@ -22,7 +22,7 @@ public class Vector3d
         this.altitude = altitude;
     }
 
-    public Vector3d(Vector2d latLong, double altitude)
+    public Vector3d(Vector2d latLong, double altitude = 0)
     {
         this.x = latLong.x;
         this.y = latLong.y;

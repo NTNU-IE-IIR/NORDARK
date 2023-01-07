@@ -29,18 +29,46 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         currentCamera = null;
     }
 
-    public void Create(Feature feature)
+    public void Create(GeoJSON.Net.Feature.Feature feature)
     {
-        CameraNode cameraNode = new CameraNode(
-            feature.Properties["name"] as string,
-            new Vector3d(feature.Coordinates[0].x, feature.Coordinates[0].y, feature.Coordinates[0].altitude)
-        );
-        List<float> eulerAngles = feature.Properties["eulerAngles"] as List<float>;
+        string name = "";
+        if (feature.Properties.ContainsKey("name")) {
+            name = feature.Properties["name"] as string;
+        }
 
+        List<float> eulerAngles = new List<float>();
+        try
+        {
+            eulerAngles = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
+        }
+        catch (System.Exception)
+        {}
+        if (eulerAngles.Count < 3) {
+            eulerAngles = new List<float>{ 0, 0, 0 };
+        }
+
+        CameraParameters cameraParameters = new CameraParameters();
+        try
+        {
+            cameraParameters = new CameraParameters((feature.Properties["parameters"] as Newtonsoft.Json.Linq.JObject).ToObject<CameraParametersSerialized>());
+        }
+        catch (System.Exception)
+        {}
+
+        GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+        double altitude = 0;
+        if (point.Coordinates.Altitude != null) {
+            altitude = (double) point.Coordinates.Altitude;
+        }
+
+        CameraNode cameraNode = new CameraNode(
+            name,
+            new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude)
+        );
         CreateCamera(
             cameraNode,
             new Vector3(eulerAngles[0], eulerAngles[1], eulerAngles[2]),
-            feature.Properties["parameters"] as CameraParameters
+            cameraParameters
         );
     }
 
@@ -66,19 +94,25 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public List<Feature> GetFeatures()
+    public List<GeoJSON.Net.Feature.Feature> GetFeatures()
     {
-        List<Feature> features = new List<Feature>();
+        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
+
         foreach (CameraNode camera in cameras) {
-            Feature feature = new Feature();
-            feature.Properties.Add("type", "camera");
-            feature.Properties.Add("name", camera.Name);
+            GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
+                camera.Coordinates.x, camera.Coordinates.y, camera.Coordinates.altitude
+            ));
+
+            Dictionary<string, object> properties = new Dictionary<string, object>();
+            properties.Add("type", "camera");
+            properties.Add("name", camera.Name);
             Vector3 eulerAngles = camera.Camera.GetEulerAngles();
-            feature.Properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
-            feature.Properties.Add("parameters", camera.Camera.GetParametersSerialized());
-            feature.Coordinates = new List<Vector3d> {camera.Coordinates};
-            features.Add(feature);
+            properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
+            properties.Add("parameters", camera.Camera.GetParametersSerialized());
+            
+            features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
+
         return features;
     }
 

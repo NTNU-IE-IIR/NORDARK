@@ -65,6 +65,6 @@ public class CameraControl : MonoBehaviour
 
     public void CameraChanged(int cameraIndex)
     {
-        cameras.value = cameraIndex;
+        cameras.SetValueWithoutNotify(cameraIndex);
     }
 }

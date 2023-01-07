@@ -82,25 +82,24 @@ public class NewLocationWindow : MonoBehaviour
         string errorMessage = IsInputValid();
 
         if (errorMessage == "") {
-            Feature feature = new Feature();
-            feature.Properties.Add("type", "location");
-            feature.Properties.Add("name", locationName.text);
-            feature.Properties.Add("cameraCoordinates", new List<double> {
-                double.Parse(cameraLatitude.text),
-                double.Parse(cameraLongitude.text),
-                double.Parse(cameraAltitude.text)
-            });
-            feature.Properties.Add("cameraAngles", new List<float> {
-                float.Parse(cameraAngleX.text),
-                float.Parse(cameraAngleY.text),
-                float.Parse(cameraAngleZ.text)
-            });
-            feature.Coordinates = new List<Vector3d> {new Vector3d(
+            Location location = new Location();
+            location.Name = locationName.text;
+            location.Coordinates = new Vector3d(
                 double.Parse(locationLatitude.text),
                 double.Parse(locationLongitude.text),
                 double.Parse(locationAltitude.text)
-            )};
-            locationsManager.Create(feature);
+            );
+            location.CameraCoordinates = new Vector3d(
+                double.Parse(cameraLatitude.text),
+                double.Parse(cameraLongitude.text),
+                double.Parse(cameraAltitude.text)
+            );
+            location.CameraAngles = new Vector3(
+                float.Parse(cameraAngleX.text),
+                float.Parse(cameraAngleY.text),
+                float.Parse(cameraAngleZ.text)
+            );
+            locationsManager.AddLocation(location);
 
             Close();
         } else {
