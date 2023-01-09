@@ -6,9 +6,14 @@ public class GroundTextureCollection
     public List<GroundTexture> GroundTextures;
     public GeoJSON.Net.Feature.FeatureCollection FeatureCollection;
 
-    public GroundTextureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection)
+    public GroundTextureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id)
     {
-        Id = System.Guid.NewGuid().ToString();
+        if (id == "") {
+            Id = System.Guid.NewGuid().ToString();
+        } else {
+            Id = id;
+        }
+        
         GroundTextures = new List<GroundTexture>();
         FeatureCollection = featureCollection;
     }

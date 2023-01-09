@@ -14,7 +14,7 @@ public class DataVisualizationControl : MonoBehaviour
     [SerializeField] private GameObject indicatorPrefab;
     [SerializeField] private Toggle displayDatasets;
     [SerializeField] private Button addDataset;
-    private Dictionary<string, DatasetControl> datasetControls;
+    private Dictionary<string, DatasetControl> datasetControls = new Dictionary<string, DatasetControl>();
 
     void Awake()
     {
@@ -24,8 +24,6 @@ public class DataVisualizationControl : MonoBehaviour
         Assert.IsNotNull(indicatorPrefab);
         Assert.IsNotNull(displayDatasets);
         Assert.IsNotNull(addDataset);
-
-        datasetControls = new Dictionary<string, DatasetControl>();
     }
 
     void Start()

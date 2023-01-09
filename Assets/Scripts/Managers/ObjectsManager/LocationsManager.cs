@@ -50,7 +50,8 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
         }
         location.CameraAngles = new Vector3(cameraAngles[0], cameraAngles[1], cameraAngles[2]);
 
-        AddLocation(location);
+        locations.Add(location);
+        locationControl.AddLocation(location.Name);
     }
 
     public void Clear()
@@ -78,6 +79,7 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
             
             Dictionary<string, object> properties = new Dictionary<string, object>();
             properties.Add("type", "location");
+            properties.Add("name", location.Name);
             properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraCoordinates.altitude});
             properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
 

@@ -31,6 +31,7 @@ public class VisualizationFeature : MonoBehaviour
         List<Vector2> uv = new List<Vector2>();
         List<int> triangles = new List<int>();
         int trianglesOffset = 0;
+        Vector3 lastShift = new Vector3();
 
         GeoJSON.Net.Geometry.LineString lineString = feature.Geometry as GeoJSON.Net.Geometry.LineString;
         for (int i=0; i<lineString.Coordinates.Count-1; ++i) {
@@ -45,17 +46,33 @@ public class VisualizationFeature : MonoBehaviour
                 float xShift = VISUALIZATION_BLOCK_WIDTH * Mathf.Sin(angle);
                 float zShift = VISUALIZATION_BLOCK_WIDTH * Mathf.Cos(angle);
 
-                vertices.AddRange(new List<Vector3> {
-                    currentPosition + new Vector3(xShift, 0, -zShift),
-                    nextPosition + new Vector3(xShift, 0, -zShift),
-                    nextPosition + new Vector3(-xShift, 0, zShift),
-                    currentPosition + new Vector3(-xShift, 0, zShift),
+                if (i > 0) {
+                    vertices.AddRange(new List<Vector3> {
+                        currentPosition + lastShift,
+                        nextPosition + new Vector3(xShift, 0, -zShift),
+                        nextPosition + new Vector3(-xShift, 0, zShift),
+                        currentPosition - lastShift,
 
-                    currentPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
-                    nextPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
-                    nextPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
-                    currentPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
-                });
+                        currentPosition + lastShift + new Vector3(0, VISUALIZATION_BLOCK_HEIGHT, 0),
+                        nextPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
+                        nextPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
+                        currentPosition - lastShift + new Vector3(0, VISUALIZATION_BLOCK_HEIGHT, 0),
+                    });
+                } else {
+                    vertices.AddRange(new List<Vector3> {
+                        currentPosition + new Vector3(xShift, 0, -zShift),
+                        nextPosition + new Vector3(xShift, 0, -zShift),
+                        nextPosition + new Vector3(-xShift, 0, zShift),
+                        currentPosition + new Vector3(-xShift, 0, zShift),
+
+                        currentPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
+                        nextPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
+                        nextPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
+                        currentPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
+                    });
+                }
+
+                lastShift = new Vector3(xShift, 0, -zShift);
 
                 uv.AddRange(new List<Vector2> {
                     new Vector2 (0, 0),

@@ -56,11 +56,11 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         Assert.IsNotNull(maskMaps);
 
         for (int i=0; i<textureNames.Count; ++i) {
-            Assert.IsNotNull(textureNames[0]);
-            Assert.IsNotNull(diffuseMaps[0]);
-            Assert.IsNotNull(normalMaps[0]);
-            Assert.IsNotNull(heightMaps[0]);
-            Assert.IsNotNull(maskMaps[0]);
+            Assert.IsNotNull(textureNames[i]);
+            Assert.IsNotNull(diffuseMaps[i]);
+            Assert.IsNotNull(normalMaps[i]);
+            Assert.IsNotNull(heightMaps[i]);
+            Assert.IsNotNull(maskMaps[i]);
         }
 
         groundTextureCollections = new List<GroundTextureCollection>();
@@ -79,8 +79,13 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
             content = feature.Properties["content"] as string;
         }
 
+        string id = "";
+        if (feature.Properties.ContainsKey("id")) {
+            id = feature.Properties["id"] as string;
+        }
+
         if (content != "") {
-            AddGroundTextureFromFeatureCollection(GeoJSONParser.StringToFeatureCollection(content));
+            CreateGroundTextureFromFeatureCollection(GeoJSONParser.StringToFeatureCollection(content), id);
         }
     }
 
@@ -109,6 +114,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
             Dictionary<string, object> properties = new Dictionary<string, object>();
             properties.Add("type", "groundTexture");
             properties.Add("content", GeoJSONParser.FeatureCollectionToString(groundTextureCollection.FeatureCollection));
+            properties.Add("id", groundTextureCollection.Id);
 
             features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
@@ -136,23 +142,48 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
             } catch (System.Exception) {}
 
             if (errorMessage == "") {
-                AddGroundTextureFromFeatureCollection(featureCollection);
+                StartCoroutine(DisplayGroundTextureCollection(CreateGroundTextureFromFeatureCollection(featureCollection)));
             } else {
                 dialogControl.CreateInfoDialog(errorMessage);
             }
         }
     }
 
-    private void AddGroundTextureFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection)
+    private GroundTextureCollection CreateGroundTextureFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id = "")
     {
-        GroundTextureCollection groundTextureCollection = CreateGroundTextureCollectionFromFeatureCollection(featureCollection);
+        GroundTextureCollection groundTextureCollection = CreateGroundTextureCollectionFromFeatureCollection(featureCollection, id);
         groundTextureCollections.Add(groundTextureCollection);
-        StartCoroutine(DisplayGroundTextureCollection(groundTextureCollection));
+        return groundTextureCollection;
     }
 
-    private GroundTextureCollection CreateGroundTextureCollectionFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection)
+    private void ResetAllTileTextures()
     {
-        GroundTextureCollection groundTextureCollection = new GroundTextureCollection(featureCollection);
+        List<Tile> tiles = mapManager.GetTiles();
+        foreach (Tile tile in tiles) {
+            for (int i=1; i<=NUMBER_OF_TEXTURES; ++i) {
+                Destroy(tile.MeshRenderer.material.GetTexture(MASK_PROPERTY + i.ToString()));
+                tile.MeshRenderer.material.SetTexture(MASK_PROPERTY + i.ToString(), null);
+
+                tile.MeshRenderer.material.SetTexture(DIFFUSE_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), null);
+            }
+        }
+    }
+
+    private IEnumerator DisplayGroundTextureCollection(GroundTextureCollection groundTextureCollection)
+    {
+        if (!AreMasksCreated(groundTextureCollection)) {
+            yield return CreateMasks(groundTextureCollection);
+        }
+        
+        SetMasks(groundTextureCollection);
+    }
+
+    private GroundTextureCollection CreateGroundTextureCollectionFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id)
+    {
+        GroundTextureCollection groundTextureCollection = new GroundTextureCollection(featureCollection, id);
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             string texture = "";
@@ -182,15 +213,6 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         }
 
         return groundTextureCollection;
-    }
-
-    private IEnumerator DisplayGroundTextureCollection(GroundTextureCollection groundTextureCollection)
-    {
-        if (!AreMasksCreated(groundTextureCollection)) {
-            yield return CreateMasks(groundTextureCollection);
-        }
-        
-        SetMasks(groundTextureCollection);
     }
 
     private bool AreMasksCreated(GroundTextureCollection groundTextureCollection)
@@ -281,16 +303,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                         if (textureShaderName != "") {
                             currentMask = tile.MeshRenderer.material.GetTexture(textureShaderName) as Texture2D;
                             if (currentMask != null) {
-                                combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask1", newMask);
-                                combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask2", currentMask);
-                                combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Result", resultCombine);
-                                combineMasksShader.Dispatch(indexOfCombineMaskKernel, resultCombine.width / 32, resultCombine.height / 32, 1);
-
-                                RenderTexture.active = resultCombine;
-                                newMask.ReadPixels(new Rect(0, 0, resultCombine.width, resultCombine.height), 0, 0);
-                                newMask.Apply();
-
-                                Destroy(currentMask);
+                                CombineMasks(resultCombine, newMask, currentMask);
                             }
                             tile.MeshRenderer.material.SetTexture(textureShaderName, newMask);
                         }
@@ -315,6 +328,39 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         foreach (Coroutine coroutine in coroutines) {
             yield return coroutine;
         }
+    }
+
+    private bool IsMaskBlack(Texture2D mask)
+    {
+        int[] result = new int[1];
+        result[0] = 0;
+
+        ComputeBuffer computeBuffer = new ComputeBuffer(1, 4);
+        computeBuffer.SetData(result);
+
+        detectBlackMaskShader.SetTexture(indexOfCombineMaskKernel, "Mask", mask);
+        detectBlackMaskShader.SetBuffer(indexOfDetectBlackMaskKernel, "Result", computeBuffer);
+        detectBlackMaskShader.Dispatch(indexOfCombineMaskKernel, MASK_TEXTURE_SIZE / 32, MASK_TEXTURE_SIZE / 32, 1);
+
+        computeBuffer.GetData(result);
+        bool maskBlack = result[0] == 0;
+        computeBuffer.Release();
+
+        return maskBlack;
+    }
+
+    private void CombineMasks(RenderTexture resultCombine, Texture2D newMask, Texture2D currentMask)
+    {
+        combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask1", newMask);
+        combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask2", currentMask);
+        combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Result", resultCombine);
+        combineMasksShader.Dispatch(indexOfCombineMaskKernel, resultCombine.width / 32, resultCombine.height / 32, 1);
+
+        RenderTexture.active = resultCombine;
+        newMask.ReadPixels(new Rect(0, 0, resultCombine.width, resultCombine.height), 0, 0);
+        newMask.Apply();
+
+        Destroy(currentMask);
     }
 
     private IEnumerator CreateMask(GroundTextureCollection groundTextureCollection, GroundTexture groundTexture, List<Tile> tiles)
@@ -352,23 +398,13 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                     Texture2D currentMask = new Texture2D(maskCameraTexture.width, maskCameraTexture.height);
                     currentMask.LoadImage(System.IO.File.ReadAllBytes(maskPath));
                     
-                    combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask1", newMask);
-                    combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Mask2", currentMask);
-                    combineMasksShader.SetTexture(indexOfCombineMaskKernel, "Result", resultCombine);
-                    combineMasksShader.Dispatch(indexOfCombineMaskKernel, resultCombine.width / 32, resultCombine.height / 32, 1);
-
-                    RenderTexture.active = resultCombine;
-                    newMask.ReadPixels(new Rect(0, 0, resultCombine.width, resultCombine.height), 0, 0);
-                    newMask.Apply();
-
-                    Destroy(currentMask);
+                    CombineMasks(resultCombine, newMask, currentMask);
                 }
 
                 System.IO.File.WriteAllBytes(maskPath, newMask.EncodeToPNG());
                 Destroy(newMask);
 
-                currentStep++;
-                groundTexturesWindow.SetProgress((float) currentStep / numberOfSteps);
+                StepsDone();
             }
             DeleteMaskMesh(maskMesh);
             
@@ -376,6 +412,8 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
             resultCombine.Release();
             maskCameraTexture.Release();
             Destroy(maskCamera.gameObject);
+        } else {
+            StepsDone(tiles.Count);
         }
     }
 
@@ -424,12 +462,6 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         return maskMesh;
     }
 
-    private void DeleteMaskMesh(GameObject maskMesh)
-    {
-        offsets.Remove(maskMesh.transform.position.x);
-        Destroy(maskMesh);
-    }
-
     private string GetGroundTextureCollectionPath(string tileId, string groundTextureCollectionId)
     {
         string folderPath = System.IO.Path.Combine(Application.persistentDataPath, MASK_FOLDER, tileId, groundTextureCollectionId);
@@ -437,38 +469,15 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         return folderPath;
     }
 
-    private bool IsMaskBlack(Texture2D mask)
+    private void StepsDone(int numberOfStepsDone = 1)
     {
-        int[] result = new int[1];
-        result[0] = 0;
-
-        ComputeBuffer computeBuffer = new ComputeBuffer(1, 4);
-        computeBuffer.SetData(result);
-
-        detectBlackMaskShader.SetTexture(indexOfCombineMaskKernel, "Mask", mask);
-        detectBlackMaskShader.SetBuffer(indexOfDetectBlackMaskKernel, "Result", computeBuffer);
-        detectBlackMaskShader.Dispatch(indexOfCombineMaskKernel, MASK_TEXTURE_SIZE / 32, MASK_TEXTURE_SIZE / 32, 1);
-
-        computeBuffer.GetData(result);
-        bool maskBlack = result[0] == 0;
-        computeBuffer.Release();
-
-        return maskBlack;
+        currentStep += numberOfStepsDone;
+        groundTexturesWindow.SetProgress((float) currentStep / numberOfSteps);
     }
 
-    private void ResetAllTileTextures()
+    private void DeleteMaskMesh(GameObject maskMesh)
     {
-        List<Tile> tiles = mapManager.GetTiles();
-        foreach (Tile tile in tiles) {
-            for (int i=1; i<=NUMBER_OF_TEXTURES; ++i) {
-                Destroy(tile.MeshRenderer.material.GetTexture(MASK_PROPERTY + i.ToString()));
-                tile.MeshRenderer.material.SetTexture(MASK_PROPERTY + i.ToString(), null);
-
-                tile.MeshRenderer.material.SetTexture(DIFFUSE_PROPERTY + i.ToString(), null);
-                tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), null);
-                tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), null);
-                tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), null);
-            }
-        }
+        offsets.Remove(maskMesh.transform.position.x);
+        Destroy(maskMesh);
     }
 }

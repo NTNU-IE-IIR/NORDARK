@@ -95,6 +95,7 @@ public class SceneManager : MonoBehaviour
                 }
             }
         }
+        locationsManager.ChangeLocation(0);
         dialogControl.CreateInfoDialog("Scene loaded.");
     }
 

@@ -69,11 +69,11 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             
             List<List<List<double>>> coordinates = new List<List<List<double>>> {new List<List<double>>()};
             foreach (Vector2d coordinate in biomeArea.Coordinates) {
-                coordinates[0].Add(new List<double>{coordinate.x, coordinate.y, 0});
+                coordinates[0].Add(new List<double>{coordinate.y, coordinate.x, 0});
             }
             // In a GeoJSON polygon, the first and last points should be same
             if (biomeArea.Coordinates.Count > 0) {
-                coordinates[0].Add(new List<double>{biomeArea.Coordinates[0].x, biomeArea.Coordinates[0].y, 0});
+                coordinates[0].Add(new List<double>{biomeArea.Coordinates[0].y, biomeArea.Coordinates[0].x, 0});
             }
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Polygon(coordinates);
 

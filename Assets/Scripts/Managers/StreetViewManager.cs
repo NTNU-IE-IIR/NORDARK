@@ -42,7 +42,7 @@ public class StreetViewManager : MonoBehaviour
 
       Location currentLocation = locationsManager.GetCurrentLocation();
       if (currentLocation != null) {
-        rb.MovePosition(mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates, true));
+        rb.MovePosition(mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates, true) + new Vector3(0, 5, 0));
       }
 
       // Starting with the child height (124cm)
