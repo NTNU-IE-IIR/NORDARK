@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 14481.697, g: 11551.163, b: 8768.29, a: 1}
+  m_IndirectSpecularColor: {r: 14564.2705, g: 11620.003, b: 8815.524, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5542,7 +5542,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 220727330}
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -21.191406, y: 0, z: -59.277344}
+  m_LocalPosition: {x: -4.3945312, y: 0, z: -6.1523438}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7487,7 +7487,7 @@ GameObject:
   - component: {fileID: 339263819}
   - component: {fileID: 339263818}
   m_Layer: 5
-  m_Name: Location undefined
+  m_Name: LocationUndefined
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14666,7 +14666,7 @@ MonoBehaviour:
   PersistentVegetationStorage: {fileID: 642597187}
   PredictiveCellLoaderCellsPerFrame: 1
   LoadPotentialVegetationCells: 1
-  CurrentTabIndex: 5
+  CurrentTabIndex: 1
   VegetationPackageIndex: 1
   SeaLevel: 0
   ExcludeSeaLevelCells: 0
@@ -14748,18 +14748,25 @@ MonoBehaviour:
   VegetationStudioCameraList:
   - SelectedCamera: {fileID: 963194227}
     VegetationStudioCameraType: 0
-    RenderDirectToCamera: 0
+    RenderDirectToCamera: 1
     RenderBillboardsOnly: 0
     CameraCullingMode: 0
     VegetationSystemPro: {fileID: 642597185}
     WindSampler: {fileID: 1977260465}
+  - SelectedCamera: {fileID: 8414410721035851599}
+    VegetationStudioCameraType: 0
+    RenderDirectToCamera: 1
+    RenderBillboardsOnly: 0
+    CameraCullingMode: 0
+    VegetationSystemPro: {fileID: 642597185}
+    WindSampler: {fileID: 1469716856}
   - SelectedCamera: {fileID: 0}
     VegetationStudioCameraType: 1
     RenderDirectToCamera: 0
     RenderBillboardsOnly: 0
     CameraCullingMode: 0
     VegetationSystemPro: {fileID: 642597185}
-    WindSampler: {fileID: 1977260465}
+    WindSampler: {fileID: 1469716856}
   ShowVegetationCells: 0
   ShowBillboardCells: 0
   ShowVisibleBillboardCells: 0
@@ -15158,6 +15165,7 @@ Transform:
   m_Children:
   - {fileID: 1631225557}
   - {fileID: 1977260466}
+  - {fileID: 1469716857}
   m_Father: {fileID: 827540394}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -32859,6 +32867,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7958723563030266321, guid: cba78e45be7dbcc439144a160d80b3ac,
         type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7958723563030266321, guid: cba78e45be7dbcc439144a160d80b3ac,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7958723563030266321, guid: cba78e45be7dbcc439144a160d80b3ac,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7958723563030266321, guid: cba78e45be7dbcc439144a160d80b3ac,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: -0
       objectReference: {fileID: 0}
@@ -34193,7 +34216,7 @@ GameObject:
   - component: {fileID: 1420384755}
   - component: {fileID: 1420384754}
   m_Layer: 5
-  m_Name: New Location
+  m_Name: NewLocation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -35465,6 +35488,37 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1469716856
+GameObject:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1469716857}
+  m_Layer: 0
+  m_Name: WindSampler_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1469716857
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1469716856}
+  m_LocalRotation: {x: 0.12044747, y: 0.1255514, z: -0.016068056, w: 0.9846173}
+  m_LocalPosition: {x: -4.4842176, y: 2.7471387, z: -6.2470617}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 642597186}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1476294437
 GameObject:
   m_ObjectHideFlags: 0
@@ -40052,7 +40106,7 @@ GameObject:
   - component: {fileID: 1639230840}
   - component: {fileID: 1639230839}
   m_Layer: 0
-  m_Name: Ground Textures
+  m_Name: GroundTextures
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47387,8 +47441,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1977260465}
-  m_LocalRotation: {x: 0.021000342, y: 0.87059367, z: 0.03875392, w: -0.49002436}
-  m_LocalPosition: {x: -21.270683, y: 56.121346, z: -59.32121}
+  m_LocalRotation: {x: 0.12632568, y: 0.3923659, z: -0.055238083, w: 0.9094172}
+  m_LocalPosition: {x: -5.25084, y: 7.116203, z: -5.5976152}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -87138,7 +87192,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8414410722313265395}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0

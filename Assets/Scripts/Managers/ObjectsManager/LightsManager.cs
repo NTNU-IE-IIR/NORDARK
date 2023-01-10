@@ -85,12 +85,10 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     {
         foreach (LightPole lightPole in lightPoles) {
             lightPole.Light.SetPosition(mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true));
-            lightPole.Light.MultiplyScale(mapManager.GetWorldRelativeScale());
         }
 
         if (selectedLightPole != null) {
             selectionPin.SetPosition(selectedLightPole.Light.GetTransform().position);
-            selectionPin.MultiplyScale(mapManager.GetWorldRelativeScale());
         }
     }
 
@@ -275,7 +273,6 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         
         selectionPin.SetActive(true);
         selectionPin.SetPosition(selectedLightPole.Light.GetTransform().position);
-        selectionPin.MultiplyScale(mapManager.GetWorldRelativeScale());
     }
 
     private void MoveCurrentLight()

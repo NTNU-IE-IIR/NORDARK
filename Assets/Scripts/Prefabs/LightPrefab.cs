@@ -4,7 +4,6 @@ public class LightPrefab : MonoBehaviour
 {
     private const float LIGHT_TEMPERATURE = 6500;
     bool isMoving;
-    Vector3 baseScale;
     UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
     IESLight iesLight;
     Renderer objectRenderer;
@@ -13,7 +12,6 @@ public class LightPrefab : MonoBehaviour
     void Awake()
     {
         isMoving = false;
-        baseScale = transform.localScale;
         hdAdditionalLightData = transform.Find("Light").gameObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
         objectRenderer = GetComponent<Renderer>();
         defaultMaterial = objectRenderer.material;
@@ -37,7 +35,6 @@ public class LightPrefab : MonoBehaviour
     {
         transform.parent = parent;
         transform.position = mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true);
-        transform.localScale = baseScale * mapManager.GetWorldRelativeScale();
         transform.eulerAngles = eulerAngles;
         hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);
     }
@@ -62,11 +59,6 @@ public class LightPrefab : MonoBehaviour
         Vector3 angles = transform.eulerAngles;
         angles.y = rotation;
         transform.eulerAngles = angles;
-    }
-
-    public void MultiplyScale(float scale)
-    {
-        transform.localScale = baseScale * scale;
     }
 
     public Transform GetTransform()

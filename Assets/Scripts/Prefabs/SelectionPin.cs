@@ -50,9 +50,4 @@ public class SelectionPin : MonoBehaviour
     {
         transform.position = position;
     }
-
-    public void MultiplyScale(float scale)
-    {
-        transform.localScale = baseScale * scale;
-    }
 }

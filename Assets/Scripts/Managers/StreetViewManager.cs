@@ -25,6 +25,7 @@ public class StreetViewManager : MonoBehaviour
   const float MAX_HEIGHT = 188f;
   const float MIN_SCALE = 0.05f;
   const float MAX_SCALE = 1.75f;
+  const float SCALE_TO_METER = 1.8f;
 
   public void DisplayCameraPreview(bool shouldDisplay)
   {
@@ -65,7 +66,7 @@ public class StreetViewManager : MonoBehaviour
   public void ChangeHeight(float value)
   {
     float multiplier = (value - MIN_HEIGHT) / (MAX_HEIGHT - MIN_HEIGHT);
-    float scale = MIN_SCALE + multiplier * (MAX_SCALE - MIN_SCALE);
+    float scale = MIN_SCALE + multiplier * (MAX_SCALE - MIN_SCALE) / SCALE_TO_METER;
 
     rb.transform.localScale = new Vector3(
       rb.transform.localScale.x,

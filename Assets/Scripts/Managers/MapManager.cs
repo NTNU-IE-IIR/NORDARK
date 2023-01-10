@@ -73,7 +73,8 @@ public class MapManager : MonoBehaviour
 
     public Vector3 GetUnityPositionFromCoordinates(Vector3d coordinates, bool stickToGround = false)
     {
-        Vector3 position = (new Vector2((float) coordinates.x, (float) coordinates.y)).AsUnityPosition(map.CenterMercator, map.WorldRelativeScale);
+        Vector3 position = Conversions.GeoToWorldPosition(coordinates.x, coordinates.y, map.CenterMercator, map.WorldRelativeScale).ToVector3xz();
+
         if (stickToGround) {
             position.y = map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(coordinates.x, coordinates.y));
         } else {
@@ -109,11 +110,6 @@ public class MapManager : MonoBehaviour
         foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
             objectsManager.OnLocationChanged();
         }
-    }
-
-    public float GetWorldRelativeScale()
-    {
-        return map.WorldRelativeScale;
     }
 
     public void DisplayBuildings(bool display)
