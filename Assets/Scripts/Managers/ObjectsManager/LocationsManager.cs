@@ -72,15 +72,15 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
 
         foreach (Location location in locations) {
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                location.Coordinates.x,
-                location.Coordinates.y,
+                location.Coordinates.latitude,
+                location.Coordinates.longitude,
                 location.Coordinates.altitude
             ));
             
             Dictionary<string, object> properties = new Dictionary<string, object>();
             properties.Add("type", "location");
             properties.Add("name", location.Name);
-            properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.x, location.CameraCoordinates.y, location.CameraCoordinates.altitude});
+            properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.latitude, location.CameraCoordinates.longitude, location.CameraCoordinates.altitude});
             properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
 
             features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));

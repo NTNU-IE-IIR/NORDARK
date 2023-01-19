@@ -15,7 +15,7 @@ public class IESSetter : MonoBehaviour
         IESDirectory = CreateAndGetDirectory();
         UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData = GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
         
-        IESLight iesLight = GetIESLightFromName("Prisma Light Elton 1-S 830 DNW ROTERAD");
+        IESLight iesLight = GetIESLightFromName("Fox_Nyx 330_Comfort_830");
         hdAdditionalLightData.SetCookie(iesLight.Cookie);
         hdAdditionalLightData.SetIntensity(iesLight.Intensity.Value, iesLight.Intensity.Unit);
     }

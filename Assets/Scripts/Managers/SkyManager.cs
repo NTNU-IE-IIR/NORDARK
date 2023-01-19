@@ -29,6 +29,7 @@ public class SkyManager : MonoBehaviour
         Assert.IsNotNull(moon);
 
         _dateTime = System.DateTime.Now;
+
         moonLight = moon.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
     }
 

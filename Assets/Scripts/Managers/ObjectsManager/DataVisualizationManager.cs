@@ -81,10 +81,12 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public void SetCurrentIndicator(string datasetName, string indicator)
+    public void SetIndicatorWeight(string datasetName, string indicator, float weight)
     {
+        datasets[datasetName].Weights[indicator] = weight;
+
         foreach(VisualizationFeature visualizationFeature in datasets[datasetName].VisualizationFeatures) {
-            visualizationFeature.SetCurrentIndicator(indicator);
+            visualizationFeature.SetWeights(datasets[datasetName].Weights);
         }
     }
 
@@ -105,39 +107,38 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         if (datasets.ContainsKey(datasetName)) {
             return false;
         } else {
-            datasets[datasetName] = dataset;
-            CreateVisualizationFeatures(datasetName, dataset);
-            return true;
+            bool atLeastOneValidFeature = false;
+            foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
+                if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString")) {
+                    if (Utils.IsEPSG4326((feature.Geometry as GeoJSON.Net.Geometry.LineString).Coordinates[0])) {
+                        atLeastOneValidFeature = true;
+                    }
+                }
+            }
+            if (atLeastOneValidFeature) {
+                datasets[datasetName] = dataset;
+                CreateVisualizationFeatures(datasetName, dataset);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
     private void CreateVisualizationFeatures(string datasetName, Dataset dataset)
     {
-        HashSet<string> propertyNames = new HashSet<string>();
-
         foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
             if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString")) {
                 VisualizationFeature visualizationFeature = Instantiate(visualizationFeaturePrefab, datasetsParent).GetComponent<VisualizationFeature>();
-                visualizationFeature.Create(feature, mapManager);
+                visualizationFeature.Create(datasetName, dataset.Weights, feature, mapManager);
                 
                 if (visualizationFeature.IsCreated()) {
                     dataset.VisualizationFeatures.Add(visualizationFeature);
                 }
             }
-
-            foreach (KeyValuePair<string, object> property in feature.Properties) {
-                try {
-                    double indicator = (double) property.Value;
-                    propertyNames.Add(property.Key);
-                } catch (System.Exception) {}
-            }
         }
 
-        dataVisualizationControl.AddDataset(datasetName, propertyNames.ToList());
-
-        if (propertyNames.Count > 0) {
-            SetCurrentIndicator(datasetName, propertyNames.ElementAt(0));
-        }
+        dataVisualizationControl.AddDataset(datasetName, dataset.Weights.Keys.ToList());
     }
 
     private void ClearVisualizationFeatures()

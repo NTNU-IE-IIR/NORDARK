@@ -9,6 +9,7 @@ public class MapManager : MonoBehaviour
     public const int UNITY_LAYER_MAP = 6;
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private SkyManager skyManager;
+    [SerializeField] private LightComputationManager lightComputationManager;
     [SerializeField] private MapControl mapControl;
     [SerializeField] private GameObject locationUndefinedWindow;
     private AbstractMap map;
@@ -21,6 +22,7 @@ public class MapManager : MonoBehaviour
     {
         Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(skyManager);
+        Assert.IsNotNull(lightComputationManager);
         Assert.IsNotNull(mapControl);
         Assert.IsNotNull(locationUndefinedWindow);
 
@@ -48,7 +50,7 @@ public class MapManager : MonoBehaviour
         if (location != null) {
             numberOfTilesInitialized = 0;
 
-            map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(location.Coordinates.x, location.Coordinates.y));
+            map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(location.Coordinates.latitude, location.Coordinates.longitude));
             map.UpdateMap();
 
             // There is a Mapbox bug with the roads, buildings and elevation, so we reset them 
@@ -73,10 +75,10 @@ public class MapManager : MonoBehaviour
 
     public Vector3 GetUnityPositionFromCoordinates(Vector3d coordinates, bool stickToGround = false)
     {
-        Vector3 position = Conversions.GeoToWorldPosition(coordinates.x, coordinates.y, map.CenterMercator, map.WorldRelativeScale).ToVector3xz();
+        Vector3 position = Conversions.GeoToWorldPosition(coordinates.latitude, coordinates.longitude, map.CenterMercator, map.WorldRelativeScale).ToVector3xz();
 
         if (stickToGround) {
-            position.y = map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(coordinates.x, coordinates.y));
+            position.y = map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(coordinates.latitude, coordinates.longitude));
         } else {
             position.y = (float) coordinates.altitude;
         }
@@ -88,10 +90,10 @@ public class MapManager : MonoBehaviour
         return new Vector3d(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale), position.y);
     }
 
-    public bool IsCoordinateOnMap(Vector3d latlong)
+    public bool IsCoordinateOnMap(Vector3d coordinates)
     {
         Mapbox.Unity.MeshGeneration.Data.UnityTile tile;
-		return map.MapVisualizer.ActiveTiles.TryGetValue(Conversions.LatitudeLongitudeToTileId(latlong.x, latlong.y, (int)map.Zoom), out tile);
+		return map.MapVisualizer.ActiveTiles.TryGetValue(Conversions.LatitudeLongitudeToTileId(coordinates.latitude, coordinates.longitude, (int)map.Zoom), out tile);
     }
 
     public void SetStyle(int style)
@@ -163,6 +165,7 @@ public class MapManager : MonoBehaviour
                     objectsManager.OnLocationChanged();
                 }
                 skyManager.OnLocationChanged();
+                lightComputationManager.OnLocationChanged();
             }
         }
     }

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -8,24 +7,35 @@ public class VisualizationFeature : MonoBehaviour
     private const float VISUALIZATION_BLOCK_WIDTH = 5;
     private const float VISUALIZATION_BLOCK_HEIGHT = 5;
     [SerializeField] private Material material;
+    [SerializeField] private TooltipDisplayer tooltipDisplayer;
     private MeshRenderer meshRenderer;
-    private Dictionary<string, object> properties;
-    private string currentIndicator;
+    private Dictionary<string, float> indicatorValues;
+    private string datasetName;
     private bool isCreated;
 
     void Awake()
     {
         Assert.IsNotNull(material);
+        Assert.IsNotNull(tooltipDisplayer);
 
         meshRenderer = GetComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = new Material(material);
-        currentIndicator = "";
+        indicatorValues = new Dictionary<string, float>();
         isCreated = false;
     }
 
-    public void Create(GeoJSON.Net.Feature.Feature feature, MapManager mapManager)
+    public void Create(string datasetName, Dictionary<string, float> weights, GeoJSON.Net.Feature.Feature feature, MapManager mapManager)
     {
-        properties = feature.Properties;
+        this.datasetName = datasetName;
+
+        foreach (string indicator in feature.Properties.Keys) {
+            try {
+                indicatorValues[indicator] = (float) (double) feature.Properties[indicator];
+            } catch (System.Exception) {}
+        }
+        foreach (string indicator in indicatorValues.Keys) {
+            weights[indicator] = 1;
+        }
 
         List<Vector3> vertices = new List<Vector3>();
         List<Vector2> uv = new List<Vector2>();
@@ -126,22 +136,8 @@ public class VisualizationFeature : MonoBehaviour
             GetComponent<MeshCollider>().sharedMesh = mesh;
         }
         isCreated = vertices.Count > 0;
-    }
 
-    public void SetCurrentIndicator(string indicatorName)
-    {
-        if (properties.ContainsKey(indicatorName)) {
-            float indicator = (float) (double) properties[indicatorName];
-            currentIndicator = indicatorName + "\n" + indicator.ToString();
-
-            indicator = Mathf.Max(indicator, 0.01f);
-            indicator = Mathf.Min(indicator, 0.99f);
-
-            meshRenderer.sharedMaterial.SetTextureOffset("_UnlitColorMap", new Vector2(indicator, 0.5f));
-        } else {
-            currentIndicator = indicatorName + "\nNo value";
-            meshRenderer.sharedMaterial.SetTextureOffset("_UnlitColorMap", new Vector2(0, 0.5f));
-        }
+        SetWeights(weights);
     }
 
     public bool IsCreated()
@@ -149,13 +145,33 @@ public class VisualizationFeature : MonoBehaviour
         return isCreated;
     }
 
-    void OnMouseEnter()
+    public void SetWeights(Dictionary<string, float> weights)
     {
-        TooltipControl.DisplayTooltip(true, currentIndicator);
-    }
+        float weightSum = 0;
+        foreach (string indicator in weights.Keys) {
+            if (indicatorValues.ContainsKey(indicator)) {
+                weightSum += weights[indicator];
+            }
+        }
 
-    void OnMouseExit()
-    {
-        TooltipControl.DisplayTooltip(false);
+        Dictionary<string, float> weightsNormalized = new Dictionary<string, float>();
+        foreach (string indicator in weights.Keys) {
+            if (indicatorValues.ContainsKey(indicator)) {
+                weightsNormalized[indicator] = weights[indicator] / weightSum;
+            }
+        }
+
+        float value = 0;
+        foreach (string indicator in weightsNormalized.Keys) {
+            value += weightsNormalized[indicator] * indicatorValues[indicator];
+        }
+        
+        tooltipDisplayer.SetText(datasetName + "\n" + value.ToString());
+
+        // Colors on the edge (when value < 0.01 or value > 0.99) are not good
+        value = Mathf.Max(value, 0.01f);
+        value = Mathf.Min(value, 0.99f);
+
+        meshRenderer.sharedMaterial.SetTextureOffset("_UnlitColorMap", new Vector2(value, 0.5f));
     }
 }

@@ -7,6 +7,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
 {
     [SerializeField] private MapManager mapManager;
     [SerializeField] private LocationsManager locationsManager;
+    [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private CameraControl cameraControl;
     [SerializeField] private CameraParametersControl cameraParametersControl;
     [SerializeField] private GameObject cameraPreview;
@@ -19,6 +20,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     {
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(locationsManager);
+        Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(cameraControl);
         Assert.IsNotNull(cameraParametersControl);
         Assert.IsNotNull(cameraPreview);
@@ -75,6 +77,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     public void Clear()
     {
         foreach (CameraNode camera in cameras) {
+            vegetationManager.RemoveCamera(camera.Camera.GetCamera());
             camera.Camera.Destroy();
         }
         cameras.Clear();
@@ -100,7 +103,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
 
         foreach (CameraNode camera in cameras) {
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                camera.Coordinates.x, camera.Coordinates.y, camera.Coordinates.altitude
+                camera.Coordinates.latitude, camera.Coordinates.longitude, camera.Coordinates.altitude
             ));
 
             Dictionary<string, object> properties = new Dictionary<string, object>();
@@ -131,6 +134,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     public void DeleteCamera()
     {
         if (currentCamera != null) {
+            vegetationManager.RemoveCamera(currentCamera.Camera.GetCamera());
             currentCamera.Camera.Destroy();
             cameras.Remove(currentCamera);
             cameraControl.RemoveCamera();
@@ -192,13 +196,14 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     private void CreateCamera(CameraNode camera, Vector3 eulerAngles, CameraParameters cameraParameters)
     {
         cameraControl.AddCameraToList(camera.Name);
-        camera.Camera = (Instantiate(
+        camera.Camera = Instantiate(
             cameraObject,
             mapManager.GetUnityPositionFromCoordinates(camera.Coordinates),
             Quaternion.Euler(eulerAngles),
             transform
-        ) as GameObject).GetComponent<CameraPrefab>();
+        ).GetComponent<CameraPrefab>();
         camera.Camera.SetParameters(cameraParameters);
+        vegetationManager.AddCamera(camera.Camera.GetCamera());
         
         cameras.Add(camera);
         ChangeCurrentCamera(cameras.Count - 1);

@@ -1,4 +1,4 @@
-Shader "FullScreen/LightComputationCustomPass"
+Shader "FullScreen/LuminanceMapCustomPass"
 {
     HLSLINCLUDE
 

@@ -41,11 +41,15 @@ public class SceneManager : MonoBehaviour
 
     public void Load()
     {
-        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "geojson", false);
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "nordark", false);
         if (paths.Length > 0) {
-            currentSave = paths[0];
-            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(paths[0]);
-            LoadScene(featureCollection);
+            try {
+                 GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(paths[0]);
+                currentSave = paths[0];
+                LoadScene(featureCollection);
+            } catch (System.Exception e) {
+                dialogControl.CreateInfoDialog(e.Message);
+            }
         }
     }
 
@@ -60,7 +64,7 @@ public class SceneManager : MonoBehaviour
 
     public void SaveAs()
     {
-        string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Save the current scene", "", "nordark", "geojson");
+        string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Save the current scene", "", "nordark", "nordark");
         if (filename != "") {
             currentSave = filename;
             SaveScene();
@@ -96,7 +100,6 @@ public class SceneManager : MonoBehaviour
             }
         }
         locationsManager.ChangeLocation(0);
-        dialogControl.CreateInfoDialog("Scene loaded.");
     }
 
     private void SaveScene()
@@ -107,6 +110,5 @@ public class SceneManager : MonoBehaviour
         }
         
         GeoJSONParser.FeaturesToFile(currentSave, features);
-        dialogControl.CreateInfoDialog("Scene saved.");
     }
 }

@@ -7,7 +7,6 @@ using Assets.Mapbox.Unity.MeshGeneration.Modifiers.MeshModifiers;
 
 public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 {
-    public const string CORRECT_CRS = "urn:ogc:def:crs:OGC:1.3:CRS84";
     private const string TEXTURE_PROPERTY = "_Texture";
     private const string DIFFUSE_PROPERTY = "_Diffuse";
     private const string NORMAL_MAP_PROPERTY = "_NormalMap";
@@ -127,24 +126,48 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert ground textures to the scene", "", "geojson", true);
 
         foreach (string path in paths) {
-            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
-            string errorMessage = "";
-
             try {
-                string crs = (featureCollection.CRS as GeoJSON.Net.CoordinateReferenceSystem.NamedCRS).Properties["name"] as string;
-                if (crs != CORRECT_CRS) {
-                    errorMessage = 
-                        System.IO.Path.GetFileName(path) + ":\n" + 
-                        "The CRS of the file must be defined as:\n" +
-                        CORRECT_CRS
-                    ;
-                }
-            } catch (System.Exception) {}
+                GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
+            
+                bool atLeastOneValidFeature = false;
+                
+                foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+                    string geometryType = feature.Geometry.GetType().FullName;
 
-            if (errorMessage == "") {
-                StartCoroutine(DisplayGroundTextureCollection(CreateGroundTextureFromFeatureCollection(featureCollection)));
-            } else {
-                dialogControl.CreateInfoDialog(errorMessage);
+                    if (feature.Properties.Count > 0 && string.Equals(geometryType, "GeoJSON.Net.Geometry.Polygon") || string.Equals(geometryType, "GeoJSON.Net.Geometry.MultiPolygon")) {
+                        List<GeoJSON.Net.Geometry.Polygon> polygons = new List<GeoJSON.Net.Geometry.Polygon>();
+
+                        if (string.Equals(geometryType, "GeoJSON.Net.Geometry.Polygon")) {
+                            polygons.Add(feature.Geometry as GeoJSON.Net.Geometry.Polygon);
+                        } else {
+                            GeoJSON.Net.Geometry.MultiPolygon multiPolygon = feature.Geometry as GeoJSON.Net.Geometry.MultiPolygon;
+                            polygons.AddRange(multiPolygon.Coordinates);
+                        }
+
+                        foreach (GeoJSON.Net.Geometry.Polygon polygon in polygons) {
+                            if (polygon.Coordinates[0].Coordinates.Count > 1 && Utils.IsEPSG4326(polygon.Coordinates[0].Coordinates[0])) {
+                                atLeastOneValidFeature = true;
+                            }
+                        }
+                    }
+                }
+
+                if (atLeastOneValidFeature) {
+                    StartCoroutine(DisplayGroundTextureCollection(CreateGroundTextureFromFeatureCollection(featureCollection)));
+                } else {
+                    string message = "Ground texture not added.\n";
+                    message += "The GeoJSON file should be made of Polygon or MultiPolygon with one property containing the ground type (";
+                    foreach (string textureName in textureNames) {
+                        message += textureName + ", ";
+                    }
+                    message = message.Remove(message.Length-2, 2);
+                    message += ").\n";
+                    message += "The EPSG:4326 coordinate system should be used (longitude from -180° to 180° / latitude from -90° to 90°).";
+
+                    dialogControl.CreateInfoDialog(message);
+                }
+            } catch (System.Exception e) {
+                dialogControl.CreateInfoDialog(e.Message);
             }
         }
     }
@@ -186,28 +209,21 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         GroundTextureCollection groundTextureCollection = new GroundTextureCollection(featureCollection, id);
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
-            string texture = "";
-            if (feature.Properties.Count > 0) {
-                texture = feature.Properties.Values.First() as string;
-            }
+            string texture = feature.Properties.Values.First() as string;
             
-            string geometryType = feature.Geometry.GetType().FullName;
+            List<GeoJSON.Net.Geometry.Polygon> polygons = new List<GeoJSON.Net.Geometry.Polygon>();
 
-            if (string.Equals(geometryType, "GeoJSON.Net.Geometry.Polygon") || string.Equals(geometryType, "GeoJSON.Net.Geometry.MultiPolygon")) {
-                List<GeoJSON.Net.Geometry.Polygon> polygons = new List<GeoJSON.Net.Geometry.Polygon>();
+            if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Polygon")) {
+                polygons.Add(feature.Geometry as GeoJSON.Net.Geometry.Polygon);
+            } else {
+                GeoJSON.Net.Geometry.MultiPolygon multiPolygon = feature.Geometry as GeoJSON.Net.Geometry.MultiPolygon;
+                polygons.AddRange(multiPolygon.Coordinates);
+            }
 
-                if (string.Equals(geometryType, "GeoJSON.Net.Geometry.Polygon")) {
-                    polygons.Add(feature.Geometry as GeoJSON.Net.Geometry.Polygon);
-                } else {
-                    GeoJSON.Net.Geometry.MultiPolygon multiPolygon = feature.Geometry as GeoJSON.Net.Geometry.MultiPolygon;
-                    polygons.AddRange(multiPolygon.Coordinates);
-                }
-
-                foreach (GeoJSON.Net.Geometry.Polygon polygon in polygons) {
-                    if (polygon.Coordinates[0].Coordinates.Count > 1) {
-                        GroundTexture groundTexture = new GroundTexture(texture, polygon.Coordinates[0].Coordinates);
-                        groundTextureCollection.GroundTextures.Add(groundTexture);
-                    }
+            foreach (GeoJSON.Net.Geometry.Polygon polygon in polygons) {
+                if (polygon.Coordinates[0].Coordinates.Count > 1) {
+                    GroundTexture groundTexture = new GroundTexture(texture, polygon.Coordinates[0].Coordinates);
+                    groundTextureCollection.GroundTextures.Add(groundTexture);
                 }
             }
         }
@@ -338,9 +354,9 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         ComputeBuffer computeBuffer = new ComputeBuffer(1, 4);
         computeBuffer.SetData(result);
 
-        detectBlackMaskShader.SetTexture(indexOfCombineMaskKernel, "Mask", mask);
+        detectBlackMaskShader.SetTexture(indexOfDetectBlackMaskKernel, "Mask", mask);
         detectBlackMaskShader.SetBuffer(indexOfDetectBlackMaskKernel, "Result", computeBuffer);
-        detectBlackMaskShader.Dispatch(indexOfCombineMaskKernel, MASK_TEXTURE_SIZE / 32, MASK_TEXTURE_SIZE / 32, 1);
+        detectBlackMaskShader.Dispatch(indexOfDetectBlackMaskKernel, MASK_TEXTURE_SIZE / 32, MASK_TEXTURE_SIZE / 32, 1);
 
         computeBuffer.GetData(result);
         bool maskBlack = result[0] == 0;

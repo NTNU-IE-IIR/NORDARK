@@ -1,32 +1,28 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 public class Vector2d
 {
-    public double x { get; set; }
-    public double y { get; set; }
+    public double latitude { get; set; }
+    public double longitude { get; set; }
 
-    public Vector2d(double x, double y)
+    public Vector2d(double latitude, double longitude)
     {
-        this.x = x;
-        this.y = y;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Vector2d(Vector3d vector)
     {
-        this.x = vector.x;
-        this.y = vector.y;
+        this.latitude = vector.latitude;
+        this.longitude = vector.longitude;
     }
 
     public Vector2d(GeoJSON.Net.Geometry.IPosition position)
     {
-        this.x = position.Latitude;
-        this.y = position.Longitude;
+        this.latitude = position.Latitude;
+        this.longitude = position.Longitude;
     }
 
     override public string ToString()
     {
-        return "{x:" + x.ToString() + "; y:" + y.ToString() + "}";
+        return "{latitude:" + this.latitude.ToString() + "; longitude:" + this.longitude.ToString() + "}";
     }
 }

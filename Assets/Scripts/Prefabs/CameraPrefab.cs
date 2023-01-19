@@ -11,6 +11,11 @@ public class CameraPrefab : MonoBehaviour
         Show(false);
     }
 
+    public Camera GetCamera()
+    {
+        return cameraComponent;
+    }
+
     public Vector3 GetPosition()
     {
         return gameObject.transform.position;

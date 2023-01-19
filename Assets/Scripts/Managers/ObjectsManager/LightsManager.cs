@@ -10,10 +10,12 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private IESManager iesManager;
     [SerializeField] private LightControl lightControl;
+    [SerializeField] private DialogControl dialogControl;
     [SerializeField] private SelectionPin selectionPin;
     [SerializeField] private Material highlightMaterial;
-    List<LightPole> lightPoles;
+    private List<LightPole> lightPoles;
     private LightPole selectedLightPole;
+    private List<string> lightPrefabNames;
 
     void Awake()
     {
@@ -21,11 +23,18 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(iesManager);
         Assert.IsNotNull(lightControl);
+        Assert.IsNotNull(dialogControl);
         Assert.IsNotNull(selectionPin);
         Assert.IsNotNull(highlightMaterial);
         
         lightPoles = new List<LightPole>();
         selectedLightPole = null;
+
+        lightPrefabNames = new List<string>();
+        Object[] lights = Resources.LoadAll(LIGHTS_RESOURCES_FOLDER);
+        foreach (Object light in lights) {
+            lightPrefabNames.Add(light.name);
+        }
     }
 
     public void Create(GeoJSON.Net.Feature.Feature feature)
@@ -98,8 +107,8 @@ public class LightsManager : MonoBehaviour, IObjectsManager
 
         foreach (LightPole lightPole in lightPoles) {
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                lightPole.Coordinates.x,
-                lightPole.Coordinates.y,
+                lightPole.Coordinates.latitude,
+                lightPole.Coordinates.longitude,
                 lightPole.Coordinates.altitude
             ));
             
@@ -130,18 +139,45 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     {
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
         foreach (string path in paths) {
-            GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
+            string message = "";
 
-            foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
-                Create(feature);
+            try {
+                GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
+
+                bool atLeastOneValidFeature = false;
+
+                foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+                    GeoJSON.Net.Geometry.Point point = null;
+                    if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
+                        point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+                    } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiPoint")) {
+                        point = (feature.Geometry as GeoJSON.Net.Geometry.MultiPoint).Coordinates[0];
+                    }
+
+                    if (point != null && Utils.IsEPSG4326(point.Coordinates)) {
+                        atLeastOneValidFeature = true;
+                        Create(feature);
+                    }
+                }
+
+                if (atLeastOneValidFeature) {
+                    message = "Lights added.";
+                } else {
+                    message = "Lights not added.\n";
+                    message += "The GeoJSON file should be made of Point or MultiPoint.\n";
+                    message += "The EPSG:4326 coordinate system should be used (longitude from -180° to 180° / latitude from -90° to 90°).";
+                }
+            } catch (System.Exception e) {
+                message = e.Message;
             }
+            
+            dialogControl.CreateInfoDialog(message);
         }
     }
 
     public void DeleteLight()
     {
-        if (selectedLightPole != null)
-        {
+        if (selectedLightPole != null) {
             selectedLightPole.Light.Destroy();
             lightPoles.Remove(selectedLightPole);
             ClearSelectedLight();
@@ -167,18 +203,6 @@ public class LightsManager : MonoBehaviour, IObjectsManager
             selectedLightPole.Light.Create(selectedLightPole, transform, eulerAngles, mapManager);
             selectedLightPole.Light.SetIESLight(iesLight);
         }
-    }
-
-    public List<string> GetLightPrefabNames()
-    {
-        List<string> lightPrefabNames = new List<string>();
-
-        Object[] lights = Resources.LoadAll(LIGHTS_RESOURCES_FOLDER);
-        foreach (Object light in lights) {
-            lightPrefabNames.Add(light.name);
-        }
-
-        return lightPrefabNames;
     }
 
     public void MoveLight()
@@ -248,13 +272,19 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         }
     }
 
+    public List<string> GetLightPrefabNames()
+    {
+        return lightPrefabNames;
+    }
+
     private void CreateLight(LightPole lightPole, Vector3 eulerAngles, string IESName)
     {
         if (lightPole.Name == "") {
             lightPole.Name = Utils.DetermineNewName(lightPoles.Select(light => light.Name).ToList(), "Light");
         }
-        if (lightPole.PrefabName == "") {
-            lightPole.PrefabName = GetLightPrefabNames()[0];
+
+        if (!lightPrefabNames.Contains(lightPole.PrefabName)) {
+            lightPole.PrefabName = lightPrefabNames[0];
         }
         
         lightPole.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightPole.PrefabName)).GetComponent<LightPrefab>();

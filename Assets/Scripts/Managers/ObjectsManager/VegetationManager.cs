@@ -7,6 +7,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
 {
     private const string DEFAULT_BIOME = "Default";
     [SerializeField] private MapManager mapManager;
+    [SerializeField] private AwesomeTechnologies.VegetationSystem.VegetationSystemPro vegetationSystemPro;
     [SerializeField] private VegetationControl vegetationControl;
     private AwesomeTechnologies.MeshTerrains.MeshTerrain meshTerrain;
     private List<BiomeArea> biomeAreas;
@@ -15,6 +16,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
     void Awake()
     {
         Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(vegetationSystemPro);
         Assert.IsNotNull(vegetationControl);
 
         meshTerrain = GetComponent<AwesomeTechnologies.MeshTerrains.MeshTerrain>();
@@ -69,11 +71,11 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             
             List<List<List<double>>> coordinates = new List<List<List<double>>> {new List<List<double>>()};
             foreach (Vector2d coordinate in biomeArea.Coordinates) {
-                coordinates[0].Add(new List<double>{coordinate.y, coordinate.x, 0});
+                coordinates[0].Add(new List<double>{coordinate.longitude, coordinate.latitude, 0});
             }
             // In a GeoJSON polygon, the first and last points should be same
             if (biomeArea.Coordinates.Count > 0) {
-                coordinates[0].Add(new List<double>{biomeArea.Coordinates[0].y, biomeArea.Coordinates[0].x, 0});
+                coordinates[0].Add(new List<double>{biomeArea.Coordinates[0].longitude, biomeArea.Coordinates[0].latitude, 0});
             }
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Polygon(coordinates);
 
@@ -222,5 +224,15 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
         } else {
             return new List<Vector2d>();
         }
+    }
+
+    public void AddCamera(Camera camera)
+    {
+        vegetationSystemPro.AddCamera(camera, false, true, false);
+    }
+
+    public void RemoveCamera(Camera camera)
+    {
+        vegetationSystemPro.RemoveCamera(camera);
     }
 }

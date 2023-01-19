@@ -56,8 +56,8 @@ namespace Sampa {
             timezone = System.TimeZoneInfo.Local.BaseUtcOffset.Hours;
             delta_ut1 = timescale.Delta_ut1;
             delta_t = timescale.Delta_t;
-            longitude = coordinates.y;
-            latitude = coordinates.x;
+            longitude = coordinates.longitude;
+            latitude = coordinates.latitude;
             elevation = coordinates.altitude;
             pressure = 1000;
             temperature = 11;

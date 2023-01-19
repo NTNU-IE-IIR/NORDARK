@@ -18,7 +18,7 @@ public class TooltipControl : MonoBehaviour
 
         instance = this;
         rectTransform = GetComponent<RectTransform>();
-        Display(false, "");
+        DisplayTooltip(false, "");
     }
 
     void Update()
@@ -36,7 +36,10 @@ public class TooltipControl : MonoBehaviour
     {
         gameObject.SetActive(display);
         text.text = message;
-        rectTransform.sizeDelta = text.GetRenderedValues(true) + new Vector2(TEXT_PADDING_SIZE*2, TEXT_PADDING_SIZE*2);
+        text.ForceMeshUpdate();
+
+        rectTransform.sizeDelta = new Vector2(text.preferredWidth, text.preferredHeight) + new Vector2(TEXT_PADDING_SIZE*2, TEXT_PADDING_SIZE*2);
+        transform.position = Input.mousePosition + new Vector3(rectTransform.sizeDelta.x/2, rectTransform.sizeDelta.y/2, 0);
     }
 
     private void HideIfOverUI()

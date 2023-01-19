@@ -13,10 +13,10 @@ TagManager:
   - UI
   - Map
   - Camera
-  - CustomPass
+  - LuminanceMap
   - MaskMesh
-  - 
-  - 
+  - Luminance
+  - Line
   - 
   - 
   - 
