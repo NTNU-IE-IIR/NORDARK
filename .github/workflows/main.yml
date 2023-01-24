@@ -21,9 +21,6 @@ jobs:
           - StandaloneLinux64
 
     steps:
-      - name: Increase disk space
-        uses: easimon/maximize-build-space@master
-
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
