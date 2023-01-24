@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Camera))]
 public class CameraPrefab : MonoBehaviour
 {
     private Camera cameraComponent;

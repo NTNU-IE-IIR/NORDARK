@@ -6,7 +6,7 @@ using TMPro;
 public class LightComputationControl : MonoBehaviour
 {
     [SerializeField] private LightComputationManager lightComputationManager;
-    [SerializeField] private Toggle lightResults;
+    [SerializeField] private Toggle luminanceMap;
     [SerializeField] private Button createMeasureLine;
     [SerializeField] private Button importResults;
     [SerializeField] private Button exportResults;
@@ -14,7 +14,7 @@ public class LightComputationControl : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(lightComputationManager);
-        Assert.IsNotNull(lightResults);
+        Assert.IsNotNull(luminanceMap);
         Assert.IsNotNull(createMeasureLine);
         Assert.IsNotNull(importResults);
         Assert.IsNotNull(exportResults);
@@ -22,7 +22,7 @@ public class LightComputationControl : MonoBehaviour
 
     void Start()
     {
-        lightResults.onValueChanged.AddListener(lightComputationManager.DisplayLightResults);
+        luminanceMap.onValueChanged.AddListener(lightComputationManager.DisplayLuminanceMap);
 
         createMeasureLine.onClick.AddListener(lightComputationManager.DrawLine);
         importResults.onClick.AddListener(lightComputationManager.ImportResults);

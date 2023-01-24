@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Renderer))]
 public class LightPrefab : MonoBehaviour
 {
     private const float LIGHT_TEMPERATURE = 6500;

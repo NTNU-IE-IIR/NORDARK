@@ -16,20 +16,17 @@ public class GraphControl : MonoBehaviour
     [SerializeField] private RectTransform labelTemplateY;
     [SerializeField] private RectTransform dashTemplateX;
     [SerializeField] private RectTransform dashTemplateY;
+    [SerializeField] private RectTransform highlightLine;
     [SerializeField] private Button barChartButton;
     [SerializeField] private Button lineGraphButton;
     [SerializeField] private Transform legend;
     [SerializeField] private GameObject captionPrefab;
     private List<GameObject> gameObjects = new List<GameObject>();
     private List<IGraphVisualObject> graphVisualObjects = new List<IGraphVisualObject>();
-    private List<RectTransform> yLabels = new List<RectTransform>();
     private List<IGraphVisual> graphVisuals = new List<IGraphVisual>();
-    private List<List<float>> valuesList;
-    private List<string> labels;
-    private int maxVisibleValueAmount;
-    private System.Func<int, string> getAxisLabelX;
+    private List<GraphSet> graphSets;
+    private System.Func<float, string> getAxisLabelX;
     private System.Func<float, string> getAxisLabelY;
-    private float xSize;
     private bool startYScaleAtZero = true;
 
     void Awake()
@@ -40,22 +37,23 @@ public class GraphControl : MonoBehaviour
         Assert.IsNotNull(labelTemplateY);
         Assert.IsNotNull(dashTemplateX);
         Assert.IsNotNull(dashTemplateY);
+        Assert.IsNotNull(highlightLine);
         Assert.IsNotNull(barChartButton);
         Assert.IsNotNull(lineGraphButton);
         Assert.IsNotNull(legend);
         Assert.IsNotNull(captionPrefab);
     }
 
-    public void CreateGraph(List<List<float>> valuesList, List<Color> colors, List<string> labels, System.Func<int, string> getAxisLabelX)
+    public void CreateGraph(List<GraphSet> graphSets)
     {
         List<IGraphVisual> lineGraphVisuals = new List<IGraphVisual>();
-        for (int i=0; i<valuesList.Count; ++i) {
-            lineGraphVisuals.Add(new LineGraphVisual(graphContainer, dotSprite, colors[i], new Color(1, 1, 1, 0.5f)));
+        for (int i=0; i<graphSets.Count; ++i) {
+            lineGraphVisuals.Add(new LineGraphVisual(graphContainer, dotSprite, graphSets[i].Color, new Color(1, 1, 1, 0.5f)));
         }
 
         List<IGraphVisual> barChartVisuals = new List<IGraphVisual>();
-        for (int i=0; i<valuesList.Count; ++i) {
-            barChartVisuals.Add(new BarChartVisual(graphContainer, colors[i], 0.9f));
+        for (int i=0; i<graphSets.Count; ++i) {
+            barChartVisuals.Add(new BarChartVisual(graphContainer, graphSets[i].Color, 0.9f));
         }
 
         barChartButton.onClick.AddListener(() => {
@@ -65,7 +63,7 @@ public class GraphControl : MonoBehaviour
             SetGraphVisual(lineGraphVisuals);
         });
         
-        ShowGraph(valuesList, lineGraphVisuals, labels, -1, getAxisLabelX);
+        ShowGraph(graphSets, lineGraphVisuals);
     }
 
     public void Show(bool display)
@@ -79,7 +77,6 @@ public class GraphControl : MonoBehaviour
             Destroy(gameObject);
         }
         gameObjects.Clear();
-        yLabels.Clear();
         foreach (IGraphVisualObject graphVisualObject in graphVisualObjects) {
             graphVisualObject.CleanUp();
         }
@@ -89,68 +86,73 @@ public class GraphControl : MonoBehaviour
         }
     }
 
-    private void SetGraphVisual(List<IGraphVisual> graphVisuals)
+    public void HighlightXLine(float x)
     {
-        ShowGraph(valuesList, graphVisuals, labels, maxVisibleValueAmount, getAxisLabelX, getAxisLabelY);
+        float xMinimum, xMaximum;
+        CalculateXScale(out xMinimum, out xMaximum);
+        float xGraph = (x - xMinimum) / (xMaximum - xMinimum) * graphContainer.sizeDelta.x;
+
+        highlightLine.anchoredPosition = new Vector2(xGraph, highlightLine.anchoredPosition.y);
     }
 
-    private void ShowGraph(List<List<float>> valuesList, List<IGraphVisual> graphVisuals, List<string> labels, int maxVisibleValueAmount = -1, System.Func<int, string> getAxisLabelX = null, System.Func<float, string> getAxisLabelY = null)
+    private void SetGraphVisual(List<IGraphVisual> graphVisuals)
     {
-        if (valuesList == null) {
+        ShowGraph(graphSets, graphVisuals, getAxisLabelX, getAxisLabelY);
+    }
+
+    private void ShowGraph(List<GraphSet> graphSets, List<IGraphVisual> graphVisuals, System.Func<float, string> getAxisLabelX = null, System.Func<float, string> getAxisLabelY = null)
+    {
+        if (graphSets == null) {
             return;
         }
 
         if (getAxisLabelX == null) {
-            getAxisLabelX = i => i.ToString();
+            getAxisLabelX = f => f.ToString("0.0");
         }
         if (getAxisLabelY == null) {
-            getAxisLabelY = f => f.ToString("0.00");
-        }
-        if (maxVisibleValueAmount <= 0 || maxVisibleValueAmount > valuesList.Count) {
-            maxVisibleValueAmount = valuesList.Select(v => v.Count).Max();
+            getAxisLabelY = f => f.ToString("0.0");
         }
 
-        this.valuesList = valuesList;
-        this.labels = labels;
+        this.graphSets = graphSets;
         this.graphVisuals = graphVisuals;
         this.getAxisLabelX = getAxisLabelX;
         this.getAxisLabelY = getAxisLabelY;
-        this.maxVisibleValueAmount = maxVisibleValueAmount;
 
         Clear();
 
         float graphWidth = graphContainer.sizeDelta.x;
         float graphHeight = graphContainer.sizeDelta.y;
-        xSize = graphWidth / (maxVisibleValueAmount+1);
+        int maxNumberOfAbscissas = graphSets.Select(graphSet => graphSet.Ordinates.Count).Max();
+        float maxXSize = graphWidth / maxNumberOfAbscissas;
 
-        float yMinimum, yMaximum;
+        float xMinimum, xMaximum, yMinimum, yMaximum;
+        CalculateXScale(out xMinimum, out xMaximum);
         CalculateYScale(out yMinimum, out yMaximum);
         
-        for (int i=0; i<valuesList.Count; ++i) {
-            List<float> values = valuesList[i];
-            int xIndex = 0;
+        for (int i=0; i<graphSets.Count; ++i) {
+            for (int j=0; j<graphSets[i].Ordinates.Count; ++j) {
+                float xPosition = ((graphSets[i].Abscissas[j] - xMinimum) / (xMaximum - xMinimum)) * graphWidth;
+                float yPosition = ((graphSets[i].Ordinates[j] - yMinimum) / (yMaximum - yMinimum)) * graphHeight;
 
-            for (int j=Mathf.Max(values.Count - maxVisibleValueAmount, 0); j<values.Count; ++j) {
-                float xPosition = (xIndex+1) * xSize;
-                float yPosition = ((values[j] - yMinimum) / (yMaximum - yMinimum)) * graphHeight;
-
-                string tooltipText = getAxisLabelY(values[j]);
-                graphVisualObjects.Add(graphVisuals[i].CreateGraphVisualObject(new Vector2(xPosition, yPosition), xSize, tooltipText));
-
-                RectTransform labelX = Instantiate(labelTemplateX, graphContainer);
-                labelX.gameObject.SetActive(true);
-                labelX.anchoredPosition = new Vector2(xPosition, labelX.anchoredPosition.y);
-                labelX.GetComponent<TMP_Text>().text = getAxisLabelX(j);
-                gameObjects.Add(labelX.gameObject);
-
-                RectTransform dashX = Instantiate(dashTemplateX, graphContainer);
-                dashX.gameObject.SetActive(true);
-                dashX.anchoredPosition = new Vector2(xPosition, dashX.anchoredPosition.y);
-                dashX.GetComponent<Image>().raycastTarget = false;
-                gameObjects.Add(dashX.gameObject);
-
-                xIndex++;
+                string tooltipText = graphSets[i].Ordinates[j].ToString("0.00");
+                graphVisualObjects.Add(graphVisuals[i].CreateGraphVisualObject(new Vector2(xPosition, yPosition), maxXSize, tooltipText));
             }
+        }
+
+        for (int i=0; i<maxNumberOfAbscissas; ++i) {
+            float normalizedValue = (float) i / maxNumberOfAbscissas;
+
+            RectTransform labelX = Instantiate(labelTemplateX, graphContainer);
+            labelX.gameObject.SetActive(true);
+            labelX.anchoredPosition = new Vector2(maxXSize * i, labelX.anchoredPosition.y);
+            labelX.GetComponent<TMP_Text>().text = getAxisLabelX(xMinimum + normalizedValue * (xMaximum - xMinimum));
+            gameObjects.Add(labelX.gameObject);
+
+            RectTransform dashX = Instantiate(dashTemplateX, graphContainer);
+            dashX.gameObject.SetActive(true);
+            dashX.anchoredPosition = new Vector2(maxXSize * i, dashX.anchoredPosition.y);
+            dashX.GetComponent<Image>().raycastTarget = false;
+            gameObjects.Add(dashX.gameObject);
         }
 
         for (int i=0; i<=SEPARATOR_COUNT; ++i) {
@@ -160,7 +162,6 @@ public class GraphControl : MonoBehaviour
             labelY.gameObject.SetActive(true);
             labelY.anchoredPosition = new Vector2(labelY.anchoredPosition.x, normalizedValue * graphHeight);
             labelY.GetComponent<TMP_Text>().text = getAxisLabelY(yMinimum + normalizedValue * (yMaximum - yMinimum));
-            yLabels.Add(labelY);
             gameObjects.Add(labelY.gameObject);
 
             RectTransform dashY = Instantiate(dashTemplateY, graphContainer);
@@ -171,10 +172,22 @@ public class GraphControl : MonoBehaviour
         }
 
         for (int i=0; i<graphVisuals.Count; ++i) {
-            if (valuesList[i].Count > 0) {
+            if (graphSets[i].Ordinates.Count > 0) {
                 Caption caption = Instantiate(captionPrefab, legend).GetComponent<Caption>();
-                caption.Create(graphVisuals[i].GetColor(), labels[i]);
+                caption.Create(graphVisuals[i].GetColor(), graphSets[i].Title);
                 gameObjects.Add(caption.gameObject);
+            }
+        }
+    }
+
+    private void CalculateXScale(out float xMinimum, out float xMaximum)
+    {
+        xMinimum = Mathf.Infinity;
+        xMaximum = -Mathf.Infinity;
+        foreach (GraphSet graphSet in graphSets) {
+            foreach (float ordinate in graphSet.Abscissas) {
+                xMinimum = Mathf.Min(xMinimum, ordinate);
+                xMaximum = Mathf.Max(xMaximum, ordinate);
             }
         }
     }
@@ -183,10 +196,10 @@ public class GraphControl : MonoBehaviour
     {
         yMinimum = Mathf.Infinity;
         yMaximum = -Mathf.Infinity;
-        foreach (List<float> values in valuesList) {
-            foreach (float value in values) {
-                yMinimum = Mathf.Min(yMinimum, value);
-                yMaximum = Mathf.Max(yMaximum, value);
+        foreach (GraphSet graphSet in graphSets) {
+            foreach (float ordinate in graphSet.Ordinates) {
+                yMinimum = Mathf.Min(yMinimum, ordinate);
+                yMaximum = Mathf.Max(yMaximum, ordinate);
             }
         }
         float yDifference = yMaximum - yMinimum;

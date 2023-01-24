@@ -7,18 +7,18 @@ using UnityEngine.EventSystems;
 
 public class MenuBarPanelsControl : MonoBehaviour
 {
-    [SerializeField] private Transform bar;
+    [SerializeField] private Transform buttonsHolder;
     [SerializeField] private Transform panelsParent;
     private List<Button> buttons;
     private List<GameObject> panels;
 
     void Awake()
     {
-        Assert.IsNotNull(bar);
+        Assert.IsNotNull(buttonsHolder);
         Assert.IsNotNull(panelsParent);
         
         buttons = new List<Button>();
-        foreach (Transform child in bar) {
+        foreach (Transform child in buttonsHolder) {
             Button button = child.GetComponent<Button>();
             Assert.IsNotNull(button);
             buttons.Add(button);

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(MeshRenderer))]
 public class Rotation : MonoBehaviour
 {
     private Material material;

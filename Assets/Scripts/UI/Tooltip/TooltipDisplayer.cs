@@ -9,7 +9,7 @@ public class TooltipDisplayer : MonoBehaviour
         text = "";
     }
 
-    void OnMouseEnter()
+    void OnMouseOver()
     {
         TooltipControl.DisplayTooltip(true, text);
     }

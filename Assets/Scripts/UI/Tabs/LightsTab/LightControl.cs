@@ -110,6 +110,11 @@ public class LightControl : MonoBehaviour
         lightSource.AddOptions(iesNames);
     }
 
+    public bool IsHighlighted()
+    {
+        return hightlight.isOn;
+    }
+
     private bool isDoubleClick()
     {
         t2 = Time.realtimeSinceStartup;

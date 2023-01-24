@@ -2,12 +2,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+[RequireComponent(typeof(MeshRenderer))]
+[RequireComponent(typeof(TooltipDisplayer))]
 public class VisualizationFeature : MonoBehaviour
 {
     private const float VISUALIZATION_BLOCK_WIDTH = 5;
     private const float VISUALIZATION_BLOCK_HEIGHT = 5;
     [SerializeField] private Material material;
-    [SerializeField] private TooltipDisplayer tooltipDisplayer;
+    private TooltipDisplayer tooltipDisplayer;
     private MeshRenderer meshRenderer;
     private Dictionary<string, float> indicatorValues;
     private string datasetName;
@@ -16,8 +18,8 @@ public class VisualizationFeature : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(material);
-        Assert.IsNotNull(tooltipDisplayer);
 
+        tooltipDisplayer = GetComponent<TooltipDisplayer>();
         meshRenderer = GetComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = new Material(material);
         indicatorValues = new Dictionary<string, float>();

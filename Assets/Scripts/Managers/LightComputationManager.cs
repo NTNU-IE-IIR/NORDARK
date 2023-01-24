@@ -1,12 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class LightComputationManager : MonoBehaviour
 {
-    private const float LINE_HEIGHT = 2;
     private const int MASK_TEXTURE_SIZE = 32;
     private const int COMPUTATION_RESOLUTION = 20;
     private const float LUMINANCE_RESOLUTION = 100;
@@ -19,11 +17,10 @@ public class LightComputationManager : MonoBehaviour
     [SerializeField] private GameObject legend;
     [SerializeField] private GameObject luminanceCameraPrefab;
     [SerializeField] private ComputeShader luminanceMaxShader;
-    [SerializeField] private LineRenderer line;
-    private bool isCreatingLine;
+    [SerializeField] private ComputationLine computationLine;
     private int indexOfLuminanceMaxShader;
-    private List<float> calculatedResults;
-    private List<float> measuredResults;
+    private GraphSet calculatedResults;
+    private GraphSet measuredResults;
 
     void Awake()
     {
@@ -36,61 +33,16 @@ public class LightComputationManager : MonoBehaviour
         Assert.IsNotNull(legend);
         Assert.IsNotNull(luminanceCameraPrefab);
         Assert.IsNotNull(luminanceMaxShader);
-        Assert.IsNotNull(line);
+        Assert.IsNotNull(computationLine);
 
-        isCreatingLine = false;
         indexOfLuminanceMaxShader = luminanceMaxShader.FindKernel("CSMain");
-        calculatedResults = new List<float>();
-        measuredResults = new List<float>();
-    }
-
-    void Update()
-    {
-        if (isCreatingLine) {
-            if (line.positionCount == 2) {
-                RaycastHit hit;
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
-                    line.SetPosition(1, hit.point + new Vector3(0, LINE_HEIGHT, 0));
-                }
-            }
-
-            if (Input.GetMouseButtonDown(0)) {
-                RaycastHit hit;
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
-                    if (line.positionCount == 0) {
-                        line.positionCount = 2;
-                        line.SetPosition(0, hit.point + new Vector3(0, LINE_HEIGHT, 0));
-                        line.SetPosition(1, hit.point + new Vector3(0, LINE_HEIGHT, 0));
-                    } else {
-                        isCreatingLine = false;
-                        measuredResults.Clear();
-                        StartCoroutine(ComputeAlongLine());
-                    }
-                }
-            }
-        }
-    }
-
-    public void Open()
-    {
-        graphControl.Show(true);
-        line.gameObject.SetActive(true);
-        if (line.positionCount == 2) {
-            StartCoroutine(ComputeAlongLine());
-        }
-    }
-
-    public void Close()
-    {
-        graphControl.Show(false);
-        line.gameObject.SetActive(false);
-        isCreatingLine = false;
+        calculatedResults = new GraphSet("Calculated", Color.blue);
+        measuredResults = new GraphSet("Measured", Color.green);
     }
 
     public void OnLocationChanged()
     {
-        isCreatingLine = false;
-        line.positionCount = 0;
+        computationLine.Erase();
 
         calculatedResults.Clear();
         measuredResults.Clear();
@@ -98,7 +50,28 @@ public class LightComputationManager : MonoBehaviour
         graphControl.Clear();
     }
 
-    public void DisplayLightResults(bool display)
+    public void Open()
+    {
+        graphControl.Show(true);
+        computationLine.Show(true);
+        if (computationLine.IsLineCreated()) {
+            StartCoroutine(ComputeAlongLine());
+        }
+    }
+
+    public void Close()
+    {
+        graphControl.Show(false);
+        computationLine.Show(false);
+    }
+
+    public void LineDefined()
+    {
+        measuredResults.Clear();
+        StartCoroutine(ComputeAlongLine());
+    }
+
+    public void DisplayLuminanceMap(bool display)
     {
         luminanceMapPass.SetActive(display);
         legend.SetActive(display);
@@ -106,10 +79,7 @@ public class LightComputationManager : MonoBehaviour
 
     public void DrawLine()
     {
-        if (!isCreatingLine) {
-            line.positionCount = 0;
-            isCreatingLine = true;
-        }
+        computationLine.Draw();
     }
 
     public void ImportResults()
@@ -122,8 +92,7 @@ public class LightComputationManager : MonoBehaviour
                 GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(paths[0]);
 
                 List<Vector3> positions = new List<Vector3>();
-                measuredResults.Clear();
-
+                List<float> luminances = new List<float>();
                 foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
                     GeoJSON.Net.Geometry.Point point = null;
                     if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
@@ -134,16 +103,21 @@ public class LightComputationManager : MonoBehaviour
 
                     if (point != null && Utils.IsEPSG4326(point.Coordinates) && feature.Properties.ContainsKey("luminance")) {
                         positions.Add(mapManager.GetUnityPositionFromCoordinates(new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude), true));
-                        measuredResults.Add(System.Convert.ToSingle(feature.Properties["luminance"]));
+                        luminances.Add(System.Convert.ToSingle(feature.Properties["luminance"]));
                     }
                 }
-
+                
                 if (positions.Count > 1) {
-                    isCreatingLine = false;
-                    line.positionCount = 2;
-                    line.SetPosition(0, positions.First() + new Vector3(0, LINE_HEIGHT, 0));
-                    line.SetPosition(1, positions.Last() + new Vector3(0, LINE_HEIGHT, 0));
+                    measuredResults.Clear();
+                    for (int i=0; i<positions.Count; ++i) {
+                        float distance = 0;
+                        if (i > 0) {
+                            distance += measuredResults.Abscissas[i-1] + Vector3.Distance(positions[i-1], positions[i]);
+                        }
+                        measuredResults.Add(distance, luminances[i]);
+                    }
 
+                    computationLine.CreateLineFromPoints(positions);
                     StartCoroutine(ComputeAlongLine());
                 } else {
                     message += 
@@ -164,15 +138,17 @@ public class LightComputationManager : MonoBehaviour
 
     public void ExportResults()
     {
-        if (calculatedResults.Count == 0) {
+        if (calculatedResults.Abscissas.Count == 0) {
             dialogControl.CreateInfoDialog("No results to export.");
         } else {
             string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Export light results", "", "light_results", "geojson");
             if (filename != "") {
                 List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
 
-                for (int i=0; i<=COMPUTATION_RESOLUTION; ++i) {
-                    Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(Vector3.Lerp(line.GetPosition(0), line.GetPosition(1), (float) i / COMPUTATION_RESOLUTION));
+                List<Vector3> positions = computationLine.GetPositionsOfMeasuresAlongLine(COMPUTATION_RESOLUTION);
+
+                for (int i=0; i<positions.Count; ++i) {
+                    Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
                     GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
                         coordinate.latitude,
                         coordinate.longitude,
@@ -180,7 +156,7 @@ public class LightComputationManager : MonoBehaviour
                     ));
 
                     Dictionary<string, object> properties = new Dictionary<string, object>();
-                    properties.Add("luminance", calculatedResults[i]);
+                    properties.Add("luminance", calculatedResults.Ordinates[i]);
 
                     features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
                 }
@@ -188,6 +164,11 @@ public class LightComputationManager : MonoBehaviour
                 GeoJSONParser.FeaturesToFile(filename, features);
             }
         }
+    }
+
+    public void LineHighlighted(float distance)
+    {
+        graphControl.HighlightXLine(distance);
     }
 
     private IEnumerator ComputeAlongLine()
@@ -200,22 +181,23 @@ public class LightComputationManager : MonoBehaviour
 
         Camera luminanceCamera = Instantiate(luminanceCameraPrefab, transform).GetComponent<Camera>();
         luminanceCamera.targetTexture = luminanceTexture;
-        luminanceCamera.farClipPlane = LINE_HEIGHT + 1;
-        luminanceCamera.transform.eulerAngles = new Vector3(
-            luminanceCamera.transform.eulerAngles.x,
-            luminanceCamera.transform.eulerAngles.y,
-            Utils.GetAngleBetweenPositions(
-                new Vector2(line.GetPosition(0).x, line.GetPosition(0).z),
-                new Vector2(line.GetPosition(1).x, line.GetPosition(1).z)
-            )
-        );
+
+        Vector3[] positions;
+        float[] angles;
+        float[] distances;
+        computationLine.GetPositionsAnglesDistancesAlongLine(COMPUTATION_RESOLUTION, out positions, out angles, out distances);
         
         // Skip frame to let luminancePass turning on
         yield return null;
 
         calculatedResults.Clear();
-        for (int i=0; i<=COMPUTATION_RESOLUTION; ++i) {
-            luminanceCamera.transform.position = Vector3.Lerp(line.GetPosition(0), line.GetPosition(1), (float) i / COMPUTATION_RESOLUTION);
+        for (int i=0; i<positions.Length; ++i) {
+            luminanceCamera.transform.position = positions[i];
+            luminanceCamera.transform.eulerAngles = new Vector3(
+                luminanceCamera.transform.eulerAngles.x,
+                luminanceCamera.transform.eulerAngles.y,
+                angles[i]
+            );
         
             // Skip frame to render to camera
             yield return null;
@@ -232,7 +214,7 @@ public class LightComputationManager : MonoBehaviour
             luminanceMaxShader.Dispatch(indexOfLuminanceMaxShader, luminanceTexture.width / 32, luminanceTexture.height / 32, 1);
 
             computeBuffer.GetData(result);                        
-            calculatedResults.Add(result[0] / LUMINANCE_RESOLUTION);
+            calculatedResults.Add(distances[i], result[0] / LUMINANCE_RESOLUTION);
             computeBuffer.Release();
         }
 
@@ -240,13 +222,6 @@ public class LightComputationManager : MonoBehaviour
         Destroy(luminanceCamera.gameObject);
         luminancePass.SetActive(false);
 
-        graphControl.CreateGraph(
-            new List<List<float>> { calculatedResults, measuredResults },
-            new List<Color> { Color.blue, Color.green },
-            new List<string> { "Calculated", "Measured" },
-            i => {
-                return Vector3.Distance(line.GetPosition(0), Vector3.Lerp(line.GetPosition(0), line.GetPosition(1), (float) i / COMPUTATION_RESOLUTION)).ToString("0.0");
-            }
-        );
+        graphControl.CreateGraph(new List<GraphSet> { calculatedResults, measuredResults });
     }
 }

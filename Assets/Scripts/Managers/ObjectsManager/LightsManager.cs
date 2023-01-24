@@ -202,6 +202,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
             selectedLightPole.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + newLightType)).GetComponent<LightPrefab>();
             selectedLightPole.Light.Create(selectedLightPole, transform, eulerAngles, mapManager);
             selectedLightPole.Light.SetIESLight(iesLight);
+            selectedLightPole.Light.Hightlight(lightControl.IsHighlighted(), highlightMaterial);
         }
     }
 
@@ -290,6 +291,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         lightPole.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightPole.PrefabName)).GetComponent<LightPrefab>();
         lightPole.Light.Create(lightPole, transform, eulerAngles, mapManager);
         lightPole.Light.SetIESLight(iesManager.GetIESLightFromName(IESName));
+        lightPole.Light.Hightlight(lightControl.IsHighlighted(), highlightMaterial);
 
         lightPoles.Add(lightPole);
     }
