@@ -109,10 +109,16 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         } else {
             bool atLeastOneValidFeature = false;
             foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
+                GeoJSON.Net.Geometry.LineString lineString = null;
+
                 if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString")) {
-                    if (Utils.IsEPSG4326((feature.Geometry as GeoJSON.Net.Geometry.LineString).Coordinates[0])) {
-                        atLeastOneValidFeature = true;
-                    }
+                    lineString = feature.Geometry as GeoJSON.Net.Geometry.LineString;
+                } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiLineString")) {
+                    lineString = (feature.Geometry as GeoJSON.Net.Geometry.MultiLineString).Coordinates[0];
+                }
+
+                if (lineString != null && Utils.IsEPSG4326(lineString.Coordinates[0])) {
+                    atLeastOneValidFeature = true;
                 }
             }
             if (atLeastOneValidFeature) {
@@ -128,7 +134,7 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
     private void CreateVisualizationFeatures(string datasetName, Dataset dataset)
     {
         foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
-            if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString")) {
+            if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString") || string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiLineString")) {
                 VisualizationFeature visualizationFeature = Instantiate(visualizationFeaturePrefab, datasetsParent).GetComponent<VisualizationFeature>();
                 visualizationFeature.Create(datasetName, dataset.Weights, feature, mapManager);
                 

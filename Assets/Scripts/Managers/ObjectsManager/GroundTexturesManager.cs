@@ -19,7 +19,6 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
     private const int MAX_NUMBER_OF_COROUTINES = 10;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private SceneManager sceneManager;
-    [SerializeField] private DialogControl dialogControl;
     [SerializeField] private GroundTexturesWindow groundTexturesWindow;
     [SerializeField] private GameObject maskMeshPrefab;
     [SerializeField] private GameObject maskCameraPrefab;
@@ -42,7 +41,6 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
     {
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(sceneManager);
-        Assert.IsNotNull(dialogControl);
         Assert.IsNotNull(groundTexturesWindow);
         Assert.IsNotNull(maskMeshPrefab);
         Assert.IsNotNull(maskCameraPrefab);
@@ -164,10 +162,10 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                     message += ").\n";
                     message += "The EPSG:4326 coordinate system should be used (longitude from -180° to 180° / latitude from -90° to 90°).";
 
-                    dialogControl.CreateInfoDialog(message);
+                    DialogControl.CreateDialog(message);
                 }
             } catch (System.Exception e) {
-                dialogControl.CreateInfoDialog(e.Message);
+                DialogControl.CreateDialog(e.Message);
             }
         }
     }
@@ -290,6 +288,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 
                 if (textureNames.Contains(textureName)) {
                     Texture2D newMask = new Texture2D(MASK_TEXTURE_SIZE, MASK_TEXTURE_SIZE);
+                    newMask.wrapMode = TextureWrapMode.Clamp;
                     newMask.LoadImage(System.IO.File.ReadAllBytes(file));
 
                     if (!IsMaskBlack(newMask)) {

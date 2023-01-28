@@ -8,14 +8,12 @@ public class IESManager : MonoBehaviour
 {
     private const string IES_RESOURCES_FOLDER = "IES";
     [SerializeField] private LightControl lightControl;
-    [SerializeField] private DialogControl dialogControl;
     private List<IESLight> IESs;
     private string IESDirectory;
 
     void Awake()
     {
         Assert.IsNotNull(lightControl);
-        Assert.IsNotNull(dialogControl);
 
         IESDirectory = CreateAndGetDirectory();
         
@@ -69,7 +67,7 @@ public class IESManager : MonoBehaviour
             }
         }
         if (message != "") {
-            dialogControl.CreateInfoDialog(message);
+            DialogControl.CreateDialog(message);
         }
     }
 

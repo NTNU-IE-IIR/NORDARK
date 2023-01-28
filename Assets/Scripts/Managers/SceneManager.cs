@@ -12,7 +12,6 @@ public class SceneManager : MonoBehaviour
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private GroundTexturesManager groundTexturesManager;
     [SerializeField] private DataVisualizationManager dataVisualizationManager;
-    [SerializeField] private DialogControl dialogControl;
     private string currentSave;
     private List<IObjectsManager> objectsManagers;
 
@@ -24,7 +23,6 @@ public class SceneManager : MonoBehaviour
         Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(dataVisualizationManager);
-        Assert.IsNotNull(dialogControl);
 
         currentSave = "";
         objectsManagers = new List<IObjectsManager>{
@@ -48,7 +46,7 @@ public class SceneManager : MonoBehaviour
                 currentSave = paths[0];
                 LoadScene(featureCollection);
             } catch (System.Exception e) {
-                dialogControl.CreateInfoDialog(e.Message);
+                DialogControl.CreateDialog(e.Message);
             }
         }
     }

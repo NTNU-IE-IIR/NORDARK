@@ -10,7 +10,6 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private IESManager iesManager;
     [SerializeField] private LightControl lightControl;
-    [SerializeField] private DialogControl dialogControl;
     [SerializeField] private SelectionPin selectionPin;
     [SerializeField] private Material highlightMaterial;
     private List<LightPole> lightPoles;
@@ -23,7 +22,6 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(iesManager);
         Assert.IsNotNull(lightControl);
-        Assert.IsNotNull(dialogControl);
         Assert.IsNotNull(selectionPin);
         Assert.IsNotNull(highlightMaterial);
         
@@ -171,7 +169,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
                 message = e.Message;
             }
             
-            dialogControl.CreateInfoDialog(message);
+            DialogControl.CreateDialog(message);
         }
     }
 

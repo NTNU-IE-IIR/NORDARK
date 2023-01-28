@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -45,7 +46,11 @@ public class VisualizationFeature : MonoBehaviour
         int trianglesOffset = 0;
         Vector3 lastShift = new Vector3();
 
-        GeoJSON.Net.Geometry.LineString lineString = feature.Geometry as GeoJSON.Net.Geometry.LineString;
+        GeoJSON.Net.Geometry.LineString lineString = string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString") ?
+            (feature.Geometry as GeoJSON.Net.Geometry.LineString) :
+            (feature.Geometry as GeoJSON.Net.Geometry.MultiLineString).Coordinates[0]
+        ;
+
         for (int i=0; i<lineString.Coordinates.Count-1; ++i) {
             Vector3d currentCoordinate = new Vector3d(lineString.Coordinates[i]);
             Vector3d nextCoordinate = new Vector3d(lineString.Coordinates[i+1]);

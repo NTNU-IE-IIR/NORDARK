@@ -7,7 +7,7 @@ RWStructuredBuffer<int> Result;
 [numthreads(32,32,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    InterlockedMax(Result[0], LuminanceResolution * (
+    InterlockedAdd(Result[0], LuminanceResolution * (
         round(Texture[id.xy].r * 100.) * 100 +
         round(Texture[id.xy].g * 100.) * 1 +
         round(Texture[id.xy].b * 100.) * .01

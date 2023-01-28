@@ -6,7 +6,6 @@ using UnityEngine.Assertions;
 public class DataVisualizationControl : MonoBehaviour
 {
     [SerializeField] private DataVisualizationManager dataVisualizationManager;
-    [SerializeField] private DialogControl dialogControl;
     [SerializeField] private RectTransform indicatorsHolder;
     [SerializeField] private GameObject indicatorPrefab;
     [SerializeField] private RectTransform weightsHolder;
@@ -18,7 +17,6 @@ public class DataVisualizationControl : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(dataVisualizationManager);
-        Assert.IsNotNull(dialogControl);
         Assert.IsNotNull(indicatorsHolder);
         Assert.IsNotNull(indicatorPrefab);
         Assert.IsNotNull(weightsHolder);
@@ -115,7 +113,7 @@ public class DataVisualizationControl : MonoBehaviour
         }
         
         if (message != "") {
-            dialogControl.CreateInfoDialog(message);
+            DialogControl.CreateDialog(message);
         }
     }
 }
