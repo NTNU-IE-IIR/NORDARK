@@ -19,6 +19,7 @@ public class GraphControl : MonoBehaviour
     [SerializeField] private RectTransform highlightLine;
     [SerializeField] private Button barChartButton;
     [SerializeField] private Button lineGraphButton;
+    [SerializeField] private Button refreshButton;
     [SerializeField] private Transform legend;
     [SerializeField] private GameObject captionPrefab;
     private List<GameObject> gameObjects = new List<GameObject>();
@@ -40,11 +41,12 @@ public class GraphControl : MonoBehaviour
         Assert.IsNotNull(highlightLine);
         Assert.IsNotNull(barChartButton);
         Assert.IsNotNull(lineGraphButton);
+        Assert.IsNotNull(refreshButton);
         Assert.IsNotNull(legend);
         Assert.IsNotNull(captionPrefab);
     }
 
-    public void CreateGraph(List<GraphSet> graphSets)
+    public void CreateGraph(List<GraphSet> graphSets, System.Action onRefresh)
     {
         List<IGraphVisual> lineGraphVisuals = new List<IGraphVisual>();
         for (int i=0; i<graphSets.Count; ++i) {
@@ -56,11 +58,19 @@ public class GraphControl : MonoBehaviour
             barChartVisuals.Add(new BarChartVisual(graphContainer, graphSets[i].Color, 0.9f));
         }
 
+        barChartButton.onClick.RemoveAllListeners();
         barChartButton.onClick.AddListener(() => {
             SetGraphVisual(barChartVisuals);
         });
+
+        lineGraphButton.onClick.RemoveAllListeners();
         lineGraphButton.onClick.AddListener(() => {
             SetGraphVisual(lineGraphVisuals);
+        });
+
+        refreshButton.onClick.RemoveAllListeners();
+        refreshButton.onClick.AddListener(() => {
+            onRefresh();
         });
         
         ShowGraph(graphSets, lineGraphVisuals);
@@ -110,7 +120,13 @@ public class GraphControl : MonoBehaviour
             getAxisLabelX = f => f.ToString("0.0");
         }
         if (getAxisLabelY == null) {
-            getAxisLabelY = f => f.ToString("0.0");
+            getAxisLabelY = f => {
+                if (f < 10) {
+                    return f.ToString("0.000");
+                } else {
+                    return f.ToString("0.");
+                }
+            };
         }
 
         this.graphSets = graphSets;
@@ -134,23 +150,23 @@ public class GraphControl : MonoBehaviour
                 float xPosition = ((graphSets[i].Abscissas[j] - xMinimum) / (xMaximum - xMinimum)) * graphWidth;
                 float yPosition = ((graphSets[i].Ordinates[j] - yMinimum) / (yMaximum - yMinimum)) * graphHeight;
 
-                string tooltipText = graphSets[i].Ordinates[j].ToString("0.00");
+                string tooltipText = graphSets[i].Ordinates[j].ToString("0.0000");
                 graphVisualObjects.Add(graphVisuals[i].CreateGraphVisualObject(new Vector2(xPosition, yPosition), maxXSize, tooltipText));
             }
         }
 
-        for (int i=0; i<maxNumberOfAbscissas; ++i) {
-            float normalizedValue = (float) i / maxNumberOfAbscissas;
+        for (int i=0; i<=SEPARATOR_COUNT; ++i) {
+            float normalizedValue = (float) i / SEPARATOR_COUNT;
 
             RectTransform labelX = Instantiate(labelTemplateX, graphContainer);
             labelX.gameObject.SetActive(true);
-            labelX.anchoredPosition = new Vector2(maxXSize * i, labelX.anchoredPosition.y);
+            labelX.anchoredPosition = new Vector2(normalizedValue * graphWidth, labelX.anchoredPosition.y);
             labelX.GetComponent<TMP_Text>().text = getAxisLabelX(xMinimum + normalizedValue * (xMaximum - xMinimum));
             gameObjects.Add(labelX.gameObject);
 
             RectTransform dashX = Instantiate(dashTemplateX, graphContainer);
             dashX.gameObject.SetActive(true);
-            dashX.anchoredPosition = new Vector2(maxXSize * i, dashX.anchoredPosition.y);
+            dashX.anchoredPosition = new Vector2(normalizedValue * graphWidth, dashX.anchoredPosition.y);
             dashX.GetComponent<Image>().raycastTarget = false;
             gameObjects.Add(dashX.gameObject);
         }

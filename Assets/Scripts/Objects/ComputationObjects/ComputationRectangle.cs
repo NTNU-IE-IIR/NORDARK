@@ -12,12 +12,14 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     [SerializeField] private MapManager mapManager;
     [SerializeField] private ObjectVisualizationControl gridVisualizationControl;
     [SerializeField] private HeatmapControl heatmapControl;
+    [SerializeField] private GameObject heatmapPositionIndicator;
     private LineRenderer line;
     private bool isCreatingRectangle;
     private bool centerSet;
     private Vector3 center;
     private Camera mainCamera;
-    private bool heatmapShown;
+    private List<Vector3> positions;
+    private List<float> luminances;
 
     void Awake()
     {
@@ -25,12 +27,14 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(gridVisualizationControl);
         Assert.IsNotNull(heatmapControl);
+        Assert.IsNotNull(heatmapPositionIndicator);
 
         line = GetComponent<LineRenderer>();
         isCreatingRectangle = false;
         centerSet = false;
         mainCamera = Camera.main;
-        heatmapShown = true;
+        positions = new List<Vector3>();
+        luminances = new List<float>();
     }
 
     void Update()
@@ -68,8 +72,8 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
                 if (Input.GetMouseButton(1) && line.GetPosition(0) != line.GetPosition(1)) {
                     isCreatingRectangle = false;
                     TooltipControl.DisplayTooltip(false);
-                    lightComputationManager.ObjectDefined(this);
                     heatmapControl.SetComputing();
+                    lightComputationManager.ComputeAlongObject(this);
                 }
             }
         }
@@ -78,12 +82,11 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     public void Show(bool show)
     {
         gameObject.SetActive(show);
-        heatmapControl.Show(show && heatmapShown);
 
         if (show) {
             if (IsRectangleCreated()) {
-                lightComputationManager.ObjectDefined(this);
                 heatmapControl.SetComputing();
+                lightComputationManager.ComputeAlongObject(this);
             }
         } else {
             isCreatingRectangle = false;
@@ -106,21 +109,20 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
         isCreatingRectangle = false;
         TooltipControl.DisplayTooltip(false);
         heatmapControl.SetWaitingForDefinition();
+        positions.Clear();
+        luminances.Clear();
     }
 
     public void ImportResults()
-    {
-
-    }
+    {}
 
     public void ExportResults()
     {
-
+        lightComputationManager.ExportResults(positions, luminances);
     }
 
     public void ShowVisualizationMethod(bool show)
     {
-        heatmapShown = show;
         heatmapControl.Show(show);
     }
 
@@ -157,12 +159,35 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
 
     public void ResultsComputed(Vector3[] positions, float[] luminances)
     {
-        float maxLuminance = luminances.Max();
-        for (int i=0; i<luminances.Length; ++i) {
-            luminances[i] = 1 - luminances[i] / maxLuminance;
-        }
+        this.positions = positions.ToList();
+        this.luminances = luminances.ToList();
 
-        heatmapControl.SetHeatmap(luminances);
+        heatmapControl.SetHeatmap(positions, luminances, () => {
+            heatmapControl.SetComputing();
+            lightComputationManager.ComputeAlongObject(this);
+        });
+    }
+
+    public void OnMouseOver(Vector2 normalizedPosition)
+    {
+        if (positions.Count > 1) {
+            Vector3 position = new Vector3(
+                Mathf.Lerp(positions.First().x, positions.Last().x, normalizedPosition.y),
+                0,
+                Mathf.Lerp(positions.First().z, positions.Last().z, normalizedPosition.x)
+            );
+
+            // Set y coordinate to terrain height
+            position = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(position), true);
+
+            heatmapPositionIndicator.SetActive(true);
+            heatmapPositionIndicator.transform.position = position;
+        }
+    }
+
+    public void OnMouseExit()
+    {
+        heatmapPositionIndicator.SetActive(false);
     }
 
     private bool IsRectangleCreated()

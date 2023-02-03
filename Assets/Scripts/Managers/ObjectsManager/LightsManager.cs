@@ -226,10 +226,16 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     {
         if (selectedLightPole != null && newIESName != selectedLightPole.Light.GetIESLight().Name) {
             IESLight newIES = iesManager.GetIESLightFromName(newIESName);
-
             if (newIES != null) {
                 selectedLightPole.Light.SetIESLight(newIES);
             }
+        }
+    }
+
+    public void ChangeLightName(string newName)
+    {
+        if (selectedLightPole != null) {
+            selectedLightPole.Name = newName;
         }
     }
 

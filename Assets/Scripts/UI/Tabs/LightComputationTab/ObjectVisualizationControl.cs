@@ -17,26 +17,29 @@ public class ObjectVisualizationControl : MonoBehaviour
     {
         Assert.IsNotNull(computationObjectGameObject);
         Assert.IsNotNull(createMeasureObject);
-        Assert.IsNotNull(importResults);
         Assert.IsNotNull(exportResults);
         Assert.IsNotNull(displayVisualizationMethod);
-        Assert.IsNotNull(resolution);
-
-        // The gameobject is used because IComputationObject is an interface and cannot be serialized
-        computationObject = computationObjectGameObject.GetComponent<IComputationObject>();
-        Assert.IsNotNull(computationObject);
+        Assert.IsNotNull(resolution); 
     }
 
     void Start()
     {
         createMeasureObject.onClick.AddListener(computationObject.Draw);
-        importResults.onClick.AddListener(computationObject.ImportResults);
+
+        if (importResults != null) {
+            importResults.onClick.AddListener(computationObject.ImportResults);
+        }
+        
         exportResults.onClick.AddListener(computationObject.ExportResults);
         displayVisualizationMethod.onValueChanged.AddListener(computationObject.ShowVisualizationMethod);
     }
 
     public IComputationObject GetComputationObject()
     {
+        // The gameobject is used because IComputationObject is an interface and cannot be serialized
+        if (computationObject == null) {
+            computationObject = computationObjectGameObject.GetComponent<IComputationObject>();
+        }
         return computationObject;
     }
 

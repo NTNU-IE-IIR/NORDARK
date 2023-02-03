@@ -21,7 +21,6 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     private Camera mainCamera;
     private GraphSet calculatedResults;
     private GraphSet measuredResults;
-    private bool graphShown;
 
     void Awake()
     {
@@ -37,7 +36,6 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         mainCamera = Camera.main;
         calculatedResults = new GraphSet("Calculated", Color.blue);
         measuredResults = new GraphSet("Measured", Color.green);
-        graphShown = true;
     }
 
     void Update()
@@ -47,7 +45,13 @@ public class ComputationLine : MonoBehaviour, IComputationObject
             if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
                 if (line.positionCount >= 2) {
                     line.SetPosition(line.positionCount-1, hit.point + new Vector3(0, LINE_HEIGHT, 0));
-                    TooltipControl.DisplayTooltip(true, GetLineDistance().ToString("0.0") + "m");
+                    float distance = GetLineDistance();
+                    Vector3 lastLineVector = line.GetPosition(line.positionCount-1) - line.GetPosition(line.positionCount-2);
+                    float angle = Utils.GetAngleBetweenPositions(new Vector2(lastLineVector.x, lastLineVector.z), new Vector2(0, 1));
+
+                    angle = (Mathf.Rad2Deg * Mathf.Atan2(lastLineVector.z, lastLineVector.x) + 270 ) % 360;
+
+                    TooltipControl.DisplayTooltip(true, distance.ToString("0.0") + "m\n" + angle.ToString("0.0") + "°");
                 }
 
                 if (Input.GetMouseButtonDown(0)) {
@@ -66,7 +70,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                     TooltipControl.DisplayTooltip(false);
 
                     measuredResults.Clear();
-                    lightComputationManager.ObjectDefined(this);
+                    lightComputationManager.ComputeAlongObject(this);
                     SetMeshCollider();
                 }
             }
@@ -96,11 +100,10 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     public void Show(bool show)
     {
         gameObject.SetActive(show);
-        graphControl.Show(show && graphShown);
 
         if (show) {
             if (IsLineCreated()) {
-                lightComputationManager.ObjectDefined(this);
+                lightComputationManager.ComputeAlongObject(this);
             }
         } else {
             isCreatingLine = false;
@@ -166,7 +169,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                     }
 
                     CreateLineFromPoints(positions);
-                    lightComputationManager.ObjectDefined(this);
+                    lightComputationManager.ComputeAlongObject(this);
                 } else {
                     message += 
                         "Not enough valid points.\n" +
@@ -186,37 +189,11 @@ public class ComputationLine : MonoBehaviour, IComputationObject
 
     public void ExportResults()
     {
-        if (calculatedResults.Abscissas.Count == 0) {
-            DialogControl.CreateDialog("No results to export.");
-        } else {
-            string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Export light results", "", "light_results", "geojson");
-            if (filename != "") {
-                List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
-
-                List<Vector3> positions = GetPositionsOfMeasuresAlongLine();
-
-                for (int i=0; i<positions.Count; ++i) {
-                    Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
-                    GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                        coordinate.latitude,
-                        coordinate.longitude,
-                        coordinate.altitude
-                    ));
-
-                    Dictionary<string, object> properties = new Dictionary<string, object>();
-                    properties.Add("luminance", calculatedResults.Ordinates[i]);
-
-                    features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
-                }
-
-                GeoJSONParser.FeaturesToFile(filename, features);
-            }
-        }
+        lightComputationManager.ExportResults(GetPositionsOfMeasuresAlongLine(), calculatedResults.Ordinates);
     }
 
     public void ShowVisualizationMethod(bool show)
     {
-        graphShown = show;
         graphControl.Show(show);
     }
 
@@ -243,9 +220,11 @@ public class ComputationLine : MonoBehaviour, IComputationObject
             Vector3 currentLinePointPosition = line.GetPosition(currentLinePoint);
             Vector3 nextLinePointPosition = line.GetPosition(currentLinePoint+1);
 
-            float t = (distance - (currentTotalDistance-currentDistance)) / currentDistance;
-
-            positions[i] = Vector3.Lerp(currentLinePointPosition, nextLinePointPosition, t);
+            positions[i] = Vector3.Lerp(
+                currentLinePointPosition,
+                nextLinePointPosition,
+                (distance - (currentTotalDistance-currentDistance)) / currentDistance
+            );
             angles[i] = Utils.GetAngleBetweenPositions(
                 new Vector2(currentLinePointPosition.x, currentLinePointPosition.z),
                 new Vector2(nextLinePointPosition.x, nextLinePointPosition.z)
@@ -266,7 +245,9 @@ public class ComputationLine : MonoBehaviour, IComputationObject
             return distances;
         });
         calculatedResults.Ordinates = luminances.ToList();
-        graphControl.CreateGraph(new List<GraphSet> { calculatedResults, measuredResults });
+        graphControl.CreateGraph(new List<GraphSet> { calculatedResults, measuredResults }, () => {
+            lightComputationManager.ComputeAlongObject(this);
+        });
     }
 
     private float GetLineDistance()

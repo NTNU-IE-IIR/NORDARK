@@ -1,8 +1,12 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
 
 public class Heatmap : MaskableGraphic
 {
+    [SerializeField] private HeatmapControl heatmapControl;
     [SerializeField] private Texture heatmapTexture;
     public Texture texture
     {
@@ -29,6 +33,27 @@ public class Heatmap : MaskableGraphic
         }
     }
     private float[] values;
+    private bool isMouseOver;
+
+    protected override void Awake()
+    {
+        Assert.IsNotNull(heatmapControl);
+
+        base.Awake();
+
+        isMouseOver = false;
+        SetUpEventTrigger();
+    }
+
+    void Update()
+    {
+        if (isMouseOver) {
+            heatmapControl.OnMouseOver(new Vector2(
+                (rectTransform.position.x - Input.mousePosition.x + rectTransform.rect.width / 2) / rectTransform.rect.width,
+                (Input.mousePosition.y - rectTransform.position.y + rectTransform.rect.height / 2) / rectTransform.rect.height
+            ));
+        }
+    }
 
     public void SetValues(float[] values)
     {
@@ -44,26 +69,46 @@ public class Heatmap : MaskableGraphic
 
             float widthStep = rectTransform.rect.width / numberOfQuadsOnOneAxis;
             float heightStep = rectTransform.rect.height / numberOfQuadsOnOneAxis;
-            Vector2 bottomLeftCorner = -rectTransform.pivot;
-            bottomLeftCorner.x *= rectTransform.rect.width;
-            bottomLeftCorner.y *= rectTransform.rect.height;
+            Vector2 bottomRightCorner = rectTransform.pivot;
+            bottomRightCorner.x *= rectTransform.rect.width;
+            bottomRightCorner.y *= -rectTransform.rect.height;
 
             vh.Clear();
-            for (int i=0; i<numberOfQuadsOnOneAxis; ++i) {
-                for (int j=0; j<numberOfQuadsOnOneAxis; ++j) {
+            for (int j=0; j<numberOfQuadsOnOneAxis; ++j) {
+                for (int i=0; i<numberOfQuadsOnOneAxis; ++i) {
                     AddQuad(
                         vh,
-                        bottomLeftCorner + new Vector2(i*widthStep, j*heightStep),
+                        bottomRightCorner + new Vector2(-i*widthStep, j*heightStep),
                         widthStep,
                         heightStep,
-                        values[i*numberOfQuadsOnOneAxis + j],
-                        values[(i+1)*numberOfQuadsOnOneAxis + j],
-                        values[(i+1)*numberOfQuadsOnOneAxis + j+1],
-                        values[i*numberOfQuadsOnOneAxis + j+1]
+                        values[(numberOfQuadsOnOneAxis+1)*j + i],
+                        values[(numberOfQuadsOnOneAxis+1)*j + i+1],
+                        values[(numberOfQuadsOnOneAxis+1)*(j+1) + i+1],
+                        values[(numberOfQuadsOnOneAxis+1)*(j+1) + i]
                     );
                 }
             }
         }
+    }
+
+    private void SetUpEventTrigger()
+    {
+        EventTrigger eventTrigger = gameObject.AddComponent<EventTrigger>();
+
+        EventTrigger.Entry entryPointerEnter = new EventTrigger.Entry();
+        entryPointerEnter.eventID = EventTriggerType.PointerEnter;
+        entryPointerEnter.callback.AddListener((data) => {
+            isMouseOver = true;
+        });
+        eventTrigger.triggers.Add(entryPointerEnter);
+
+        EventTrigger.Entry entryPointerExit = new EventTrigger.Entry();
+        entryPointerExit.eventID = EventTriggerType.PointerExit;
+        entryPointerExit.callback.AddListener((data) => {
+            isMouseOver = false;
+            heatmapControl.OnMouseExit();
+        });
+        eventTrigger.triggers.Add(entryPointerExit);
     }
 
     private void AddQuad(VertexHelper vh, Vector2 position, float width, float height, float firstValue, float secondValue, float thirdValue, float fourthValue)
@@ -77,11 +122,11 @@ public class Heatmap : MaskableGraphic
         vertex.uv0 = new Vector4(firstValue, 0);
         vh.AddVert(vertex);
 
-        vertex.position = position + new Vector2(width, 0);
+        vertex.position = position + new Vector2(-width, 0);
         vertex.uv0 = new Vector4(secondValue, 0);
         vh.AddVert(vertex);
 
-        vertex.position = position + new Vector2(width, height);
+        vertex.position = position + new Vector2(-width, height);
         vertex.uv0 = new Vector4(thirdValue, 1);
         vh.AddVert(vertex);
 

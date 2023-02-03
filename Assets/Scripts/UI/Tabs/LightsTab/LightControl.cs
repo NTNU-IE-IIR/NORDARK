@@ -13,7 +13,7 @@ public class LightControl : MonoBehaviour
     [SerializeField] private Slider rotation;
     [SerializeField] private TMP_Text rotationValue;
     [SerializeField] private TMP_Dropdown lightSource;
-    [SerializeField] private TMP_Text lightObjectName;
+    [SerializeField] private TMP_InputField lightObjectName;
     [SerializeField] private Button insert;
     [SerializeField] private Button move;
     [SerializeField] private Button delete;
@@ -41,23 +41,24 @@ public class LightControl : MonoBehaviour
     void Start()
     {
         lightType.AddOptions(lightsManager.GetLightPrefabNames());
-        lightType.onValueChanged.AddListener(delegate {
-            lightsManager.ChangeLightType(lightType.options[lightType.value].text);
+        lightType.onValueChanged.AddListener(value => {
+            lightsManager.ChangeLightType(lightType.options[value].text);
         });
 
-        rotation.onValueChanged.AddListener(delegate
-        {
-            lightsManager.RotateSelectedLight(rotation.value);
-            rotationValue.text = rotation.value.ToString();
+        rotation.onValueChanged.AddListener(value => {
+            lightsManager.RotateSelectedLight(value);
+            rotationValue.text = value.ToString();
         });
 
-        lightSource.onValueChanged.AddListener(delegate {
-            lightsManager.ChangeLightSource(lightSource.options[lightSource.value].text);
+        lightSource.onValueChanged.AddListener(value => {
+            lightsManager.ChangeLightSource(lightSource.options[value].text);
         });
+
+        lightObjectName.onEndEdit.AddListener(lightsManager.ChangeLightName);
 
         insert.onClick.AddListener(lightsManager.Create);
         move.onClick.AddListener(lightsManager.MoveLight);
-        delete.onClick.AddListener(delegate {
+        delete.onClick.AddListener(() => {
             lightsManager.DeleteLight();
             EventSystem.current.SetSelectedGameObject(null);
         });
@@ -92,7 +93,7 @@ public class LightControl : MonoBehaviour
         int lightSourceIndex = lightSource.options.FindIndex((i) => { return i.text.Equals(selectedLightPole.Light.GetIESLight().Name); });
         int lightTypeIndex = lightType.options.FindIndex((i) => { return i.text.Equals(selectedLightPole.PrefabName); });
 
-        lightObjectName.text = "Selected: " + selectedLightPole.Name;
+        lightObjectName.text = selectedLightPole.Name;
         rotation.value = rotationSelected;
         rotationValue.text = rotationSelected.ToString();
         
