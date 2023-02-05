@@ -60,7 +60,7 @@ public class LightComputationManager : MonoBehaviour
         StartCoroutine(Compute(computationObject));
     }
 
-    public void ExportResults(List<Vector3> positions, List<float> luminances)
+    public void ExportResultsGeoJSON(List<Vector3> positions, List<float> luminances)
     {
         if (luminances.Count == 0) {
             DialogControl.CreateDialog("No results to export.");
@@ -79,11 +79,38 @@ public class LightComputationManager : MonoBehaviour
 
                     Dictionary<string, object> properties = new Dictionary<string, object>();
                     properties.Add("luminance", luminances[i]);
+                    properties.Add("ground", mapManager.GetGroundFromPosition(positions[i]));
 
                     features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
                 }
 
                 GeoJSONParser.FeaturesToFile(filename, features);
+            }
+        }
+    }
+
+    public void ExportResultsCSV(List<Vector3> positions, List<float> luminances)
+    {
+        if (luminances.Count == 0) {
+            DialogControl.CreateDialog("No results to export.");
+        } else {
+            string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Export light results", "", "light_results", "csv");
+            if (filename != "") {
+                string content = "latitude,longitude,altitude(m),luminance(cd/m2),ground\n";
+
+                for (int i=0; i<positions.Count; ++i) {
+                    Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
+                    content += 
+                        coordinate.latitude.ToString() + "," +
+                        coordinate.longitude.ToString() + "," +
+                        coordinate.altitude + "," + 
+                        luminances[i].ToString() + "," +
+                        mapManager.GetGroundFromPosition(positions[i]) + "\n";
+                }
+
+                System.IO.StreamWriter sw = new System.IO.StreamWriter(filename);
+                sw.WriteLine(content);
+                sw.Close();
             }
         }
     }

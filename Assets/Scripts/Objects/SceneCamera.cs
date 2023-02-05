@@ -1,37 +1,52 @@
 using UnityEngine;
+using UnityEngine.Rendering;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(Camera))]
 public class SceneCamera : MonoBehaviour
 {
-    [SerializeField] private Light lightTest;
     private Camera sceneCamera;
+    private LightsManager lightsManager;
+    private IEnumerable<LightPrefab> mainCameraLights;
 
     void Awake()
     {
         sceneCamera = GetComponent<Camera>();
+
+        RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+        RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
     }
 
-    private void OnPreCull()
+    void OnDestroy()
     {
-        if (lightTest != null) {
-            lightTest.enabled = false;
-        }
+        RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+        RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
     }
-    private void OnPreRender()
+
+    void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {
-        if (lightTest != null) {
-            lightTest.enabled = false;
-        }
-    }
-    private void OnPostRender()
-    {
-        if (lightTest != null) {
-            lightTest.enabled = true;
+        if (camera == sceneCamera && lightsManager != null) {
+            mainCameraLights = lightsManager.GetLights();
+
+            foreach (LightPrefab lightPrefab in mainCameraLights) {
+                lightPrefab.ShowLight(false);
+            }
         }
     }
 
-    public void SetViewport(Rect rect)
+    void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
     {
-        sceneCamera.rect = rect;
+        if (camera == sceneCamera && mainCameraLights != null) {
+            foreach (LightPrefab lightPrefab in mainCameraLights) {
+                lightPrefab.ShowLight(true);
+            }
+            mainCameraLights = null;
+        }
+    }
+
+    public void Create(Rect viewport, LightsManager lightsManager)
+    {
+        sceneCamera.rect = viewport;
+        this.lightsManager = lightsManager;
     }
 }

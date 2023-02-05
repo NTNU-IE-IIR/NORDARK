@@ -34,7 +34,7 @@ Transform:
   m_Children:
   - {fileID: 5138872677389987063}
   m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3072356252190394855
 MeshFilter:
@@ -98,6 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a1d1ca10e8b38449999287116d787c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  unityLight: {fileID: 2640329706507820750}
 --- !u!64 &-5724431354748696368
 MeshCollider:
   m_ObjectHideFlags: 0

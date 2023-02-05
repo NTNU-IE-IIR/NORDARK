@@ -282,6 +282,11 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         return lightPrefabNames;
     }
 
+    public IEnumerable<LightPrefab> GetLights()
+    {
+        return lightPoles.Select(light => light.Light);
+    }
+
     private void CreateLight(LightPole lightPole, Vector3 eulerAngles, string IESName)
     {
         if (lightPole.Name == "") {

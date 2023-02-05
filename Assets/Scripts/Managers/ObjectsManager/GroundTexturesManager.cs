@@ -16,7 +16,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
     private const string MASK_FOLDER = "ground-textures";
     private const int MASK_TEXTURE_SIZE = 512;
     private const int NUMBER_OF_TEXTURES = 8;
-    private const int MAX_NUMBER_OF_COROUTINES = 10;
+    private const int MAX_NUMBER_OF_COROUTINES = 1;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private GroundTexturesWindow groundTexturesWindow;
@@ -170,6 +170,19 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         }
     }
 
+    public string GetPositionTexture(Material material, Vector2 position)
+    {
+        for (int i=1; i<=NUMBER_OF_TEXTURES; ++i) {
+            Texture2D mask = material.GetTexture(MASK_PROPERTY + i.ToString()) as Texture2D;
+            if (mask != null) {
+                if (mask.GetPixel((int) (position.x * mask.width), (int) (position.y * mask.height)) == Color.white) {
+                    return textureNames[(int) material.GetFloat(TEXTURE_PROPERTY + i.ToString())];
+                }
+            }
+        }
+        return "";
+    }
+
     private GroundTextureCollection CreateGroundTextureFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id = "")
     {
         GroundTextureCollection groundTextureCollection = CreateGroundTextureCollectionFromFeatureCollection(featureCollection, id);
@@ -310,6 +323,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                                 tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), normalMaps[textureIndex]);
                                 tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), heightMaps[textureIndex]);
                                 tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), maskMaps[textureIndex]);
+                                tile.MeshRenderer.material.SetFloat(TEXTURE_PROPERTY + i.ToString(), textureNames.IndexOf(textureName));
                             } else {
                                 textureShaderName = "";
                             }

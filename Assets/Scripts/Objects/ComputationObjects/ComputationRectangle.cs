@@ -116,9 +116,14 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     public void ImportResults()
     {}
 
-    public void ExportResults()
+    public void ExportResultsGeoJSON()
     {
-        lightComputationManager.ExportResults(positions, luminances);
+        lightComputationManager.ExportResultsGeoJSON(positions, luminances);
+    }
+
+    public void ExportResultsCSV()
+    {
+        lightComputationManager.ExportResultsCSV(positions, luminances);
     }
 
     public void ShowVisualizationMethod(bool show)

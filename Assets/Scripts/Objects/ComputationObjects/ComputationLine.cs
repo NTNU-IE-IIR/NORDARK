@@ -187,9 +187,14 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         }
     }
 
-    public void ExportResults()
+    public void ExportResultsGeoJSON()
     {
-        lightComputationManager.ExportResults(GetPositionsOfMeasuresAlongLine(), calculatedResults.Ordinates);
+        lightComputationManager.ExportResultsGeoJSON(GetPositionsOfMeasuresAlongLine(), calculatedResults.Ordinates);
+    }
+
+    public void ExportResultsCSV()
+    {
+        lightComputationManager.ExportResultsCSV(GetPositionsOfMeasuresAlongLine(), calculatedResults.Ordinates);
     }
 
     public void ShowVisualizationMethod(bool show)

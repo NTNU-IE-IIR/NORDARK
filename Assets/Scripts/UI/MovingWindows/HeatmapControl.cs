@@ -71,7 +71,7 @@ public class HeatmapControl : MonoBehaviour
         }
 
         minLegend.text = "0";
-        maxLegend.text = maxValue.ToString("0.00");
+        maxLegend.text = maxValue.ToString("0.00") + " cd/m²";
 
         refreshButton.onClick.RemoveAllListeners();
         refreshButton.onClick.AddListener(() => {

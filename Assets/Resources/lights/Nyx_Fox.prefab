@@ -315,6 +315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a1d1ca10e8b38449999287116d787c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  unityLight: {fileID: 4260622193795050175}
 --- !u!64 &5589008717853918777
 MeshCollider:
   m_ObjectHideFlags: 0

@@ -10,6 +10,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private SkyManager skyManager;
     [SerializeField] private LightComputationManager lightComputationManager;
+    [SerializeField] private GroundTexturesManager groundTexturesManager;
     [SerializeField] private MapControl mapControl;
     [SerializeField] private GameObject locationUndefinedWindow;
     private AbstractMap map;
@@ -23,6 +24,7 @@ public class MapManager : MonoBehaviour
         Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(skyManager);
         Assert.IsNotNull(lightComputationManager);
+        Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(mapControl);
         Assert.IsNotNull(locationUndefinedWindow);
 
@@ -150,6 +152,19 @@ public class MapManager : MonoBehaviour
         
         Mapbox.Unity.Map.RangeTileProviderOptions extentOptions = (Mapbox.Unity.Map.RangeTileProviderOptions) map.Options.extentOptions.GetTileProviderOptions();
         return tileSize * new Vector3(1 + extentOptions.west + extentOptions.east, 0, 1 + extentOptions.north + extentOptions.south);
+    }
+
+    public string GetGroundFromPosition(Vector3 position)
+    {
+        RaycastHit hit = new RaycastHit();
+        if (Physics.Raycast(position + new Vector3(0, 100, 0), Vector3.down, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+            string ground = groundTexturesManager.GetPositionTexture(hit.transform.gameObject.GetComponent<Renderer>().material, hit.textureCoord);
+            if (ground != "") {
+                return ground;
+            } 
+        }
+
+        return "Unknown";
     }
 
     private void TileFinished(Mapbox.Unity.MeshGeneration.Data.UnityTile tile)

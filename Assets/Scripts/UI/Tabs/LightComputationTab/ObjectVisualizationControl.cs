@@ -8,7 +8,8 @@ public class ObjectVisualizationControl : MonoBehaviour
     [SerializeField] private GameObject computationObjectGameObject;
     [SerializeField] private Button createMeasureObject;
     [SerializeField] private Button importResults;
-    [SerializeField] private Button exportResults;
+    [SerializeField] private Button exportResultsGeoJSON;
+    [SerializeField] private Button exportResultsCSV;
     [SerializeField] private Toggle displayVisualizationMethod;
     [SerializeField] private TMP_InputField resolution;
     private IComputationObject computationObject;
@@ -17,7 +18,8 @@ public class ObjectVisualizationControl : MonoBehaviour
     {
         Assert.IsNotNull(computationObjectGameObject);
         Assert.IsNotNull(createMeasureObject);
-        Assert.IsNotNull(exportResults);
+        Assert.IsNotNull(exportResultsGeoJSON);
+        Assert.IsNotNull(exportResultsCSV);
         Assert.IsNotNull(displayVisualizationMethod);
         Assert.IsNotNull(resolution); 
     }
@@ -30,7 +32,8 @@ public class ObjectVisualizationControl : MonoBehaviour
             importResults.onClick.AddListener(computationObject.ImportResults);
         }
         
-        exportResults.onClick.AddListener(computationObject.ExportResults);
+        exportResultsGeoJSON.onClick.AddListener(computationObject.ExportResultsGeoJSON);
+        exportResultsCSV.onClick.AddListener(computationObject.ExportResultsCSV);
         displayVisualizationMethod.onValueChanged.AddListener(computationObject.ShowVisualizationMethod);
     }
 

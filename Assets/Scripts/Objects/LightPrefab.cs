@@ -1,21 +1,27 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 
 [RequireComponent(typeof(Renderer))]
 public class LightPrefab : MonoBehaviour
 {
+    [SerializeField] private Light unityLight;
     private const float LIGHT_TEMPERATURE = 6500;
-    bool isMoving;
-    UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
-    IESLight iesLight;
-    Renderer objectRenderer;
-    Material defaultMaterial;
+    private bool isMoving;
+    private UnityEngine.Rendering.HighDefinition.HDAdditionalLightData hdAdditionalLightData;
+    private IESLight iesLight;
+    private Renderer objectRenderer;
+    private Material defaultMaterial;
+    private int defaultLayer;
 
     void Awake()
     {
+        Assert.IsNotNull(unityLight);
+
         isMoving = false;
-        hdAdditionalLightData = transform.Find("Light").gameObject.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
+        hdAdditionalLightData = unityLight.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
         objectRenderer = GetComponent<Renderer>();
         defaultMaterial = objectRenderer.material;
+        defaultLayer = gameObject.layer;
     }
 
     void Update()
@@ -81,6 +87,18 @@ public class LightPrefab : MonoBehaviour
 
     public void Show(bool display) {
         gameObject.SetActive(display);
+    }
+
+    public void ShowLight(bool display) {
+        // gameObject.SetActive() cannot be used here, otherwise a Unity error occurs
+
+        unityLight.enabled = display;
+
+        if (display) {
+            gameObject.layer = defaultLayer;
+        } else {
+            gameObject.layer = SceneCamerasManager.HIDDEN_FROM_CAMERA_LAYER;
+        }
     }
 
     public void Destroy()
