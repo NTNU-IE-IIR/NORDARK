@@ -202,6 +202,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                 tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), null);
                 tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), null);
                 tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), null);
+                tile.MeshRenderer.material.SetFloat(TEXTURE_PROPERTY + i.ToString(), -1);
             }
         }
     }
