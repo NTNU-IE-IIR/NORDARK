@@ -44,10 +44,12 @@ public class ConfigurationsControl : MonoBehaviour
             if (i == 0) {
                 configuration.Create("Scene config", () => {}, false);
             } else {
+                int configurationIndex = i;
                 configuration.Create("No file selected", () => {
                     string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Import configuration file", "", "nordark", false);
                     if (paths.Length > 0) {
                         configuration.SetName(paths[0]);
+                        sceneCamerasManager.SetConfiguration(paths[0], configurationIndex);
                     }
                 });
             }
@@ -55,6 +57,6 @@ public class ConfigurationsControl : MonoBehaviour
             configurationsHolder.sizeDelta += new Vector2(0, configuration.GetHeight());
         }
 
-        sceneCamerasManager.SplitScreen(numberOfConfigs);
+        sceneCamerasManager.SplitScreen(numberOfConfigs, MAX_NUMBER_OF_CONFIGURATIONS);
     }
 }

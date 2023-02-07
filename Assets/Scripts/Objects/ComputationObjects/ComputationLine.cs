@@ -49,7 +49,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                     Vector3 lastLineVector = line.GetPosition(line.positionCount-1) - line.GetPosition(line.positionCount-2);
                     float angle = Utils.GetAngleBetweenPositions(new Vector2(lastLineVector.x, lastLineVector.z), new Vector2(0, 1));
 
-                    angle = (Mathf.Rad2Deg * Mathf.Atan2(lastLineVector.z, lastLineVector.x) + 270 ) % 360;
+                    angle = 360 - (Mathf.Rad2Deg * Mathf.Atan2(lastLineVector.z, lastLineVector.x) + 270 ) % 360;
 
                     TooltipControl.DisplayTooltip(true, distance.ToString("0.0") + "m\n" + angle.ToString("0.0") + "°");
                 }

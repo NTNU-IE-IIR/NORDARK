@@ -69,7 +69,12 @@ public class LightComputationManager : MonoBehaviour
             if (filename != "") {
                 List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
 
+                float distanceFromOrigin = 0;
                 for (int i=0; i<positions.Count; ++i) {
+                    if (i > 0) {
+                        distanceFromOrigin += Vector3.Distance(positions[i-1], positions[i]);
+                    }
+
                     Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
                     GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
                         coordinate.latitude,
@@ -80,6 +85,7 @@ public class LightComputationManager : MonoBehaviour
                     Dictionary<string, object> properties = new Dictionary<string, object>();
                     properties.Add("luminance", luminances[i]);
                     properties.Add("ground", mapManager.GetGroundFromPosition(positions[i]));
+                    properties.Add("distanceFromOrigin", distanceFromOrigin);
 
                     features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
                 }
@@ -96,14 +102,20 @@ public class LightComputationManager : MonoBehaviour
         } else {
             string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Export light results", "", "light_results", "csv");
             if (filename != "") {
-                string content = "latitude,longitude,altitude(m),luminance(cd/m2),ground\n";
+                string content = "latitude,longitude,altitude(m),distanceFromOrigin(m),luminance(cd/m2),ground\n";
 
+                float distanceFromOrigin = 0;
                 for (int i=0; i<positions.Count; ++i) {
+                    if (i > 0) {
+                        distanceFromOrigin += Vector3.Distance(positions[i-1], positions[i]);
+                    }
+
                     Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
                     content += 
                         coordinate.latitude.ToString() + "," +
                         coordinate.longitude.ToString() + "," +
-                        coordinate.altitude + "," + 
+                        coordinate.altitude + "," +
+                        distanceFromOrigin + "," +
                         luminances[i].ToString() + "," +
                         mapManager.GetGroundFromPosition(positions[i]) + "\n";
                 }

@@ -42,7 +42,7 @@ public class SceneManager : MonoBehaviour
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a NORDARK scene file", "", "nordark", false);
         if (paths.Length > 0) {
             try {
-                 GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(paths[0]);
+                GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(paths[0]);
                 currentSave = paths[0];
                 LoadScene(featureCollection);
             } catch (System.Exception e) {

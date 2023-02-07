@@ -19,8 +19,12 @@ public class SceneCamerasManager : MonoBehaviour
         viewportRect = mainCamera.rect;
     }
 
-    public void SplitScreen(int numberOfScreens)
+    public void SplitScreen(int numberOfScreens, int maxNumberOfScreens)
     {
+        for (int i=1; i<maxNumberOfScreens; ++i) {
+            lightsManager.DeleteAllLightsFromConfiguration(i);
+        }
+
         foreach (Transform sceneCamera in transform) {
             Destroy(sceneCamera.gameObject);
         }
@@ -39,7 +43,22 @@ public class SceneCamerasManager : MonoBehaviour
                 i < numberOfScreens/2f ? viewportRect.y + viewportRect.height * 0.5f : viewportRect.y,
                 i < numberOfScreens/2f ? mainCamera.rect.width : viewportRect.width / (numberOfScreens - i),
                 mainCamera.rect.height
-            ), lightsManager);
+            ), lightsManager, i);
+        }
+    }
+
+    public void SetConfiguration(string path, int configurationIndex)
+    {
+        lightsManager.DeleteAllLightsFromConfiguration(configurationIndex);
+
+        GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
+
+        foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+            if (feature.Properties.ContainsKey("type")) {
+                if (string.Equals(feature.Properties["type"] as string, "light")) {
+                    lightsManager.Create(feature, configurationIndex);
+                }
+            }
         }
     }
 }

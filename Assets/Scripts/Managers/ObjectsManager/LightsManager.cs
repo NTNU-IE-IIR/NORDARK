@@ -37,46 +37,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
 
     public void Create(GeoJSON.Net.Feature.Feature feature)
     {
-        GeoJSON.Net.Geometry.Point point = null;
-        if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
-            point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-        } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiPoint")) {
-            point = (feature.Geometry as GeoJSON.Net.Geometry.MultiPoint).Coordinates[0];
-        }
-
-        if (point != null) {
-            double altitude = 0;
-            if (point.Coordinates.Altitude != null) {
-                altitude = (double) point.Coordinates.Altitude;
-            }
-            LightPole lightPole = new LightPole(new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude));
-
-            if (feature.Properties.ContainsKey("name")) {
-                lightPole.Name = feature.Properties["name"] as string;
-            }
-
-            if (feature.Properties.ContainsKey("prefabName")) {
-                lightPole.PrefabName = feature.Properties["prefabName"] as string;
-            }
-
-            List<float> eulerAngles = new List<float>();
-            try
-            {
-                eulerAngles = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
-            }
-            catch (System.Exception)
-            {}
-            if (eulerAngles.Count < 3) {
-                eulerAngles = new List<float>{ 0, 0, 0 };
-            }
-
-            string IESName = "";
-            if (feature.Properties.ContainsKey("IESfileName")) {
-                IESName = feature.Properties["IESfileName"] as string;
-            }
-
-            CreateLight(lightPole, new Vector3(eulerAngles[0], eulerAngles[1], eulerAngles[2]), IESName);
-        }
+        Create(feature, 0);
     }
 
     public void Clear()
@@ -104,22 +65,24 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
 
         foreach (LightPole lightPole in lightPoles) {
-            GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                lightPole.Coordinates.latitude,
-                lightPole.Coordinates.longitude,
-                lightPole.Coordinates.altitude
-            ));
-            
-            Vector3 eulerAngles = lightPole.Light.GetTransform().eulerAngles;
-            
-            Dictionary<string, object> properties = new Dictionary<string, object>();
-            properties.Add("type", "light");
-            properties.Add("name", lightPole.Name);
-            properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
-            properties.Add("IESfileName", lightPole.Light.GetIESLight().Name);
-            properties.Add("prefabName", lightPole.PrefabName);
+            if (lightPole.ConfigurationIndex == 0) {
+                GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
+                    lightPole.Coordinates.latitude,
+                    lightPole.Coordinates.longitude,
+                    lightPole.Coordinates.altitude
+                ));
+                
+                Vector3 eulerAngles = lightPole.Light.GetTransform().eulerAngles;
+                
+                Dictionary<string, object> properties = new Dictionary<string, object>();
+                properties.Add("type", "light");
+                properties.Add("name", lightPole.Name);
+                properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
+                properties.Add("IESfileName", lightPole.Light.GetIESLight().Name);
+                properties.Add("prefabName", lightPole.PrefabName);
 
-            features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
+                features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
+            }            
         }
 
         return features;
@@ -131,6 +94,50 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         CreateLight(lightPole, new Vector3(0, 0), "");
         SelectLight(lightPole);
         MoveCurrentLight();
+    }
+
+    public void Create(GeoJSON.Net.Feature.Feature feature, int configurationIndex)
+    {
+        GeoJSON.Net.Geometry.Point point = null;
+        if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
+            point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+        } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiPoint")) {
+            point = (feature.Geometry as GeoJSON.Net.Geometry.MultiPoint).Coordinates[0];
+        }
+
+        if (point != null) {
+            double altitude = 0;
+            if (point.Coordinates.Altitude != null) {
+                altitude = (double) point.Coordinates.Altitude;
+            }
+            LightPole lightPole = new LightPole(new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude), configurationIndex);
+
+            if (feature.Properties.ContainsKey("name")) {
+                lightPole.Name = feature.Properties["name"] as string;
+            }
+
+            if (feature.Properties.ContainsKey("prefabName")) {
+                lightPole.PrefabName = feature.Properties["prefabName"] as string;
+            }
+
+            List<float> eulerAngles = new List<float>();
+            try
+            {
+                eulerAngles = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
+            }
+            catch (System.Exception)
+            {}
+            if (eulerAngles.Count < 3) {
+                eulerAngles = new List<float>{ 0, 0, 0 };
+            }
+
+            string IESName = "";
+            if (feature.Properties.ContainsKey("IESfileName")) {
+                IESName = feature.Properties["IESfileName"] as string;
+            }
+
+            CreateLight(lightPole, new Vector3(eulerAngles[0], eulerAngles[1], eulerAngles[2]), IESName);
+        }
     }
 
     public void AddLightsFromFile()
@@ -180,6 +187,17 @@ public class LightsManager : MonoBehaviour, IObjectsManager
             lightPoles.Remove(selectedLightPole);
             ClearSelectedLight();
         }
+    }
+
+    public void DeleteAllLightsFromConfiguration(int configurationIndex)
+    {
+        foreach (LightPole lightPole in lightPoles) {
+            if (lightPole.ConfigurationIndex == configurationIndex) {
+                lightPole.Light.Destroy();
+            }
+        }
+
+        lightPoles.RemoveAll(lightPole => lightPole.ConfigurationIndex == configurationIndex);
     }
 
     public void ShowLights(bool show)
@@ -247,7 +265,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
             LightPrefab lightPrefab = hitInfo.transform.gameObject.GetComponent<LightPrefab>();
             if (lightPrefab != null) {
                 foreach (LightPole lightPole in lightPoles) {
-                    if (lightPole.Light == lightPrefab) {
+                    if (lightPole.Light == lightPrefab && lightPole.ConfigurationIndex == 0) {
                         selectedLightPole = lightPole;
                         SelectLight(selectedLightPole);
                     }
@@ -282,9 +300,9 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         return lightPrefabNames;
     }
 
-    public IEnumerable<LightPrefab> GetLights()
+    public List<LightPole> GetLights()
     {
-        return lightPoles.Select(light => light.Light);
+        return lightPoles;
     }
 
     private void CreateLight(LightPole lightPole, Vector3 eulerAngles, string IESName)

@@ -16,7 +16,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
     private const string MASK_FOLDER = "ground-textures";
     private const int MASK_TEXTURE_SIZE = 512;
     private const int NUMBER_OF_TEXTURES = 8;
-    private const int MAX_NUMBER_OF_COROUTINES = 1;
+    private const int MAX_NUMBER_OF_COROUTINES = 5;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private SceneManager sceneManager;
     [SerializeField] private GroundTexturesWindow groundTexturesWindow;

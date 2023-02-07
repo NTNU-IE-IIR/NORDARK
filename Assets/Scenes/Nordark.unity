@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.39700517, g: 0.18523331, b: 0.037879836, a: 1}
+  m_IndirectSpecularColor: {r: 0.35034984, g: 0.16460235, b: 0.033313725, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -7245,7 +7245,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 220727330}
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 1342.2852, y: 0, z: -1105.3711}
+  m_LocalPosition: {x: 379.8828, y: 0, z: -692.1875}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -45426,8 +45426,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1469716856}
-  m_LocalRotation: {x: 0.34153402, y: -0.30599916, z: 0.120296374, w: 0.8804816}
-  m_LocalPosition: {x: 1342.3279, y: 1670.955, z: -1105.457}
+  m_LocalRotation: {x: 0.026886536, y: -0.054418825, z: 0.00309208, w: 0.99815136}
+  m_LocalPosition: {x: 379.97137, y: 804.1046, z: -692.2221}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -46506,7 +46506,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1603627620}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.5880327
+  m_Size: 0.9999036
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -49680,7 +49680,7 @@ RectTransform:
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0.5880327}
+  m_AnchorMax: {x: 1, y: 0.9999036}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -53767,7 +53767,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.0000076910155}
+  m_AnchoredPosition: {x: 0, y: 0.000065117274}
   m_SizeDelta: {x: 0, y: 75.39}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1764679777

@@ -7,7 +7,8 @@ public class SceneCamera : MonoBehaviour
 {
     private Camera sceneCamera;
     private LightsManager lightsManager;
-    private IEnumerable<LightPrefab> mainCameraLights;
+    private List<LightPole> mainCameraLights;
+    private int configurationIndex;
 
     void Awake()
     {
@@ -28,8 +29,8 @@ public class SceneCamera : MonoBehaviour
         if (camera == sceneCamera && lightsManager != null) {
             mainCameraLights = lightsManager.GetLights();
 
-            foreach (LightPrefab lightPrefab in mainCameraLights) {
-                lightPrefab.ShowLight(false);
+            foreach (LightPole lightPole in mainCameraLights) {
+                lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
             }
         }
     }
@@ -37,16 +38,17 @@ public class SceneCamera : MonoBehaviour
     void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
     {
         if (camera == sceneCamera && mainCameraLights != null) {
-            foreach (LightPrefab lightPrefab in mainCameraLights) {
-                lightPrefab.ShowLight(true);
+            foreach (LightPole lightPole in mainCameraLights) {
+                lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
             }
             mainCameraLights = null;
         }
     }
 
-    public void Create(Rect viewport, LightsManager lightsManager)
+    public void Create(Rect viewport, LightsManager lightsManager, int configurationIndex)
     {
         sceneCamera.rect = viewport;
         this.lightsManager = lightsManager;
+        this.configurationIndex = configurationIndex;
     }
 }
