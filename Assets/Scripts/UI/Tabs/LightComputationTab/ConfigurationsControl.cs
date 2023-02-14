@@ -8,6 +8,7 @@ public class ConfigurationsControl : MonoBehaviour
     private const int MAX_NUMBER_OF_CONFIGURATIONS = 4;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private TMP_Dropdown numberOfConfigurations;
+    [SerializeField] private TMP_Dropdown comparisonType;
     [SerializeField] private GameObject configurationPrefab;
     [SerializeField] private RectTransform configurationsHolder;
 
@@ -15,6 +16,7 @@ public class ConfigurationsControl : MonoBehaviour
     {
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(numberOfConfigurations);
+        Assert.IsNotNull(comparisonType);
         Assert.IsNotNull(configurationPrefab);
         Assert.IsNotNull(configurationsHolder);
     }
@@ -26,6 +28,10 @@ public class ConfigurationsControl : MonoBehaviour
         );
         numberOfConfigurations.onValueChanged.AddListener(value => {
             SetConfigurations(int.Parse(numberOfConfigurations.options[value].text));
+        });
+
+        comparisonType.onValueChanged.AddListener(value => {
+            SetConfigurations(int.Parse(numberOfConfigurations.options[numberOfConfigurations.value].text));
         });
 
         SetConfigurations(1);
@@ -57,6 +63,10 @@ public class ConfigurationsControl : MonoBehaviour
             configurationsHolder.sizeDelta += new Vector2(0, configuration.GetHeight());
         }
 
-        sceneCamerasManager.SplitScreen(numberOfConfigs, MAX_NUMBER_OF_CONFIGURATIONS);
+        if (comparisonType.value == 0) {
+            sceneCamerasManager.DisplayLuminanceMaps(numberOfConfigs, MAX_NUMBER_OF_CONFIGURATIONS);
+        } else {
+            sceneCamerasManager.DisplayLineVisualization();
+        }
     }
 }

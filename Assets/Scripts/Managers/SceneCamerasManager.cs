@@ -19,7 +19,7 @@ public class SceneCamerasManager : MonoBehaviour
         viewportRect = mainCamera.rect;
     }
 
-    public void SplitScreen(int numberOfScreens, int maxNumberOfScreens)
+    public void DisplayLuminanceMaps(int numberOfScreens, int maxNumberOfScreens)
     {
         for (int i=1; i<maxNumberOfScreens; ++i) {
             lightsManager.DeleteAllLightsFromConfiguration(i);
@@ -45,6 +45,11 @@ public class SceneCamerasManager : MonoBehaviour
                 mainCamera.rect.height
             ), lightsManager, i);
         }
+    }
+
+    public void DisplayLineVisualization()
+    {
+        
     }
 
     public void SetConfiguration(string path, int configurationIndex)
