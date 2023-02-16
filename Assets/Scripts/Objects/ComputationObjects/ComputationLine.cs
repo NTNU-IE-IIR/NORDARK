@@ -12,20 +12,21 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     private const int LINE_LAYER = 11;
     [SerializeField] private LightComputationManager lightComputationManager;
     [SerializeField] private MapManager mapManager;
+    [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private ObjectVisualizationControl lineVisualizationControl;
     [SerializeField] private GraphControl graphControl;
     private LineRenderer line;
     private MeshCollider meshCollider;
     private TooltipDisplayer tooltipDisplayer;
     private bool isCreatingLine;
-    private Camera mainCamera;
-    private GraphSet calculatedResults;
-    private GraphSet measuredResults;
+    private GraphSet importedResults;
+    private List<GraphSet> calculatedResults;
 
     void Awake()
     {
         Assert.IsNotNull(lightComputationManager);
         Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(lineVisualizationControl);
         Assert.IsNotNull(graphControl);
 
@@ -33,19 +34,18 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         meshCollider = GetComponent<MeshCollider>();
         tooltipDisplayer = GetComponent<TooltipDisplayer>();
         isCreatingLine = false;
-        mainCamera = Camera.main;
-        calculatedResults = new GraphSet("Calculated", Color.blue);
-        measuredResults = new GraphSet("Measured", Color.green);
+        importedResults = new GraphSet("Imported", Color.green);
+        calculatedResults = new List<GraphSet>();
     }
 
     void Update()
     {
         if (isCreatingLine) {
             RaycastHit hit;
-            if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+            if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
                 if (line.positionCount >= 2) {
                     line.SetPosition(line.positionCount-1, hit.point + new Vector3(0, LINE_HEIGHT, 0));
-                    float distance = GetLineDistance();
+                    float distance = Utils.GetLineDistance(line);
                     Vector3 lastLineVector = line.GetPosition(line.positionCount-1) - line.GetPosition(line.positionCount-2);
                     float angle = Utils.GetAngleBetweenPositions(new Vector2(lastLineVector.x, lastLineVector.z), new Vector2(0, 1));
 
@@ -69,7 +69,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                     isCreatingLine = false;
                     TooltipControl.DisplayTooltip(false);
 
-                    measuredResults.Clear();
+                    importedResults.Clear();
                     lightComputationManager.ComputeAlongObject(this);
                     SetMeshCollider();
                 }
@@ -80,7 +80,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     void OnMouseOver()
     {
         RaycastHit hit;
-        if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << LINE_LAYER)) {
+        if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << LINE_LAYER)) {
             float distance = 0;
             for (int i=0; i<line.positionCount-1; ++i) {
                 Vector3 currentPosition = line.GetPosition(i);
@@ -129,7 +129,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         SetMeshCollider();
 
         calculatedResults.Clear();
-        measuredResults.Clear();
+        importedResults.Clear();
         graphControl.Clear();
     }
 
@@ -159,13 +159,13 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                 }
                 
                 if (positions.Count > 1) {
-                    measuredResults.Clear();
+                    importedResults.Clear();
                     for (int i=0; i<positions.Count; ++i) {
                         float distance = 0;
                         if (i > 0) {
-                            distance += measuredResults.Abscissas[i-1] + Vector3.Distance(positions[i-1], positions[i]);
+                            distance += importedResults.Abscissas[i-1] + Vector3.Distance(positions[i-1], positions[i]);
                         }
-                        measuredResults.Add(distance, luminances[i]);
+                        importedResults.Add(distance, luminances[i]);
                     }
 
                     CreateLineFromPoints(positions);
@@ -189,12 +189,12 @@ public class ComputationLine : MonoBehaviour, IComputationObject
 
     public void ExportResultsGeoJSON()
     {
-        lightComputationManager.ExportResultsGeoJSON(GetPositionsOfMeasuresAlongLine(), calculatedResults.Ordinates);
+        lightComputationManager.ExportResultsGeoJSON(GetPositionsOfMeasuresAlongLine(), calculatedResults.Select(graphSet => graphSet.Ordinates).ToList());
     }
 
     public void ExportResultsCSV()
     {
-        lightComputationManager.ExportResultsCSV(GetPositionsOfMeasuresAlongLine(), calculatedResults.Ordinates);
+        lightComputationManager.ExportResultsCSV(GetPositionsOfMeasuresAlongLine(), calculatedResults.Select(graphSet => graphSet.Ordinates).ToList());
     }
 
     public void ShowVisualizationMethod(bool show)
@@ -208,7 +208,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         positions = new Vector3[resolution+1];
         angles = new float[resolution+1];
 
-        float distanceStep = GetLineDistance() / resolution;
+        float distanceStep = Utils.GetLineDistance(line) / resolution;
 
         int currentLinePoint = 0;
         float currentDistance = Vector3.Distance(line.GetPosition(currentLinePoint), line.GetPosition(currentLinePoint+1));
@@ -237,9 +237,9 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         }
     }
     
-    public void ResultsComputed(Vector3[] positions, float[] luminances)
+    public void ResultsComputed(Vector3[] positions, float[,] luminances)
     {
-        calculatedResults.Abscissas = positions.Select((position, index) => {
+        List<float> distances = positions.Select((position, index) => {
             return index > 0 ? Vector3.Distance(position, positions[index-1]) : 0;
         }).Aggregate(new List<float>(), (distances, distance) => {
             if (distances.Count > 0) {
@@ -249,21 +249,24 @@ public class ComputationLine : MonoBehaviour, IComputationObject
             }
             return distances;
         });
-        calculatedResults.Ordinates = luminances.ToList();
-        graphControl.CreateGraph(new List<GraphSet> { calculatedResults, measuredResults }, () => {
+        List<GraphSet> graphSets = new List<GraphSet>();
+
+        for (int i=0; i<luminances.GetLength(0); ++i) {
+            GraphSet results = new GraphSet("Config " + i.ToString(), Random.ColorHSV(0, 1, 1, 1, 0.5f, 1, 1, 1));
+            results.Abscissas = distances;
+            results.Ordinates = Enumerable.Range(0, luminances.GetLength(1))
+                .Select(x => luminances[i, x])
+                .ToList();
+
+            graphSets.Add(results);
+
+            calculatedResults.Add(results);
+        }
+
+        graphSets.Add(importedResults);
+        graphControl.CreateGraph(graphSets, () => {
             lightComputationManager.ComputeAlongObject(this);
         });
-    }
-
-    private float GetLineDistance()
-    {
-        float distance = 0;
-        Vector3[] positions = new Vector3[line.positionCount];
-        line.GetPositions(positions);
-        for (int i=0; i<line.positionCount-1; ++i) {
-            distance += Vector3.Distance(positions[i], positions[i+1]);
-        }
-        return distance;
     }
 
     private void SetMeshCollider()

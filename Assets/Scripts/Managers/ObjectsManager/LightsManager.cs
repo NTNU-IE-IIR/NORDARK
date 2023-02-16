@@ -7,8 +7,8 @@ public class LightsManager : MonoBehaviour, IObjectsManager
 {
     private const string LIGHTS_RESOURCES_FOLDER = "Lights";
     [SerializeField] private MapManager mapManager;
-    [SerializeField] private SceneManager sceneManager;
     [SerializeField] private IESManager iesManager;
+    [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private LightControl lightControl;
     [SerializeField] private SelectionPin selectionPin;
     [SerializeField] private Material highlightMaterial;
@@ -19,8 +19,8 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     void Awake()
     {
         Assert.IsNotNull(mapManager);
-        Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(iesManager);
+        Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(lightControl);
         Assert.IsNotNull(selectionPin);
         Assert.IsNotNull(highlightMaterial);
@@ -53,10 +53,11 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     {
         foreach (LightPole lightPole in lightPoles) {
             lightPole.Light.SetPosition(mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true));
+            lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinates));
         }
 
         if (selectedLightPole != null) {
-            selectionPin.SetPosition(selectedLightPole.Light.GetTransform().position);
+            selectionPin.SetPosition(selectedLightPole.Light.transform.position);
         }
     }
 
@@ -72,7 +73,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
                     lightPole.Coordinates.altitude
                 ));
                 
-                Vector3 eulerAngles = lightPole.Light.GetTransform().eulerAngles;
+                Vector3 eulerAngles = lightPole.Light.transform.eulerAngles;
                 
                 Dictionary<string, object> properties = new Dictionary<string, object>();
                 properties.Add("type", "light");
@@ -90,7 +91,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
 
     public void Create()
     {
-        LightPole lightPole = new LightPole();
+        LightPole lightPole = new LightPole(mapManager.GetCoordinatesFromUnityPosition(new Vector3()), 0);
         CreateLight(lightPole, new Vector3(0, 0), "");
         SelectLight(lightPole);
         MoveCurrentLight();
@@ -203,22 +204,20 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     public void ShowLights(bool show)
     {
         foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.Show(show);
+            lightPole.Light.Show(show && mapManager.IsCoordinateOnMap(lightPole.Coordinates));
         }
     }
 
     public void ChangeLightType(string newLightType)
     {
         if (selectedLightPole != null && newLightType != selectedLightPole.PrefabName) {
-            Vector3 eulerAngles = selectedLightPole.Light.GetTransform().eulerAngles;
+            Vector3 eulerAngles = selectedLightPole.Light.transform.eulerAngles;
             IESLight iesLight = selectedLightPole.Light.GetIESLight();
-            selectedLightPole.Light.Destroy();
 
+            selectedLightPole.Light.Destroy();
             selectedLightPole.PrefabName = newLightType;
-            selectedLightPole.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + newLightType)).GetComponent<LightPrefab>();
-            selectedLightPole.Light.Create(selectedLightPole, transform, eulerAngles, mapManager);
-            selectedLightPole.Light.SetIESLight(iesLight);
-            selectedLightPole.Light.Hightlight(lightControl.IsHighlighted(), highlightMaterial);
+
+            CreateLightPrefab(selectedLightPole, eulerAngles, iesLight);
         }
     }
 
@@ -261,13 +260,12 @@ public class LightsManager : MonoBehaviour, IObjectsManager
     {
         RaycastHit hitInfo = new RaycastHit();
         bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
-        if (!isOverUI && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 10000)) {
+        if (!isOverUI && Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hitInfo)) {
             LightPrefab lightPrefab = hitInfo.transform.gameObject.GetComponent<LightPrefab>();
             if (lightPrefab != null) {
                 foreach (LightPole lightPole in lightPoles) {
                     if (lightPole.Light == lightPrefab && lightPole.ConfigurationIndex == 0) {
-                        selectedLightPole = lightPole;
-                        SelectLight(selectedLightPole);
+                        SelectLight(lightPole);
                     }
                 }
             }
@@ -279,7 +277,7 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         if (selectedLightPole != null) {
             selectedLightPole.Light.SetMoving(false);
 
-            Vector3 lightPosition = selectedLightPole.Light.GetTransform().position;
+            Vector3 lightPosition = selectedLightPole.Light.transform.position;
             selectedLightPole.Coordinates = mapManager.GetCoordinatesFromUnityPosition(lightPosition);
 
             selectedLightPole = null;
@@ -314,11 +312,8 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         if (!lightPrefabNames.Contains(lightPole.PrefabName)) {
             lightPole.PrefabName = lightPrefabNames[0];
         }
-        
-        lightPole.Light = Instantiate(Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightPole.PrefabName)).GetComponent<LightPrefab>();
-        lightPole.Light.Create(lightPole, transform, eulerAngles, mapManager);
-        lightPole.Light.SetIESLight(iesManager.GetIESLightFromName(IESName));
-        lightPole.Light.Hightlight(lightControl.IsHighlighted(), highlightMaterial);
+
+        CreateLightPrefab(lightPole, eulerAngles, iesManager.GetIESLightFromName(IESName));
 
         lightPoles.Add(lightPole);
     }
@@ -331,12 +326,28 @@ public class LightsManager : MonoBehaviour, IObjectsManager
         lightControl.LightSelected(selectedLightPole);
         
         selectionPin.SetActive(true);
-        selectionPin.SetPosition(selectedLightPole.Light.GetTransform().position);
+        selectionPin.SetPosition(selectedLightPole.Light.transform.position);
     }
 
     private void MoveCurrentLight()
     {
         selectedLightPole.Light.SetMoving(true);
         selectionPin.SetMoving(true);
+    }
+
+    private void CreateLightPrefab(LightPole lightPole, Vector3 eulerAngles, IESLight iESLight)
+    {
+        lightPole.Light = Instantiate(
+            Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightPole.PrefabName),
+            mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true),
+            Quaternion.Euler(eulerAngles),
+            transform
+        ).GetComponent<LightPrefab>();
+
+        lightPole.Light.Create(sceneCamerasManager);
+        lightPole.Light.SetIESLight(iESLight);
+        lightPole.Light.Hightlight(lightControl.IsHighlighted(), highlightMaterial);
+        lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
+        lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinates));
     }
 }

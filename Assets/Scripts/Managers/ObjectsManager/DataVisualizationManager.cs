@@ -73,6 +73,61 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         return AddDataset(datasetName, new Dataset(GeoJSONParser.FileToFeatureCollection(path)));
     }
 
+    public bool AddVariable(string datasetName, string variable, string path)
+    {
+        if (datasets.ContainsKey(datasetName)) {
+            Dataset dataset = datasets[datasetName];
+
+            if (dataset.Weights.ContainsKey(variable)) {
+                return false;
+            }
+
+            GeoJSON.Net.Feature.FeatureCollection features = GeoJSONParser.FileToFeatureCollection(path);
+
+            Dictionary<GeoJSON.Net.Feature.Feature, double> newValues = new Dictionary<GeoJSON.Net.Feature.Feature, double>();
+            double maxNewValue = -Mathf.Infinity;
+            foreach (GeoJSON.Net.Feature.Feature feature in features.Features) {
+                GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+                if (point != null) {
+                    GeoJSON.Net.Feature.Feature nearestFeature = FindNearestFeatureFromPosition(
+                        new Vector3d(point.Coordinates),
+                        dataset.FeatureCollection
+                    );
+                    if (nearestFeature != null) {
+                        double variableValue = (double) feature.Properties[variable];
+                        maxNewValue = System.Math.Max(maxNewValue, variableValue);
+
+                        if (newValues.ContainsKey(nearestFeature)) {
+                            newValues[nearestFeature] += variableValue;
+                            newValues[nearestFeature] /= 2;
+                        } else {
+                            newValues[nearestFeature] = variableValue;
+                        }
+                    }
+                }
+            }
+
+            foreach (GeoJSON.Net.Feature.Feature feature in newValues.Keys.ToList()) {
+                newValues[feature] /= maxNewValue;
+            }
+
+            foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
+                if (newValues.ContainsKey(feature)) {
+                    feature.Properties[variable] = newValues[feature];
+                } else {
+                    feature.Properties[variable] = .0;
+                }
+            }
+
+            DeleteDataset(datasetName);
+            AddDataset(datasetName, dataset);
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public void DeleteDataset(string datasetName)
     {
         if (datasets.ContainsKey(datasetName)) {
@@ -109,13 +164,7 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         } else {
             bool atLeastOneValidFeature = false;
             foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
-                GeoJSON.Net.Geometry.LineString lineString = null;
-
-                if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString")) {
-                    lineString = feature.Geometry as GeoJSON.Net.Geometry.LineString;
-                } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiLineString")) {
-                    lineString = (feature.Geometry as GeoJSON.Net.Geometry.MultiLineString).Coordinates[0];
-                }
+                GeoJSON.Net.Geometry.LineString lineString = GetLineStringFromGeometry(feature.Geometry);
 
                 if (lineString != null && Utils.IsEPSG4326(lineString.Coordinates[0])) {
                     atLeastOneValidFeature = true;
@@ -128,6 +177,13 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
             } else {
                 return false;
             }
+        }
+    }
+
+    private void ClearVisualizationFeatures()
+    {
+        foreach (KeyValuePair<string, Dataset> dataset in datasets) {
+            ClearVisualizationFeature(dataset.Key);
         }
     }
 
@@ -147,11 +203,26 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         dataVisualizationControl.AddDataset(datasetName, dataset.Weights.Keys.ToList());
     }
 
-    private void ClearVisualizationFeatures()
+    private GeoJSON.Net.Feature.Feature FindNearestFeatureFromPosition(Vector3d position, GeoJSON.Net.Feature.FeatureCollection features)
     {
-        foreach (KeyValuePair<string, Dataset> dataset in datasets) {
-            ClearVisualizationFeature(dataset.Key);
+        GeoJSON.Net.Feature.Feature nearestFeature = null;
+        double minDistance = Mathf.Infinity;
+
+        foreach (GeoJSON.Net.Feature.Feature feature in features.Features) {
+            GeoJSON.Net.Geometry.LineString lineString = GetLineStringFromGeometry(feature.Geometry);
+
+            if (lineString != null) {
+                foreach (GeoJSON.Net.Geometry.IPosition point in lineString.Coordinates) {
+                    double distance = Vector3d.Distance(position, new Vector3d(point));
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestFeature = feature;
+                    }
+                }
+            }
         }
+
+        return nearestFeature;
     }
 
     private void ClearVisualizationFeature(string datasetName)
@@ -162,5 +233,17 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         dataVisualizationControl.DeleteDataset(datasetName);
 
         datasets[datasetName].VisualizationFeatures.Clear();
+    }
+
+    private GeoJSON.Net.Geometry.LineString GetLineStringFromGeometry(GeoJSON.Net.Geometry.IGeometryObject geometry)
+    {
+        GeoJSON.Net.Geometry.LineString lineString = null;
+        if (string.Equals(geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString")) {
+            lineString = geometry as GeoJSON.Net.Geometry.LineString;
+        } else if (string.Equals(geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiLineString")) {
+            lineString = (geometry as GeoJSON.Net.Geometry.MultiLineString).Coordinates[0];
+        }
+
+        return lineString;
     }
 }

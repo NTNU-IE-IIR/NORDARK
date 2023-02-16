@@ -1,33 +1,44 @@
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Rendering;
+using System.Collections.Generic;
 
-[RequireComponent(typeof(Camera))]
+[RequireComponent(typeof(Camera), typeof(CameraMovement))]
 public class SceneCamerasManager : MonoBehaviour
 {
     public const int HIDDEN_FROM_CAMERA_LAYER = 12;
     [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private GameObject sceneCameraPrefab;
     private Camera mainCamera;
+    private CameraMovement cameraMovement;
     private Rect viewportRect;
+    private int numberOfScreens;
 
     void Awake()
     {
         Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(sceneCameraPrefab);
 
         mainCamera = GetComponent<Camera>();
+        cameraMovement = GetComponent<CameraMovement>();
         viewportRect = mainCamera.rect;
+        RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
     }
 
-    public void DisplayLuminanceMaps(int numberOfScreens, int maxNumberOfScreens)
+    void OnDestroy()
     {
-        for (int i=1; i<maxNumberOfScreens; ++i) {
-            lightsManager.DeleteAllLightsFromConfiguration(i);
-        }
+        RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+    }
 
+    public void SplitScreen(int numberOfScreens)
+    {
+        this.numberOfScreens = numberOfScreens;
         foreach (Transform sceneCamera in transform) {
             Destroy(sceneCamera.gameObject);
         }
+        ShowOnlyMainCameraLights();
 
         mainCamera.rect = new Rect(
             viewportRect.x,
@@ -35,7 +46,6 @@ public class SceneCamerasManager : MonoBehaviour
             viewportRect.width * 1f / ((int) ((numberOfScreens + 1) / 2)),
             numberOfScreens > 1 ? viewportRect.height * 0.5f : viewportRect.height
         );
-
         for (int i=1; i<numberOfScreens; ++i) {
             SceneCamera sceneCamera = Instantiate(sceneCameraPrefab, transform).GetComponent<SceneCamera>();
             sceneCamera.Create(new Rect(
@@ -43,27 +53,73 @@ public class SceneCamerasManager : MonoBehaviour
                 i < numberOfScreens/2f ? viewportRect.y + viewportRect.height * 0.5f : viewportRect.y,
                 i < numberOfScreens/2f ? mainCamera.rect.width : viewportRect.width / (numberOfScreens - i),
                 mainCamera.rect.height
-            ), lightsManager, i);
+            ), mainCamera.orthographic, mainCamera.orthographicSize, lightsManager, vegetationManager, i);
         }
     }
 
-    public void DisplayLineVisualization()
+    public void ChangeViewType()
     {
-        
+        mainCamera.orthographic = !mainCamera.orthographic;
+        if (mainCamera.orthographic) {
+            mainCamera.transform.eulerAngles = new Vector3(90, 0, 0);
+        }
+
+        foreach (Transform child in transform) {
+            Camera camera = child.GetComponent<Camera>();
+            camera.orthographic = mainCamera.orthographic;
+
+            if (camera.orthographic) {
+                camera.orthographicSize = mainCamera.orthographicSize;
+            }
+        }
+
+        cameraMovement.SetOrthographic(mainCamera.orthographic);   
     }
 
-    public void SetConfiguration(string path, int configurationIndex)
+    public void IncreaseCameraSize(float increase)
     {
-        lightsManager.DeleteAllLightsFromConfiguration(configurationIndex);
-
-        GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
-
-        foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
-            if (feature.Properties.ContainsKey("type")) {
-                if (string.Equals(feature.Properties["type"] as string, "light")) {
-                    lightsManager.Create(feature, configurationIndex);
-                }
+        if (mainCamera.orthographic) {
+            mainCamera.orthographicSize += increase;
+            if (mainCamera.orthographicSize <= 0) {
+                mainCamera.orthographicSize = 0.1f;
             }
+
+            foreach (Transform child in transform) {
+                child.GetComponent<Camera>().orthographicSize = mainCamera.orthographicSize;
+            }
+        }
+    }
+
+    public Ray ScreenPointToRay(Vector3 position)
+    {
+        Vector2 positionNormalized = new Vector2(position.x / Screen.width, position.y / Screen.height);
+        if (mainCamera.rect.Contains(positionNormalized)) {
+            return mainCamera.ScreenPointToRay(position);
+        }
+
+        foreach (Transform child in transform) {
+            Camera camera = child.GetComponent<Camera>();
+            if (camera.rect.Contains(positionNormalized)) {
+                return camera.ScreenPointToRay(position);
+            }
+        }
+
+        return new Ray();
+    }
+
+    private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+    {
+        if (numberOfScreens > 1 && camera == mainCamera) {
+            ShowOnlyMainCameraLights();
+        }
+    }
+
+    private void ShowOnlyMainCameraLights()
+    {
+        List<LightPole> mainCameraLights = lightsManager.GetLights();
+
+        foreach (LightPole lightPole in mainCameraLights) {
+            lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
         }
     }
 }

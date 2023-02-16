@@ -30,7 +30,7 @@ public class StreetViewControl : MonoBehaviour
     });
     superPowerCheckbox.onValueChanged.AddListener(delegate
     {
-      streetViewManager.toggleSuperPower(superPowerCheckbox.isOn);
+      streetViewManager.ToggleSuperPower(superPowerCheckbox.isOn);
       ChangeCharacterTitle();
     });
 

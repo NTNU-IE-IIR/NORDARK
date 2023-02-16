@@ -10,5 +10,5 @@ public interface IComputationObject
     public void ExportResultsCSV();
     public void ShowVisualizationMethod(bool show);
     public void GetPositionsAnglesAlongObject(out Vector3[] positions, out float[] angles);
-    public void ResultsComputed(Vector3[] positions, float[] luminances);
+    public void ResultsComputed(Vector3[] positions, float[,] luminances);
 }

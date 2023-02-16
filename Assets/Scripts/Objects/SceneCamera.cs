@@ -7,7 +7,7 @@ public class SceneCamera : MonoBehaviour
 {
     private Camera sceneCamera;
     private LightsManager lightsManager;
-    private List<LightPole> mainCameraLights;
+    private VegetationManager vegetationManager;
     private int configurationIndex;
 
     void Awake()
@@ -15,19 +15,18 @@ public class SceneCamera : MonoBehaviour
         sceneCamera = GetComponent<Camera>();
 
         RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-        RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
     }
 
     void OnDestroy()
     {
+        vegetationManager.RemoveCamera(sceneCamera);
         RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-        RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
     }
 
     void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {
         if (camera == sceneCamera && lightsManager != null) {
-            mainCameraLights = lightsManager.GetLights();
+            List<LightPole> mainCameraLights = lightsManager.GetLights();
 
             foreach (LightPole lightPole in mainCameraLights) {
                 lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
@@ -35,20 +34,18 @@ public class SceneCamera : MonoBehaviour
         }
     }
 
-    void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
-    {
-        if (camera == sceneCamera && mainCameraLights != null) {
-            foreach (LightPole lightPole in mainCameraLights) {
-                lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
-            }
-            mainCameraLights = null;
-        }
-    }
-
-    public void Create(Rect viewport, LightsManager lightsManager, int configurationIndex)
+    public void Create(Rect viewport, bool orthographic, float orthographicSize, LightsManager lightsManager, VegetationManager vegetationManager, int configurationIndex)
     {
         sceneCamera.rect = viewport;
+        sceneCamera.orthographic = orthographic;
+        if (sceneCamera.orthographic) {
+            sceneCamera.orthographicSize = orthographicSize;
+        }
+
+        vegetationManager.AddCamera(sceneCamera);
+        
         this.lightsManager = lightsManager;
+        this.vegetationManager = vegetationManager;
         this.configurationIndex = configurationIndex;
     }
 }

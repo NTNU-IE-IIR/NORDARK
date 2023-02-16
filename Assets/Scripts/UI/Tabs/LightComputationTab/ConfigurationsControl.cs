@@ -1,22 +1,25 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UI;
 using TMPro;
 
 public class ConfigurationsControl : MonoBehaviour
 {
-    private const int MAX_NUMBER_OF_CONFIGURATIONS = 4;
+    public const int MAX_NUMBER_OF_CONFIGURATIONS = 4;
+    [SerializeField] private LightConfigurationsManager lightConfigurationsManager;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private TMP_Dropdown numberOfConfigurations;
-    [SerializeField] private TMP_Dropdown comparisonType;
+    [SerializeField] private Toggle splitScreen;
     [SerializeField] private GameObject configurationPrefab;
     [SerializeField] private RectTransform configurationsHolder;
 
     void Awake()
     {
+        Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(numberOfConfigurations);
-        Assert.IsNotNull(comparisonType);
+        Assert.IsNotNull(splitScreen);
         Assert.IsNotNull(configurationPrefab);
         Assert.IsNotNull(configurationsHolder);
     }
@@ -30,11 +33,19 @@ public class ConfigurationsControl : MonoBehaviour
             SetConfigurations(int.Parse(numberOfConfigurations.options[value].text));
         });
 
-        comparisonType.onValueChanged.AddListener(value => {
-            SetConfigurations(int.Parse(numberOfConfigurations.options[numberOfConfigurations.value].text));
+        splitScreen.onValueChanged.AddListener(isOn => {
+            sceneCamerasManager.SplitScreen(isOn ?
+                int.Parse(numberOfConfigurations.options[numberOfConfigurations.value].text) :
+                1
+            );
         });
 
         SetConfigurations(1);
+    }
+
+    public int GetCurrentNumberOfConfigurations()
+    {
+        return configurationsHolder.childCount;
     }
 
     private void SetConfigurations(int numberOfConfigs)
@@ -43,6 +54,7 @@ public class ConfigurationsControl : MonoBehaviour
         foreach (Transform configuration in configurationsHolder) {
             Destroy(configuration.gameObject);
         }
+        lightConfigurationsManager.ResetConfigurations();
 
         for (int i=0; i<numberOfConfigs; ++i) {
             Configuration configuration = Instantiate(configurationPrefab, configurationsHolder).GetComponent<Configuration>();
@@ -55,18 +67,14 @@ public class ConfigurationsControl : MonoBehaviour
                     string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Import configuration file", "", "nordark", false);
                     if (paths.Length > 0) {
                         configuration.SetName(paths[0]);
-                        sceneCamerasManager.SetConfiguration(paths[0], configurationIndex);
+                        lightConfigurationsManager.SetConfiguration(paths[0], configurationIndex);
                     }
                 });
             }
 
             configurationsHolder.sizeDelta += new Vector2(0, configuration.GetHeight());
         }
-
-        if (comparisonType.value == 0) {
-            sceneCamerasManager.DisplayLuminanceMaps(numberOfConfigs, MAX_NUMBER_OF_CONFIGURATIONS);
-        } else {
-            sceneCamerasManager.DisplayLineVisualization();
-        }
+        
+        sceneCamerasManager.SplitScreen(splitScreen.isOn ? numberOfConfigs : 1);
     }
 }

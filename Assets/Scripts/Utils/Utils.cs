@@ -22,4 +22,15 @@ public static class Utils
     {
         return coordinates.Longitude > -180 && coordinates.Longitude < 180 && coordinates.Latitude > -90 && coordinates.Longitude < 90;
     }
+
+    public static float GetLineDistance(LineRenderer line)
+    {
+        float distance = 0;
+        Vector3[] positions = new Vector3[line.positionCount];
+        line.GetPositions(positions);
+        for (int i=0; i<line.positionCount-1; ++i) {
+            distance += Vector3.Distance(positions[i], positions[i+1]);
+        }
+        return distance;
+    }
 }

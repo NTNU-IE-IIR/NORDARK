@@ -50,7 +50,7 @@ public class GraphControl : MonoBehaviour
     {
         List<IGraphVisual> lineGraphVisuals = new List<IGraphVisual>();
         for (int i=0; i<graphSets.Count; ++i) {
-            lineGraphVisuals.Add(new LineGraphVisual(graphContainer, dotSprite, graphSets[i].Color, new Color(1, 1, 1, 0.5f)));
+            lineGraphVisuals.Add(new LineGraphVisual(graphContainer, dotSprite, graphSets[i].Color, graphSets[i].Color));
         }
 
         List<IGraphVisual> barChartVisuals = new List<IGraphVisual>();
@@ -98,6 +98,10 @@ public class GraphControl : MonoBehaviour
 
     public void HighlightXLine(float x)
     {
+        if (graphSets == null) {
+            return;
+        }
+        
         float xMinimum, xMaximum;
         CalculateXScale(out xMinimum, out xMaximum);
         float xGraph = (x - xMinimum) / (xMaximum - xMinimum) * graphContainer.sizeDelta.x;
@@ -150,7 +154,7 @@ public class GraphControl : MonoBehaviour
                 float xPosition = ((graphSets[i].Abscissas[j] - xMinimum) / (xMaximum - xMinimum)) * graphWidth;
                 float yPosition = ((graphSets[i].Ordinates[j] - yMinimum) / (yMaximum - yMinimum)) * graphHeight;
 
-                string tooltipText = graphSets[i].Ordinates[j].ToString("0.0000");
+                string tooltipText = graphSets[i].Title + "\n" + graphSets[i].Ordinates[j].ToString("0.0000");
                 graphVisualObjects.Add(graphVisuals[i].CreateGraphVisualObject(new Vector2(xPosition, yPosition), maxXSize, tooltipText));
             }
         }

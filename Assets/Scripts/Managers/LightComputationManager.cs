@@ -9,6 +9,8 @@ public class LightComputationManager : MonoBehaviour
     private const float LUMINANCE_RESOLUTION = 100;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private VegetationManager vegetationManager;
+    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private LightConfigurationsManager lightConfigurationsManager;
     [SerializeField] private ObjectVisualizationControl lineVisualizationControl;
     [SerializeField] private ObjectVisualizationControl gridVisualizationControl;
     [SerializeField] private GameObject luminancePass;
@@ -21,6 +23,8 @@ public class LightComputationManager : MonoBehaviour
     {
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(vegetationManager);
+        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(lineVisualizationControl);
         Assert.IsNotNull(gridVisualizationControl);
         Assert.IsNotNull(luminancePass);
@@ -60,7 +64,7 @@ public class LightComputationManager : MonoBehaviour
         StartCoroutine(Compute(computationObject));
     }
 
-    public void ExportResultsGeoJSON(List<Vector3> positions, List<float> luminances)
+    public void ExportResultsGeoJSON(List<Vector3> positions, List<List<float>> luminances)
     {
         if (luminances.Count == 0) {
             DialogControl.CreateDialog("No results to export.");
@@ -69,25 +73,28 @@ public class LightComputationManager : MonoBehaviour
             if (filename != "") {
                 List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
 
-                float distanceFromOrigin = 0;
-                for (int i=0; i<positions.Count; ++i) {
-                    if (i > 0) {
-                        distanceFromOrigin += Vector3.Distance(positions[i-1], positions[i]);
+                for (int i=0; i<luminances.Count; ++i) {
+                    float distanceFromOrigin = 0;
+                    for (int j=0; j<positions.Count; ++j) {
+                        if (j > 0) {
+                            distanceFromOrigin += Vector3.Distance(positions[j-1], positions[j]);
+                        }
+
+                        Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[j]);
+                        GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
+                            coordinate.latitude,
+                            coordinate.longitude,
+                            coordinate.altitude
+                        ));
+
+                        Dictionary<string, object> properties = new Dictionary<string, object>();
+                        properties.Add("luminance", luminances[i][j]);
+                        properties.Add("ground", mapManager.GetGroundFromPosition(positions[j]));
+                        properties.Add("distanceFromOrigin", distanceFromOrigin);
+                        properties.Add("config", i);
+
+                        features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
                     }
-
-                    Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
-                    GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                        coordinate.latitude,
-                        coordinate.longitude,
-                        coordinate.altitude
-                    ));
-
-                    Dictionary<string, object> properties = new Dictionary<string, object>();
-                    properties.Add("luminance", luminances[i]);
-                    properties.Add("ground", mapManager.GetGroundFromPosition(positions[i]));
-                    properties.Add("distanceFromOrigin", distanceFromOrigin);
-
-                    features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
                 }
 
                 GeoJSONParser.FeaturesToFile(filename, features);
@@ -95,29 +102,32 @@ public class LightComputationManager : MonoBehaviour
         }
     }
 
-    public void ExportResultsCSV(List<Vector3> positions, List<float> luminances)
+    public void ExportResultsCSV(List<Vector3> positions, List<List<float>> luminances)
     {
         if (luminances.Count == 0) {
             DialogControl.CreateDialog("No results to export.");
         } else {
             string filename = SFB.StandaloneFileBrowser.SaveFilePanel("Export light results", "", "light_results", "csv");
             if (filename != "") {
-                string content = "latitude,longitude,altitude(m),distanceFromOrigin(m),luminance(cd/m2),ground\n";
+                string content = "latitude,longitude,altitude(m),distanceFromOrigin(m),luminance(cd/m2),ground,config\n";
 
-                float distanceFromOrigin = 0;
-                for (int i=0; i<positions.Count; ++i) {
-                    if (i > 0) {
-                        distanceFromOrigin += Vector3.Distance(positions[i-1], positions[i]);
+                for (int i=0; i<luminances.Count; ++i) {
+                    float distanceFromOrigin = 0;
+                    for (int j=0; j<positions.Count; ++j) {
+                        if (j > 0) {
+                            distanceFromOrigin += Vector3.Distance(positions[j-1], positions[j]);
+                        }
+
+                        Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[j]);
+                        content += 
+                            coordinate.latitude.ToString() + "," +
+                            coordinate.longitude.ToString() + "," +
+                            coordinate.altitude + "," +
+                            distanceFromOrigin + "," +
+                            luminances[i][j].ToString() + "," +
+                            mapManager.GetGroundFromPosition(positions[j]) + "," +
+                            i.ToString() + "\n";
                     }
-
-                    Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[i]);
-                    content += 
-                        coordinate.latitude.ToString() + "," +
-                        coordinate.longitude.ToString() + "," +
-                        coordinate.altitude + "," +
-                        distanceFromOrigin + "," +
-                        luminances[i].ToString() + "," +
-                        mapManager.GetGroundFromPosition(positions[i]) + "\n";
                 }
 
                 System.IO.StreamWriter sw = new System.IO.StreamWriter(filename);
@@ -131,56 +141,55 @@ public class LightComputationManager : MonoBehaviour
     {
         luminancePass.SetActive(true);
 
-        RenderTexture luminanceTexture = new RenderTexture(MASK_TEXTURE_SIZE, MASK_TEXTURE_SIZE, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
-        luminanceTexture.enableRandomWrite = true;
-        luminanceTexture.Create();
+        LuminanceCamera luminanceCamera = Instantiate(luminanceCameraPrefab, transform).GetComponent<LuminanceCamera>();
+        luminanceCamera.Create(
+            MASK_TEXTURE_SIZE,
+            vegetationManager,
+            lightsManager
+        );
 
-        Camera luminanceCamera = Instantiate(luminanceCameraPrefab, transform).GetComponent<Camera>();
-        luminanceCamera.targetTexture = luminanceTexture;
-        vegetationManager.AddCamera(luminanceCamera);
-
+        int numberOfConfigurations = lightConfigurationsManager.GetCurrentNumberOfConfigurations();
         Vector3[] positions;
         float[] angles;
         computationObject.GetPositionsAnglesAlongObject(out positions, out angles);
-        float[] luminances = new float[positions.Length];
+        float[,] luminances = new float[numberOfConfigurations, positions.Length];
 
         // Skip frame to let luminancePass turning on
         yield return null;
 
-        for (int i=0; i<positions.Length; ++i) {
-            luminanceCamera.transform.position = positions[i];
-            luminanceCamera.transform.eulerAngles = new Vector3(
-                luminanceCamera.transform.eulerAngles.x,
-                luminanceCamera.transform.eulerAngles.y,
-                angles[i]
-            );
-        
-            // Skip frame to render to camera
-            yield return null;
+        for (int i = 0; i<numberOfConfigurations; ++i) {
+            luminanceCamera.SetConfigurationIndex(i);
 
-            // Skip frame to render vegetation, needed only for the first point
-            if (i ==0) {
+            for (int j=0; j<positions.Length; ++j) {
+                luminanceCamera.SetPositionAndAngle(positions[j], angles[j]);
+            
+                // Skip frame to render to camera
                 yield return null;
+
+                // Skip frame to render vegetation, needed only for the first point
+                if (j ==0) {
+                    yield return null;
+                }
+
+                int[] result = new int[1];
+                result[0] = 0;
+
+                ComputeBuffer computeBuffer = new ComputeBuffer(1, 4);
+                computeBuffer.SetData(result);
+
+                RenderTexture luminanceTexture = luminanceCamera.GetTexture();
+
+                luminanceSumShader.SetTexture(indexOfLuminanceSumShader, "Texture", luminanceTexture);
+                luminanceSumShader.SetFloat("LuminanceResolution", LUMINANCE_RESOLUTION);
+                luminanceSumShader.SetBuffer(indexOfLuminanceSumShader, "Result", computeBuffer);
+                luminanceSumShader.Dispatch(indexOfLuminanceSumShader, luminanceTexture.width / 32, luminanceTexture.height / 32, 1);
+
+                computeBuffer.GetData(result);
+                luminances[i, j] = result[0] / LUMINANCE_RESOLUTION / (MASK_TEXTURE_SIZE * MASK_TEXTURE_SIZE);
+                computeBuffer.Release();
             }
-
-            int[] result = new int[1];
-            result[0] = 0;
-
-            ComputeBuffer computeBuffer = new ComputeBuffer(1, 4);
-            computeBuffer.SetData(result);
-
-            luminanceSumShader.SetTexture(indexOfLuminanceSumShader, "Texture", luminanceTexture);
-            luminanceSumShader.SetFloat("LuminanceResolution", LUMINANCE_RESOLUTION);
-            luminanceSumShader.SetBuffer(indexOfLuminanceSumShader, "Result", computeBuffer);
-            luminanceSumShader.Dispatch(indexOfLuminanceSumShader, luminanceTexture.width / 32, luminanceTexture.height / 32, 1);
-
-            computeBuffer.GetData(result);
-            luminances[i] = result[0] / LUMINANCE_RESOLUTION / (MASK_TEXTURE_SIZE * MASK_TEXTURE_SIZE);
-            computeBuffer.Release();
         }
 
-        vegetationManager.RemoveCamera(luminanceCamera);
-        luminanceTexture.Release();
         Destroy(luminanceCamera.gameObject);
         luminancePass.SetActive(false);
 

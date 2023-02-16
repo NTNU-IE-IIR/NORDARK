@@ -11,6 +11,7 @@ public class LightPrefab : MonoBehaviour
     private IESLight iesLight;
     private Renderer objectRenderer;
     private Material defaultMaterial;
+    private SceneCamerasManager sceneCamerasManager;
     private int defaultLayer;
 
     void Awake()
@@ -26,23 +27,19 @@ public class LightPrefab : MonoBehaviour
 
     void Update()
     {
-        if (isMoving)
-        {
+        if (isMoving) {
             bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = sceneCamerasManager.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit = new RaycastHit();
-            if (!isOverUI && Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP))
-            {
+            if (!isOverUI && Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
                 transform.position = hit.point;
             }
         }
     }
 
-    public void Create(LightPole lightPole, Transform parent, Vector3 eulerAngles, MapManager mapManager)
+    public void Create(SceneCamerasManager sceneCamerasManager)
     {
-        transform.parent = parent;
-        transform.position = mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true);
-        transform.eulerAngles = eulerAngles;
+        this.sceneCamerasManager = sceneCamerasManager;
         hdAdditionalLightData.SetColor(hdAdditionalLightData.color, LIGHT_TEMPERATURE);
     }
 
@@ -68,11 +65,6 @@ public class LightPrefab : MonoBehaviour
         transform.eulerAngles = angles;
     }
 
-    public Transform GetTransform()
-    {
-        return transform;
-    }
-
     public void SetIESLight(IESLight iesLight)
     {
         this.iesLight = iesLight;
@@ -85,19 +77,21 @@ public class LightPrefab : MonoBehaviour
         return iesLight;
     }
 
-    public void Show(bool display) {
-        gameObject.SetActive(display);
+    public void Show(bool show) {
+        gameObject.SetActive(show);
     }
 
     public void ShowLight(bool display) {
-        // gameObject.SetActive() cannot be used here, otherwise a Unity error occurs
+        if (gameObject.activeSelf) {
+            
+            // gameObject.SetActive() cannot be used here, otherwise a Unity error occurs
+            unityLight.enabled = display;
 
-        unityLight.enabled = display;
-
-        if (display) {
-            gameObject.layer = defaultLayer;
-        } else {
-            gameObject.layer = SceneCamerasManager.HIDDEN_FROM_CAMERA_LAYER;
+            if (display) {
+                gameObject.layer = defaultLayer;
+            } else {
+                gameObject.layer = SceneCamerasManager.HIDDEN_FROM_CAMERA_LAYER;
+            }
         }
     }
 

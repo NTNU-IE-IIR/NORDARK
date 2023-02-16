@@ -6,8 +6,9 @@ using UnityEngine.Assertions;
 public class DataVisualizationControl : MonoBehaviour
 {
     [SerializeField] private DataVisualizationManager dataVisualizationManager;
-    [SerializeField] private RectTransform indicatorsHolder;
-    [SerializeField] private GameObject indicatorPrefab;
+    [SerializeField] private AddVariableWindow addVariableWindow;
+    [SerializeField] private RectTransform datasetsHolder;
+    [SerializeField] private GameObject datasetPrefab;
     [SerializeField] private RectTransform weightsHolder;
     [SerializeField] private GameObject weightPrefab;
     [SerializeField] private Toggle displayDatasets;
@@ -17,8 +18,9 @@ public class DataVisualizationControl : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(dataVisualizationManager);
-        Assert.IsNotNull(indicatorsHolder);
-        Assert.IsNotNull(indicatorPrefab);
+        Assert.IsNotNull(addVariableWindow);
+        Assert.IsNotNull(datasetsHolder);
+        Assert.IsNotNull(datasetPrefab);
         Assert.IsNotNull(weightsHolder);
         Assert.IsNotNull(weightPrefab);
         Assert.IsNotNull(displayDatasets);
@@ -31,37 +33,40 @@ public class DataVisualizationControl : MonoBehaviour
         displayDatasets.onValueChanged.AddListener(dataVisualizationManager.DisplayDatasets);
     }
 
-    public void AddDataset(string datasetName, List<string> indicators)
+    public void AddDataset(string datasetName, List<string> variables)
     {
         DatasetUI datasetUI = new DatasetUI();
 
-        DatasetControl datasetControl = Instantiate(indicatorPrefab, indicatorsHolder).GetComponent<DatasetControl>();
+        DatasetControl datasetControl = Instantiate(datasetPrefab, datasetsHolder).GetComponent<DatasetControl>();
         datasetControl.Create(datasetName, isOn => {
             dataVisualizationManager.DisplayDataset(datasetName, isOn);
             foreach (WeightControl weightControl in datasetUIs[datasetName].WeightControls) {
                 weightControl.gameObject.SetActive(isOn);
             }
         }, () => {
+            addVariableWindow.Open((variable, path) => {
+                if (dataVisualizationManager.AddVariable(datasetName, variable, path)) {
+                    DialogControl.CreateDialog(variable + " variable added.");
+                } else {
+                    DialogControl.CreateDialog("Variable not added. An existing variable with the same name already exists.");
+                }
+            });
+        }, () => {
             dataVisualizationManager.DeleteDataset(datasetName);
         });
         datasetUI.DatasetControl = datasetControl;
-        indicatorsHolder.sizeDelta += new Vector2(0, datasetControl.GetHeight());
+        datasetsHolder.sizeDelta += new Vector2(0, datasetControl.GetHeight());
 
-        foreach (string indicator in indicators) {
-            WeightControl weightControl = Instantiate(weightPrefab, weightsHolder).GetComponent<WeightControl>();
-            weightControl.Create(indicator, weight => {
-                dataVisualizationManager.SetIndicatorWeight(datasetName, indicator, weight);
-            });
-            datasetUI.WeightControls.Add(weightControl);
-            weightsHolder.sizeDelta += new Vector2(0, weightControl.GetHeight());
-        }
-        
         datasetUIs.Add(datasetName, datasetUI);
+
+        foreach (string variable in variables) {
+            AddVariable(variable, datasetName);
+        }
     }
 
     public void DeleteDataset(string datasetName)
     {
-        indicatorsHolder.sizeDelta -= new Vector2(0, datasetUIs[datasetName].DatasetControl.GetHeight());
+        datasetsHolder.sizeDelta -= new Vector2(0, datasetUIs[datasetName].DatasetControl.GetHeight());
         foreach (WeightControl weightControl in datasetUIs[datasetName].WeightControls) {
             weightsHolder.sizeDelta -= new Vector2(0, weightControl.GetHeight());
         }
@@ -82,7 +87,7 @@ public class DataVisualizationControl : MonoBehaviour
         List<string> notAddedDatasets = new List<string>();
 
         string message = "";
-        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a GeoJSON file", "", "geojson", false);
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Select a GeoJSON file", "", "geojson", true);
         foreach (string path in paths) {
             string datasetName = System.IO.Path.GetFileNameWithoutExtension(path);
 
@@ -115,5 +120,15 @@ public class DataVisualizationControl : MonoBehaviour
         if (message != "") {
             DialogControl.CreateDialog(message);
         }
+    }
+
+    private void AddVariable(string variable, string datasetName)
+    {
+        WeightControl weightControl = Instantiate(weightPrefab, weightsHolder).GetComponent<WeightControl>();
+        weightControl.Create(variable, weight => {
+            dataVisualizationManager.SetIndicatorWeight(datasetName, variable, weight);
+        });
+        datasetUIs[datasetName].WeightControls.Add(weightControl);
+        weightsHolder.sizeDelta += new Vector2(0, weightControl.GetHeight());
     }
 }

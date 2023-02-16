@@ -10,6 +10,7 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     private const float RECTANGLE_HEIGHT = 1;
     [SerializeField] private LightComputationManager lightComputationManager;
     [SerializeField] private MapManager mapManager;
+    [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private ObjectVisualizationControl gridVisualizationControl;
     [SerializeField] private HeatmapControl heatmapControl;
     [SerializeField] private GameObject heatmapPositionIndicator;
@@ -17,9 +18,8 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     private bool isCreatingRectangle;
     private bool centerSet;
     private Vector3 center;
-    private Camera mainCamera;
     private List<Vector3> positions;
-    private List<float> luminances;
+    private List<List<float>> luminances;
 
     void Awake()
     {
@@ -32,16 +32,15 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
         line = GetComponent<LineRenderer>();
         isCreatingRectangle = false;
         centerSet = false;
-        mainCamera = Camera.main;
         positions = new List<Vector3>();
-        luminances = new List<float>();
+        luminances = new List<List<float>>();
     }
 
     void Update()
     {
         if (isCreatingRectangle) {
             RaycastHit hit;
-            if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+            if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
                 if (Input.GetMouseButton(0)) {
                     center = hit.point;
                     centerSet = true;
@@ -162,12 +161,18 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
         }
     }
 
-    public void ResultsComputed(Vector3[] positions, float[] luminances)
+    public void ResultsComputed(Vector3[] positions, float[,] luminances)
     {
         this.positions = positions.ToList();
-        this.luminances = luminances.ToList();
+        this.luminances = Enumerable.Range(0, luminances.GetLength(0))
+            .Select(i => {
+                return Enumerable.Range(0, luminances.GetLength(1))
+                    .Select(j => luminances[i, j])
+                    .ToList();
+            })
+            .ToList();
 
-        heatmapControl.SetHeatmap(positions, luminances, () => {
+        heatmapControl.SetHeatmap(positions, this.luminances[0].ToArray(), () => {
             heatmapControl.SetComputing();
             lightComputationManager.ComputeAlongObject(this);
         });
