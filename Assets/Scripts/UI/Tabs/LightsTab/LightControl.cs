@@ -7,120 +7,109 @@ using UnityEngine.EventSystems;
 
 public class LightControl : MonoBehaviour
 {
-    [SerializeField] private LightsManager lightsManager;
-    [SerializeField] private IESManager iesManager;
-    [SerializeField] private TMP_Dropdown lightType;
+    [SerializeField] private LightPolesManager lightPolesManager;
+    [SerializeField] private LightPolesSelectionManager lightPolesSelectionManager;
+    [SerializeField] private TMP_InputField selectedLightPoleName;
     [SerializeField] private Slider rotation;
     [SerializeField] private TMP_Text rotationValue;
-    [SerializeField] private TMP_Dropdown lightSource;
-    [SerializeField] private TMP_InputField lightObjectName;
-    [SerializeField] private Button insert;
+    [SerializeField] private TMP_Dropdown lightIESFile;
+    [SerializeField] private TMP_Dropdown light3DModel;
+    [SerializeField] private Button select;
+    [SerializeField] private Button add;
     [SerializeField] private Button move;
     [SerializeField] private Button delete;
-    [SerializeField] private Toggle hightlight;
+    [SerializeField] private Toggle highlight;
     [SerializeField] private Toggle display;
-    private double t1;
-    private double t2;
 
     void Awake()
     {
-        Assert.IsNotNull(lightsManager);
-        Assert.IsNotNull(iesManager);
-        Assert.IsNotNull(lightType);
+        Assert.IsNotNull(lightPolesManager);
+        Assert.IsNotNull(lightPolesSelectionManager);
+        Assert.IsNotNull(selectedLightPoleName);
         Assert.IsNotNull(rotation);
         Assert.IsNotNull(rotationValue);
-        Assert.IsNotNull(lightSource);
-        Assert.IsNotNull(lightObjectName);
-        Assert.IsNotNull(insert);
+        Assert.IsNotNull(lightIESFile);
+        Assert.IsNotNull(light3DModel);
+        Assert.IsNotNull(select);
+        Assert.IsNotNull(add);
         Assert.IsNotNull(move);
         Assert.IsNotNull(delete);
-        Assert.IsNotNull(hightlight);
+        Assert.IsNotNull(highlight);
         Assert.IsNotNull(display);
     }
 
     void Start()
     {
-        lightType.AddOptions(lightsManager.GetLightPrefabNames());
-        lightType.onValueChanged.AddListener(value => {
-            lightsManager.ChangeLightType(lightType.options[value].text);
-        });
+        selectedLightPoleName.onEndEdit.AddListener(lightPolesManager.ChangeSelectedLightPolesName);
 
         rotation.onValueChanged.AddListener(value => {
-            lightsManager.RotateSelectedLight(value);
+            lightPolesManager.RotateSelectedLightPoles(value);
             rotationValue.text = value.ToString();
         });
 
-        lightSource.onValueChanged.AddListener(value => {
-            lightsManager.ChangeLightSource(lightSource.options[value].text);
+        lightIESFile.onValueChanged.AddListener(value => {
+            lightPolesManager.ChangeIESFileOfSelectedLightPoles(lightIESFile.options[value].text);
         });
 
-        lightObjectName.onEndEdit.AddListener(lightsManager.ChangeLightName);
+        light3DModel.AddOptions(lightPolesManager.GetLightPrefabNames());
+        light3DModel.onValueChanged.AddListener(value => {
+            lightPolesManager.Change3DModelOfSelectedLightPoles(light3DModel.options[value].text);
+        });
 
-        insert.onClick.AddListener(lightsManager.Create);
-        move.onClick.AddListener(lightsManager.MoveLight);
+        select.onClick.AddListener(lightPolesSelectionManager.StartDrawing);
+        add.onClick.AddListener(lightPolesManager.AddLightPole);
+        move.onClick.AddListener(lightPolesManager.MoveSelectedLightPoles);
         delete.onClick.AddListener(() => {
-            lightsManager.DeleteLight();
+            lightPolesManager.DeleteSelectedLightPoles();
             EventSystem.current.SetSelectedGameObject(null);
         });
 
-        hightlight.onValueChanged.AddListener(lightsManager.HighlightLights);
-        display.onValueChanged.AddListener(lightsManager.ShowLights);
+        highlight.onValueChanged.AddListener(lightPolesManager.HighlightLights);
+        display.onValueChanged.AddListener(lightPolesManager.ShowLightPoles);
     }
 
     void Update()
-    {
+    {   
         if (Input.GetMouseButtonDown(0)) {
-            if (isDoubleClick()) {
-                lightsManager.MoveLight();
-            } else {
-                lightsManager.SelectLight();
-            }
+            lightPolesManager.SelectLightPoleFromPointerByCursor(Input.GetKey(KeyCode.LeftControl));
         } else if (Input.GetMouseButtonDown(1)) {
-            lightsManager.ClearSelectedLight();
+            lightPolesManager.ClearSelectedLightPoles();
         }
     }
 
     public void ClearSelectedLight()
     {
-        lightObjectName.text = "No selection";
+        selectedLightPoleName.text = "No selection";
         rotation.value = 0;
         rotationValue.text = "";
     }
 
-    public void LightSelected(LightPole selectedLightPole)
+    public void LightSelected(LightPole selectedLightPole, bool multipleSelectedLightPoles)
     {
         float rotationSelected = System.Math.Max(0, selectedLightPole.Light.transform.eulerAngles.y);
-        int lightSourceIndex = lightSource.options.FindIndex((i) => { return i.text.Equals(selectedLightPole.Light.GetIESLight().Name); });
-        int lightTypeIndex = lightType.options.FindIndex((i) => { return i.text.Equals(selectedLightPole.PrefabName); });
+        int iesFileIndex = lightIESFile.options.FindIndex(i => i.text.Equals(selectedLightPole.Light.GetIESLight().Name));
+        int prefabIndex = light3DModel.options.FindIndex(i => i.text.Equals(selectedLightPole.PrefabName));
 
-        lightObjectName.text = selectedLightPole.Name;
+        selectedLightPoleName.text = multipleSelectedLightPoles ? "Multiple light poles selected" : selectedLightPole.Name;
         rotation.value = rotationSelected;
         rotationValue.text = rotationSelected.ToString();
         
-        if (lightSourceIndex >= 0) {
-            lightSource.value = lightSourceIndex;
+        if (iesFileIndex >= 0) {
+            lightIESFile.value = iesFileIndex;
         }
-        if (lightTypeIndex >= 0) {
-            lightType.value = lightTypeIndex;
+        if (prefabIndex >= 0) {
+            light3DModel.value = prefabIndex;
         }
     }
 
     public void SetIESNames(List<string> iesNames)
     {
-        lightSource.ClearOptions();
-        lightSource.AddOptions(iesNames);
+        lightIESFile.ClearOptions();
+        lightIESFile.AddOptions(iesNames);
     }
 
     public bool IsHighlighted()
     {
-        return hightlight.isOn;
-    }
-
-    private bool isDoubleClick()
-    {
-        t2 = Time.realtimeSinceStartup;
-        bool doubleClick = t2 - t1 < 0.5f;
-        t1 = t2;
-        return doubleClick;
+        return highlight.isOn;
     }
 }

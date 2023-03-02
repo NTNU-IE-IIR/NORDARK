@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7958723561904399504}
   - component: {fileID: 7958723561904399535}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: MapboxPin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!95 &7958723561904399535
 Animator:
-  serializedVersion: 4
+  serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -53,7 +53,7 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
+  m_KeepAnimatorStateOnDisable: 0
 --- !u!1 &7958723561909710120
 GameObject:
   m_ObjectHideFlags: 0
@@ -67,7 +67,7 @@ GameObject:
   - component: {fileID: 7958723561909710116}
   - component: {fileID: 7958723561909710117}
   - component: {fileID: 7958723561909710118}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: star
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -187,7 +187,7 @@ GameObject:
   - component: {fileID: 7958723562396014011}
   - component: {fileID: 7958723562396014012}
   - component: {fileID: 7958723562396014013}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: pinpoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -307,7 +307,7 @@ GameObject:
   - component: {fileID: 7958723563030266350}
   - component: {fileID: 2896214690192687245}
   - component: {fileID: 3464108744379422824}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: SelectionPin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -321,16 +321,16 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7958723563030266320}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: -0.7071068}
   m_LocalPosition: {x: -0, y: 0, z: 0}
-  m_LocalScale: {x: 4, y: 4, z: 4}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7958723561904399504}
   - {fileID: 7958723563621031582}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 270, y: 0, z: 0}
 --- !u!33 &7958723563030266349
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -416,7 +416,7 @@ GameObject:
   - component: {fileID: 7958723563621031582}
   - component: {fileID: 7958723563621031580}
   - component: {fileID: 7958723563621031581}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Core
   m_TagString: Untagged
   m_Icon: {fileID: 0}

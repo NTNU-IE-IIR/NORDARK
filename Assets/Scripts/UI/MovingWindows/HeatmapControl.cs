@@ -46,16 +46,30 @@ public class HeatmapControl : MonoBehaviour
         SetStatus("Computing...");
     }
 
-    public void SetHeatmap(Vector3[] positions, float[] values, System.Action onRefresh)
+    public void DisplayValues(bool display)
+    {
+        heatmap.DisplayValues(display);
+    }
+
+    public void SetHeatmap(
+        Vector3[] positions,
+        float[] values,
+        System.Action onRefresh,
+        float yMinimum = IComputationObject.EXTREMUM_DEFAULT_VALUE,
+        float yMaximum = IComputationObject.EXTREMUM_DEFAULT_VALUE)
     {
         figure.SetActive(true);
 
-        float maxValue = values.Max();
-        for (int i=0; i<values.Length; ++i) {
-            values[i] = 1 - values[i] / maxValue;
+        if (yMinimum > yMaximum && yMinimum != IComputationObject.EXTREMUM_DEFAULT_VALUE) {
+            (yMinimum, yMaximum) = (yMaximum, yMinimum);
+        }
+        if (yMinimum == yMaximum && yMinimum != IComputationObject.EXTREMUM_DEFAULT_VALUE) {
+            yMaximum += 0.001f;
         }
 
-        heatmap.SetValues(values);
+        float minValue = yMinimum == IComputationObject.EXTREMUM_DEFAULT_VALUE ? values.Min() : yMinimum;
+        float maxValue = yMaximum == IComputationObject.EXTREMUM_DEFAULT_VALUE ? values.Max() : yMaximum;
+        heatmap.SetValues(values, minValue, maxValue);
 
         float step = 1f / (labelsX.childCount-1);
         float t = 0;
@@ -70,7 +84,7 @@ public class HeatmapControl : MonoBehaviour
             t += step;
         }
 
-        minLegend.text = "0";
+        minLegend.text = minValue.ToString("0.00") + " cd/m²";
         maxLegend.text = maxValue.ToString("0.00") + " cd/m²";
 
         refreshButton.onClick.RemoveAllListeners();

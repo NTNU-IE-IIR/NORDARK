@@ -4,12 +4,14 @@ using UnityEngine.Assertions;
 public class ShorcutsControl : MonoBehaviour
 {
     [SerializeField] private SceneManager sceneManager;
-    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private LightPolesManager lightPolesManager;
+    [SerializeField] private LightPolesSelectionManager lightPolesSelectionManager;
 
     void Awake()
     {
         Assert.IsNotNull(sceneManager);
-        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(lightPolesManager);
+        Assert.IsNotNull(lightPolesSelectionManager);
     }
 
     void Update()
@@ -23,17 +25,17 @@ public class ShorcutsControl : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F12)) {
             sceneManager.SaveAs();
         }
-        if (Input.GetKeyDown(KeyCode.Delete)) {
-            lightsManager.DeleteLight();
-        }
-        if (Input.GetKeyDown(KeyCode.M)) {
-            lightsManager.MoveLight();
+        if (Input.GetKeyDown(KeyCode.O)) {
+            lightPolesSelectionManager.StartDrawing();
         }
         if (Input.GetKeyDown(KeyCode.I)) {
-            lightsManager.Create();
+            lightPolesManager.AddLightPole();
         }
-        if (Input.GetKeyDown(KeyCode.Insert)) {
-            lightsManager.Create();
+        if (Input.GetKeyDown(KeyCode.M)) {
+            lightPolesManager.MoveSelectedLightPoles();
+        }
+        if (Input.GetKeyDown(KeyCode.Delete)) {
+            lightPolesManager.DeleteSelectedLightPoles();
         }
     }
 }

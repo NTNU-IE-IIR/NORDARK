@@ -8,7 +8,7 @@ public class LuminanceCamera : MonoBehaviour
 {
     private Camera luminanceCamera;
     private VegetationManager vegetationManager;
-    private LightsManager lightsManager;
+    private LightPolesManager lightPolesManager;
     private int configurationIndex;
     private RenderTexture luminanceTexture;
 
@@ -24,16 +24,16 @@ public class LuminanceCamera : MonoBehaviour
         vegetationManager.RemoveCamera(luminanceCamera);
         luminanceTexture.Release();
 
-        List<LightPole> mainCameraLights = lightsManager.GetLights();
+        List<LightPole> mainCameraLights = lightPolesManager.GetLights();
         foreach (LightPole lightPole in mainCameraLights) {
             lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
         }
     }
 
-    public void Create(int maskTextureSize, VegetationManager vegetationManager, LightsManager lightsManager)
+    public void Create(int maskTextureSize, VegetationManager vegetationManager, LightPolesManager lightPolesManager)
     {
         this.vegetationManager = vegetationManager;
-        this.lightsManager = lightsManager;
+        this.lightPolesManager = lightPolesManager;
 
         luminanceTexture = new RenderTexture(maskTextureSize, maskTextureSize, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
         luminanceTexture.enableRandomWrite = true;
@@ -67,7 +67,7 @@ public class LuminanceCamera : MonoBehaviour
     private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {   
         if (luminanceCamera == camera) {
-            List<LightPole> mainCameraLights = lightsManager.GetLights();
+            List<LightPole> mainCameraLights = lightPolesManager.GetLights();
 
             foreach (LightPole lightPole in mainCameraLights) {
                 lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);

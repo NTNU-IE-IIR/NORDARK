@@ -196,6 +196,9 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     {
         lightComputationManager.ExportResultsCSV(GetPositionsOfMeasuresAlongLine(), calculatedResults.Select(graphSet => graphSet.Ordinates).ToList());
     }
+    
+    public void DisplayValues(bool display)
+    {}
 
     public void ShowVisualizationMethod(bool show)
     {
@@ -264,9 +267,19 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         }
 
         graphSets.Add(importedResults);
+
+        float yMinimum = lineVisualizationControl.isMinAuto() ?
+            IComputationObject.EXTREMUM_DEFAULT_VALUE :
+            lineVisualizationControl.GetMinValue()
+        ;
+        float yMaximum = lineVisualizationControl.isMaxAuto() ?
+            IComputationObject.EXTREMUM_DEFAULT_VALUE :
+            lineVisualizationControl.GetMaxValue()
+        ;
+
         graphControl.CreateGraph(graphSets, () => {
             lightComputationManager.ComputeAlongObject(this);
-        });
+        }, yMinimum, yMaximum);
     }
 
     private void SetMeshCollider()

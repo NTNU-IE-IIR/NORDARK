@@ -45,7 +45,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             // In a GeoJSON polygon, the first and last points are be same
             for (int i=0; i<polygon.Coordinates[0].Coordinates.Count-1; i++) {
                 GeoJSON.Net.Geometry.IPosition coordinate = polygon.Coordinates[0].Coordinates[i];
-                biomeArea.Coordinates.Add(new Vector2d(coordinate.Latitude, coordinate.Longitude));
+                biomeArea.Coordinates.Add(new Vector3d(coordinate.Latitude, coordinate.Longitude));
             }
 
             AddBiomeArea(biomeArea);
@@ -70,7 +70,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
         foreach (BiomeArea biomeArea in biomeAreas) {
             
             List<List<List<double>>> coordinates = new List<List<List<double>>> {new List<List<double>>()};
-            foreach (Vector2d coordinate in biomeArea.Coordinates) {
+            foreach (Vector3d coordinate in biomeArea.Coordinates) {
                 coordinates[0].Add(new List<double>{coordinate.longitude, coordinate.latitude, 0});
             }
             // In a GeoJSON polygon, the first and last points should be same
@@ -143,9 +143,9 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
             
             biomeArea.BiomeMaskArea.ClearNodes();
-            foreach(Vector2d coordinate in biomeArea.Coordinates) {
+            foreach(Vector3d coordinate in biomeArea.Coordinates) {
                 AwesomeTechnologies.VegetationSystem.Biomes.Node node = new AwesomeTechnologies.VegetationSystem.Biomes.Node();
-                node.Position = mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0));
+                node.Position = mapManager.GetUnityPositionFromCoordinates(coordinate);
                 biomeArea.BiomeMaskArea.Nodes.Add(node);
             }
             biomeArea.BiomeMaskArea.PositionNodes();
@@ -187,7 +187,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
     {
         int biomeAreaIndex = vegetationControl.GetBiomeAreaIndex();
         if (biomeAreaIndex > -1 && biomeAreaIndex < biomeAreas.Count) {
-            Vector2d coordinate = new Vector2d(mapManager.GetCoordinatesFromUnityPosition(position));
+            Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(position);
 
             biomeAreas[biomeAreaIndex].Coordinates.Add(coordinate);
 
@@ -197,7 +197,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
 
             AwesomeTechnologies.VegetationSystem.Biomes.Node node = new AwesomeTechnologies.VegetationSystem.Biomes.Node();
-            node.Position = mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0));
+            node.Position = mapManager.GetUnityPositionFromCoordinates(coordinate);
             biomeAreas[biomeAreaIndex].BiomeMaskArea.Nodes.Add(node);
             biomeAreas[biomeAreaIndex].BiomeMaskArea.PositionNodes();
         }
@@ -216,13 +216,13 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public List<Vector2d> GetCoordinateOfCurrentBiomeArea()
+    public List<Vector3d> GetCoordinateOfCurrentBiomeArea()
     {
         int biomeAreaIndex = vegetationControl.GetBiomeAreaIndex();
         if (biomeAreaIndex > -1 && biomeAreaIndex < biomeAreas.Count) {
             return biomeAreas[biomeAreaIndex].Coordinates;
         } else {
-            return new List<Vector2d>();
+            return new List<Vector3d>();
         }
     }
 

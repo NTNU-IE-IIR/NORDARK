@@ -141,6 +141,19 @@ public class MapManager : MonoBehaviour
         return tiles;
     }
 
+    public (Vector3d, Vector3d) GetTileBoundaries(Tile tile)
+    {
+        return (GetCoordinatesFromUnityPosition(new Vector3(
+            tile.Transform.position.x - tile.MeshFilter.mesh.bounds.size.x / 2,
+            tile.Transform.position.y,
+            tile.Transform.position.z - tile.MeshFilter.mesh.bounds.size.z / 2
+        )), GetCoordinatesFromUnityPosition(new Vector3(
+            tile.Transform.position.x + tile.MeshFilter.mesh.bounds.size.x / 2,
+            tile.Transform.position.y,
+            tile.Transform.position.z + tile.MeshFilter.mesh.bounds.size.z / 2
+        )));
+    }
+
     public Vector3 GetMapSize()
     {
         List<Tile> tiles = GetTiles();
@@ -165,6 +178,18 @@ public class MapManager : MonoBehaviour
         }
 
         return "Unknown";
+    }
+
+    public void UpdateMapTerrain()
+    {
+        bool isTerrainElevated = map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation;
+        if (isTerrainElevated) {
+            map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+            map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
+        } else {
+            map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
+            map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
+        }
     }
 
     private void TileFinished(Mapbox.Unity.MeshGeneration.Data.UnityTile tile)

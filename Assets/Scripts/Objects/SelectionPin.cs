@@ -1,15 +1,12 @@
 using UnityEngine;
-using UnityEngine.Assertions;
 
 public class SelectionPin : MonoBehaviour
 {
-    [SerializeField] private SceneCamerasManager sceneCamerasManager;
+    private SceneCamerasManager sceneCamerasManager;
     private bool isMoving;
 
     void Awake()
     {
-        Assert.IsNotNull(sceneCamerasManager);
-
         isMoving = false;
     }
 
@@ -25,24 +22,28 @@ public class SelectionPin : MonoBehaviour
         }
     }
 
-    public void SetActive(bool active)
+    public void Create(SceneCamerasManager sceneCamerasManager)
     {
-        gameObject.SetActive(active);
-        if (!active) {
-            isMoving = false;
-        }
+        this.sceneCamerasManager = sceneCamerasManager;
     }
 
     public void SetMoving(bool moving)
     {
         isMoving = moving;
-        if (moving) {
-            gameObject.SetActive(true);
-        }
     }
 
     public void SetPosition(Vector3 position)
     {
         transform.position = position;
+    }
+
+    public Vector3 GetPosition()
+    {
+        return transform.position;
+    }
+
+    public void Destroy()
+    {
+        Destroy(gameObject);
     }
 }

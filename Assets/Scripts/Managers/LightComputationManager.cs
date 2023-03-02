@@ -9,7 +9,7 @@ public class LightComputationManager : MonoBehaviour
     private const float LUMINANCE_RESOLUTION = 100;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private VegetationManager vegetationManager;
-    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private LightConfigurationsManager lightConfigurationsManager;
     [SerializeField] private ObjectVisualizationControl lineVisualizationControl;
     [SerializeField] private ObjectVisualizationControl gridVisualizationControl;
@@ -23,7 +23,7 @@ public class LightComputationManager : MonoBehaviour
     {
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(vegetationManager);
-        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(lineVisualizationControl);
         Assert.IsNotNull(gridVisualizationControl);
@@ -145,7 +145,7 @@ public class LightComputationManager : MonoBehaviour
         luminanceCamera.Create(
             MASK_TEXTURE_SIZE,
             vegetationManager,
-            lightsManager
+            lightPolesManager
         );
 
         int numberOfConfigurations = lightConfigurationsManager.GetCurrentNumberOfConfigurations();

@@ -14,21 +14,20 @@ public class IESManager : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(lightControl);
-
+   
         IESDirectory = CreateAndGetDirectory();
+    }
+
+    public void AddIESFilesFromResources()
+    {
+        string iesFilesResourcePath = System.IO.Path.Combine(Application.dataPath, GameManager.RESOURCES_FOLDER_NAME, IES_RESOURCES_FOLDER);
+        string iesFilesDataPath = System.IO.Path.Combine(Application.persistentDataPath, IES_RESOURCES_FOLDER);
+
+        if (System.IO.Directory.Exists(iesFilesDataPath)) {
+            System.IO.Directory.Delete(iesFilesDataPath, true);
+        }
         
-        IESs = new List<IESLight>();
-        Object[] IES = Resources.LoadAll(IES_RESOURCES_FOLDER);
-        foreach (Object ies in IES) {
-            IESs.Add(new IESLight(ies.name, LoadCookie(ies.name), GetIntensity(ies.name)));
-        }
-        foreach (string path in Directory.GetFiles(IESDirectory)) {
-            string iesName = Path.GetFileNameWithoutExtension(path);
-            if (!IESs.Any(iesLight => iesLight.Name.Equals(iesName))) {
-                IESs.Add(new IESLight(iesName, LoadCookie(iesName), GetIntensity(iesName)));
-            }
-        }
-        lightControl.SetIESNames(GetIESNames());
+        Utils.CopyDirectory(iesFilesResourcePath, iesFilesDataPath, true);
     }
 
     public void Upload()
@@ -42,9 +41,9 @@ public class IESManager : MonoBehaviour
             string destFile = Path.Combine(IESDirectory, Path.GetFileName(path));
 
             File.Copy(path, destFile, true);
-            Cubemap cookie = LoadCookie(iesName);
+            Cubemap cookie = LoadCookie(destFile);
             if (cookie != null) {
-                IESs.Add(new IESLight(iesName, cookie, GetIntensity(iesName)));
+                IESs.Add(new IESLight(iesName, cookie, GetIntensity(destFile)));
                 lightControl.SetIESNames(GetIESNames());
                 addedFiles.Add(iesName);
             } else {
@@ -73,6 +72,10 @@ public class IESManager : MonoBehaviour
 
     public IESLight GetIESLightFromName(string name)
     {
+        if (IESs == null) {
+            SetIESFiles();
+        }
+
         IESLight IES = IESs.Find(iesLight => iesLight.Name == name);
         if (IES == null) {
             IES =  IESs[0];
@@ -87,47 +90,34 @@ public class IESManager : MonoBehaviour
         return directoryPath;
     }
 
-    private Cubemap LoadCookie(string iesName)
+    private void SetIESFiles()
     {
-        string path = GetPathFromFileNameAndCreateFile(iesName);
-        return IESLights.RuntimeIESImporter.ImportPointLightCookie(path, 128, false);
-    }
-
-    private LightIntensity GetIntensity(string iesName)
-    {
-        string path = GetPathFromFileNameAndCreateFile(iesName);
-
-        IESReader iesReader = new IESReader();
-        iesReader.ReadFile(path);
-        if (iesReader.TotalLumens != -1) {
-            return new LightIntensity(iesReader.TotalLumens, UnityEngine.Rendering.HighDefinition.LightUnit.Lumen);
-        } else {
-            return new LightIntensity(iesReader.MaxCandelas, UnityEngine.Rendering.HighDefinition.LightUnit.Candela);
+        IESs = new List<IESLight>();
+        foreach (string path in Directory.GetFiles(IESDirectory)) {
+            IESs.Add(new IESLight(Path.GetFileNameWithoutExtension(path), LoadCookie(path), GetIntensity(path)));
         }
-    }
-
-    private string GetPathFromFileNameAndCreateFile(string name)
-    {
-        string path = Path.Combine(IESDirectory, name + ".ies");
-
-        if (!File.Exists(path)) {
-            TextAsset iesResource = UnityEngine.Resources.Load<TextAsset>(IES_RESOURCES_FOLDER + "/" + name);
-            using (FileStream file = File.Create(path))
-            {
-                AddText(file, iesResource.text);
-            }
-        }
-        return path;
-    }
-
-    private void AddText(FileStream file, string value)
-    {
-        byte[] info = new System.Text.UTF8Encoding(true).GetBytes(value);
-        file.Write(info, 0, info.Length);
+        lightControl.SetIESNames(GetIESNames());
     }
 
     private List<string> GetIESNames()
     {
         return IESs.Select(IESLight => IESLight.Name).ToList();
+    }
+
+    private Cubemap LoadCookie(string path)
+    {
+        return IESLights.RuntimeIESImporter.ImportPointLightCookie(path, 128, false);
+    }
+
+    private LightIntensity GetIntensity(string path)
+    {
+        IESReader iesReader = new IESReader();
+        iesReader.ReadFile(path);
+
+        if (iesReader.TotalLumens == -1) {
+            return new LightIntensity(iesReader.MaxCandelas, UnityEngine.Rendering.HighDefinition.LightUnit.Candela);
+        } else {
+            return new LightIntensity(iesReader.TotalLumens, UnityEngine.Rendering.HighDefinition.LightUnit.Lumen);
+        }
     }
 }

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class SceneCamera : MonoBehaviour
 {
     private Camera sceneCamera;
-    private LightsManager lightsManager;
+    private LightPolesManager lightPolesManager;
     private VegetationManager vegetationManager;
     private int configurationIndex;
 
@@ -25,8 +25,8 @@ public class SceneCamera : MonoBehaviour
 
     void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {
-        if (camera == sceneCamera && lightsManager != null) {
-            List<LightPole> mainCameraLights = lightsManager.GetLights();
+        if (camera == sceneCamera && lightPolesManager != null) {
+            List<LightPole> mainCameraLights = lightPolesManager.GetLights();
 
             foreach (LightPole lightPole in mainCameraLights) {
                 lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
@@ -34,7 +34,7 @@ public class SceneCamera : MonoBehaviour
         }
     }
 
-    public void Create(Rect viewport, bool orthographic, float orthographicSize, LightsManager lightsManager, VegetationManager vegetationManager, int configurationIndex)
+    public void Create(Rect viewport, bool orthographic, float orthographicSize, LightPolesManager lightPolesManager, VegetationManager vegetationManager, int configurationIndex)
     {
         sceneCamera.rect = viewport;
         sceneCamera.orthographic = orthographic;
@@ -44,7 +44,7 @@ public class SceneCamera : MonoBehaviour
 
         vegetationManager.AddCamera(sceneCamera);
         
-        this.lightsManager = lightsManager;
+        this.lightPolesManager = lightPolesManager;
         this.vegetationManager = vegetationManager;
         this.configurationIndex = configurationIndex;
     }

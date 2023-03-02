@@ -125,6 +125,11 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
         lightComputationManager.ExportResultsCSV(positions, luminances);
     }
 
+    public void DisplayValues(bool display)
+    {
+        heatmapControl.DisplayValues(display);
+    }
+
     public void ShowVisualizationMethod(bool show)
     {
         heatmapControl.Show(show);
@@ -172,10 +177,19 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
             })
             .ToList();
 
+        float yMinimum = gridVisualizationControl.isMinAuto() ?
+            IComputationObject.EXTREMUM_DEFAULT_VALUE :
+            gridVisualizationControl.GetMinValue()
+        ;
+        float yMaximum = gridVisualizationControl.isMaxAuto() ?
+            IComputationObject.EXTREMUM_DEFAULT_VALUE :
+            gridVisualizationControl.GetMaxValue()
+        ;
+
         heatmapControl.SetHeatmap(positions, this.luminances[0].ToArray(), () => {
             heatmapControl.SetComputing();
             lightComputationManager.ComputeAlongObject(this);
-        });
+        }, yMinimum, yMaximum);
     }
 
     public void OnMouseOver(Vector2 normalizedPosition)

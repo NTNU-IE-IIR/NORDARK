@@ -9,6 +9,7 @@ public class VegetationControl : MonoBehaviour
 {
     [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private MapManager mapManager;
+    [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private Toggle displayVegetation;
     [SerializeField] private TMP_Dropdown biomeAreas;
     [SerializeField] private Button addBiomeArea;
@@ -25,6 +26,7 @@ public class VegetationControl : MonoBehaviour
     {
         Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(displayVegetation);
         Assert.IsNotNull(biomeAreas);
         Assert.IsNotNull(addBiomeArea);
@@ -56,11 +58,11 @@ public class VegetationControl : MonoBehaviour
         if (movingPin != null && Input.GetMouseButtonDown(0)) {
             bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
             if (!isOverUI) {
-                vegetationManager.AddNodeToCurrentBiomeArea(movingPin.gameObject.transform.position);
+                vegetationManager.AddNodeToCurrentBiomeArea(movingPin.GetPosition());
                 DisplayNodes();
             }
             
-            movingPin.gameObject.Destroy();
+            movingPin.Destroy();
             movingPin = null;
         }
     }
@@ -89,7 +91,7 @@ public class VegetationControl : MonoBehaviour
         biomeAreas.ClearOptions();
 
         if (movingPin != null) {
-            movingPin.gameObject.Destroy();
+            movingPin.Destroy();
             movingPin = null;
         }
         
@@ -136,6 +138,7 @@ public class VegetationControl : MonoBehaviour
     private void AddNode()
     {
         movingPin = Instantiate(selectionPin, new Vector3(0, 0, 0), Quaternion.Euler(-90, 0, 0)).GetComponent<SelectionPin>();
+        movingPin.Create(sceneCamerasManager);
         movingPin.SetMoving(true);
     }
 
@@ -152,9 +155,9 @@ public class VegetationControl : MonoBehaviour
             GameObject.Destroy(child.gameObject);
         }
         if (displayNodes.isOn) {
-            List<Vector2d> nodeCoordinates = vegetationManager.GetCoordinateOfCurrentBiomeArea();
-            foreach(Vector2d coordinate in nodeCoordinates) {
-                Instantiate(selectionPin, mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate, 0), true), Quaternion.Euler(-90, 0, 0), selectionPinContainer);
+            List<Vector3d> nodeCoordinates = vegetationManager.GetCoordinateOfCurrentBiomeArea();
+            foreach(Vector3d coordinate in nodeCoordinates) {
+                Instantiate(selectionPin, mapManager.GetUnityPositionFromCoordinates(coordinate, true), Quaternion.Euler(-90, 0, 0), selectionPinContainer);
             }
         }
     }

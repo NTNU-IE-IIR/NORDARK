@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 public class SceneManager : MonoBehaviour
 {
     private static readonly string DEFAULT_SCENE_NAME = "DefaultScene";
-    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private CamerasManager camerasManager;
     [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private LocationsManager locationsManager;
@@ -17,7 +17,7 @@ public class SceneManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(camerasManager);
         Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(locationsManager);
@@ -26,7 +26,7 @@ public class SceneManager : MonoBehaviour
 
         currentSave = "";
         objectsManagers = new List<IObjectsManager>{
-            lightsManager, camerasManager, vegetationManager, locationsManager, groundTexturesManager, dataVisualizationManager
+            lightPolesManager, camerasManager, vegetationManager, locationsManager, groundTexturesManager, dataVisualizationManager
         };
     }
 
@@ -87,7 +87,7 @@ public class SceneManager : MonoBehaviour
                 } else if (string.Equals(feature.Properties["type"] as string, "camera")) {
                     camerasManager.Create(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "light")) {
-                    lightsManager.Create(feature);
+                    lightPolesManager.Create(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "biomeArea")) {
                     vegetationManager.Create(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "groundTexture")) {

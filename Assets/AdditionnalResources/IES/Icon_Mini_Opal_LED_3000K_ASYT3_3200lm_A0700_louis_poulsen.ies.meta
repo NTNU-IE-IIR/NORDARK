@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: c5760154bbca0914dac40fdb4f94ffb3
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 9801397f829a1ed42984340315cbf362, type: 3}
+  iesMetaData:
+    FileFormatVersion: LM-63-2002
+    IESPhotometricType: Type C
+    IESMaximumIntensity: 3214
+    IESMaximumIntensityUnit: Lumens
+    Manufacturer: Louis Poulsen
+    LuminaireCatalogNumber: 
+    LuminaireDescription: Icon Mini Opal LED 3000K ASYT3 3200lm
+    LampCatalogNumber: LED 3000K
+    LampDescription: LED 3000K
+    PrefabLightType: 0
+    SpotAngle: 120
+    iesSize: 128
+    ApplyLightAttenuation: 1
+    UseIESMaximumIntensity: 1
+    CookieCompression: 2
+    LightAimAxisRotation: -90

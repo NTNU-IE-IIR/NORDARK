@@ -28,7 +28,8 @@ public class GraphControl : MonoBehaviour
     private List<GraphSet> graphSets;
     private System.Func<float, string> getAxisLabelX;
     private System.Func<float, string> getAxisLabelY;
-    private bool startYScaleAtZero = true;
+    private float yMinimum = IComputationObject.EXTREMUM_DEFAULT_VALUE;
+    private float yMaximum = IComputationObject.EXTREMUM_DEFAULT_VALUE;
 
     void Awake()
     {
@@ -46,8 +47,21 @@ public class GraphControl : MonoBehaviour
         Assert.IsNotNull(captionPrefab);
     }
 
-    public void CreateGraph(List<GraphSet> graphSets, System.Action onRefresh)
+    public void CreateGraph(
+        List<GraphSet> graphSets,
+        System.Action onRefresh,
+        float yMinimum = IComputationObject.EXTREMUM_DEFAULT_VALUE,
+        float yMaximum = IComputationObject.EXTREMUM_DEFAULT_VALUE)
     {
+        if (yMinimum > yMaximum && yMinimum != IComputationObject.EXTREMUM_DEFAULT_VALUE) {
+            (yMinimum, yMaximum) = (yMaximum, yMinimum);
+        }
+        if (yMinimum == yMaximum && yMinimum != IComputationObject.EXTREMUM_DEFAULT_VALUE) {
+            yMaximum += 0.001f;
+        }
+        this.yMinimum = yMinimum;
+        this.yMaximum = yMaximum;
+
         List<IGraphVisual> lineGraphVisuals = new List<IGraphVisual>();
         for (int i=0; i<graphSets.Count; ++i) {
             lineGraphVisuals.Add(new LineGraphVisual(graphContainer, dotSprite, graphSets[i].Color, graphSets[i].Color));
@@ -151,8 +165,10 @@ public class GraphControl : MonoBehaviour
         
         for (int i=0; i<graphSets.Count; ++i) {
             for (int j=0; j<graphSets[i].Ordinates.Count; ++j) {
+                float yPositionUnscaled = Mathf.Max(Mathf.Min(graphSets[i].Ordinates[j], yMaximum), yMinimum);
+
                 float xPosition = ((graphSets[i].Abscissas[j] - xMinimum) / (xMaximum - xMinimum)) * graphWidth;
-                float yPosition = ((graphSets[i].Ordinates[j] - yMinimum) / (yMaximum - yMinimum)) * graphHeight;
+                float yPosition = ((yPositionUnscaled - yMinimum) / (yMaximum - yMinimum)) * graphHeight;
 
                 string tooltipText = graphSets[i].Title + "\n" + graphSets[i].Ordinates[j].ToString("0.0000");
                 graphVisualObjects.Add(graphVisuals[i].CreateGraphVisualObject(new Vector2(xPosition, yPosition), maxXSize, tooltipText));
@@ -229,8 +245,11 @@ public class GraphControl : MonoBehaviour
         yMaximum += yDifference * OFFSET_Y;
         yMinimum -= yDifference * OFFSET_Y;
 
-        if (startYScaleAtZero) {
-            yMinimum = 0;
+        if (this.yMinimum != IComputationObject.EXTREMUM_DEFAULT_VALUE) {
+            yMinimum = this.yMinimum;
+        }
+        if (this.yMaximum != IComputationObject.EXTREMUM_DEFAULT_VALUE) {
+            yMaximum = this.yMaximum;
         }
     }
 

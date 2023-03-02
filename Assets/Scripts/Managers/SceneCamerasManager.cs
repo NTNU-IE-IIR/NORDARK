@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class SceneCamerasManager : MonoBehaviour
 {
     public const int HIDDEN_FROM_CAMERA_LAYER = 12;
-    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private GameObject sceneCameraPrefab;
     private Camera mainCamera;
@@ -17,7 +17,7 @@ public class SceneCamerasManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(sceneCameraPrefab);
 
@@ -53,7 +53,7 @@ public class SceneCamerasManager : MonoBehaviour
                 i < numberOfScreens/2f ? viewportRect.y + viewportRect.height * 0.5f : viewportRect.y,
                 i < numberOfScreens/2f ? mainCamera.rect.width : viewportRect.width / (numberOfScreens - i),
                 mainCamera.rect.height
-            ), mainCamera.orthographic, mainCamera.orthographicSize, lightsManager, vegetationManager, i);
+            ), mainCamera.orthographic, mainCamera.orthographicSize, lightPolesManager, vegetationManager, i);
         }
     }
 
@@ -76,6 +76,11 @@ public class SceneCamerasManager : MonoBehaviour
         cameraMovement.SetOrthographic(mainCamera.orthographic);   
     }
 
+    public bool isView2D()
+    {
+        return mainCamera.orthographic;
+    }
+
     public void IncreaseCameraSize(float increase)
     {
         if (mainCamera.orthographic) {
@@ -92,19 +97,22 @@ public class SceneCamerasManager : MonoBehaviour
 
     public Ray ScreenPointToRay(Vector3 position)
     {
-        Vector2 positionNormalized = new Vector2(position.x / Screen.width, position.y / Screen.height);
-        if (mainCamera.rect.Contains(positionNormalized)) {
-            return mainCamera.ScreenPointToRay(position);
+        Camera camera = GetCameraPointedByPosition(position);
+        if (camera == null) {
+            return new Ray();
+        } else {
+            return camera.ScreenPointToRay(position);
         }
+    }
 
-        foreach (Transform child in transform) {
-            Camera camera = child.GetComponent<Camera>();
-            if (camera.rect.Contains(positionNormalized)) {
-                return camera.ScreenPointToRay(position);
-            }
+    public Vector3 ScreenToWorldPoint(Vector3 position)
+    {
+        Camera camera = GetCameraPointedByPosition(position);
+        if (camera == null) {
+            return new Vector3();
+        } else {
+            return camera.ScreenToWorldPoint(position);
         }
-
-        return new Ray();
     }
 
     private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
@@ -116,10 +124,27 @@ public class SceneCamerasManager : MonoBehaviour
 
     private void ShowOnlyMainCameraLights()
     {
-        List<LightPole> mainCameraLights = lightsManager.GetLights();
+        List<LightPole> mainCameraLights = lightPolesManager.GetLights();
 
         foreach (LightPole lightPole in mainCameraLights) {
             lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
         }
+    }
+
+    private Camera GetCameraPointedByPosition(Vector3 position)
+    {
+        Vector2 positionNormalized = new Vector2(position.x / Screen.width, position.y / Screen.height);
+        if (mainCamera.rect.Contains(positionNormalized)) {
+            return mainCamera;
+        }
+
+        foreach (Transform child in transform) {
+            Camera camera = child.GetComponent<Camera>();
+            if (camera.rect.Contains(positionNormalized)) {
+                return camera;
+            }
+        }
+
+        return null;
     }
 }

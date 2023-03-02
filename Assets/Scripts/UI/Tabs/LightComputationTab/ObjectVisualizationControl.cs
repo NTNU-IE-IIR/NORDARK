@@ -10,8 +10,13 @@ public class ObjectVisualizationControl : MonoBehaviour
     [SerializeField] private Button importResults;
     [SerializeField] private Button exportResultsGeoJSON;
     [SerializeField] private Button exportResultsCSV;
-    [SerializeField] private Toggle displayVisualizationMethod;
+    [SerializeField] private TMP_InputField minValue;
+    [SerializeField] private Toggle minValueAuto;
+    [SerializeField] private TMP_InputField maxValue;
+    [SerializeField] private Toggle maxValueAuto;
     [SerializeField] private TMP_InputField resolution;
+    [SerializeField] private Toggle displayValues;
+    [SerializeField] private Toggle displayVisualizationMethod;
     private IComputationObject computationObject;
 
     void Awake()
@@ -20,8 +25,12 @@ public class ObjectVisualizationControl : MonoBehaviour
         Assert.IsNotNull(createMeasureObject);
         Assert.IsNotNull(exportResultsGeoJSON);
         Assert.IsNotNull(exportResultsCSV);
+        Assert.IsNotNull(minValue);
+        Assert.IsNotNull(minValueAuto);
+        Assert.IsNotNull(maxValue);
+        Assert.IsNotNull(maxValueAuto);
+        Assert.IsNotNull(resolution);
         Assert.IsNotNull(displayVisualizationMethod);
-        Assert.IsNotNull(resolution); 
     }
 
     void Start()
@@ -34,6 +43,14 @@ public class ObjectVisualizationControl : MonoBehaviour
         
         exportResultsGeoJSON.onClick.AddListener(computationObject.ExportResultsGeoJSON);
         exportResultsCSV.onClick.AddListener(computationObject.ExportResultsCSV);
+
+        minValueAuto.onValueChanged.AddListener(SetMinAuto);
+        maxValueAuto.onValueChanged.AddListener(SetMaxAuto);
+
+        if (displayValues != null) {
+            displayValues.onValueChanged.AddListener(computationObject.DisplayValues);
+        }
+
         displayVisualizationMethod.onValueChanged.AddListener(computationObject.ShowVisualizationMethod);
     }
 
@@ -49,5 +66,35 @@ public class ObjectVisualizationControl : MonoBehaviour
     public int GetResolution()
     {
         return System.Int32.Parse(resolution.text);
+    }
+
+    public bool isMinAuto()
+    {
+        return minValueAuto.isOn;
+    }
+
+    public float GetMinValue()
+    {
+        return float.Parse(minValue.text);
+    }
+
+    public bool isMaxAuto()
+    {
+        return maxValueAuto.isOn;
+    }
+
+    public float GetMaxValue()
+    {
+        return float.Parse(maxValue.text);
+    }
+
+    private void SetMinAuto(bool setAuto)
+    {
+        minValue.interactable = !setAuto;
+    }
+
+    private void SetMaxAuto(bool setAuto)
+    {
+        maxValue.interactable = !setAuto;
     }
 }

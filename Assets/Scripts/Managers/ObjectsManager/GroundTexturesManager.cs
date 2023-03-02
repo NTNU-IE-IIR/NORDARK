@@ -119,6 +119,18 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         return features;
     }
 
+    public void AddMasksFromResources()
+    {
+        string maskResourcePath = System.IO.Path.Combine(Application.dataPath, GameManager.RESOURCES_FOLDER_NAME, MASK_FOLDER);
+        string maskDataPath = System.IO.Path.Combine(Application.persistentDataPath, MASK_FOLDER);
+
+        if (System.IO.Directory.Exists(maskDataPath)) {
+            System.IO.Directory.Delete(maskDataPath, true);
+        }
+        
+        Utils.CopyDirectory(maskResourcePath, maskDataPath, true);
+    }
+
     public void AddGroundTexturesFromFile()
     {
         string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert ground textures to the scene", "", "geojson", true);
@@ -452,7 +464,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         Vector3 mapBounds = mapManager.GetMapSize();
 
         List<Vector3> points = groundTexture.Coordinates.Select(
-            coordinate => mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate))
+            coordinate => mapManager.GetUnityPositionFromCoordinates(coordinate)
         ).ToList();
 
         foreach (Vector3 point in points) {
@@ -467,7 +479,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
     private GameObject CreateMaskMesh(GroundTexture groundTexture)
     {
         List<Vector3> points = groundTexture.Coordinates.Select(
-            coordinate => mapManager.GetUnityPositionFromCoordinates(new Vector3d(coordinate))
+            coordinate => mapManager.GetUnityPositionFromCoordinates(coordinate)
         ).ToList();
 
         var flatData = EarcutLibrary.Flatten(new List<List<Vector3>>() { points });

@@ -4,17 +4,21 @@ using UnityEngine.Assertions;
 
 public class InsertControl : MenuBarItemControl
 {
-    [SerializeField] private LightsManager lightsManager;
+    [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private GroundTexturesManager groundTexturesManager;
+    [SerializeField] private HeightMapsManager heightMapsManager;
     [SerializeField] private Button lights;
     [SerializeField] private Button groundTextures;
+    [SerializeField] private Button heightMaps;
 
     void Awake()
     {
-        Assert.IsNotNull(lightsManager);
+        Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(groundTexturesManager);
+        Assert.IsNotNull(heightMapsManager);
         Assert.IsNotNull(lights);
         Assert.IsNotNull(groundTextures);
+        Assert.IsNotNull(heightMaps);
 
         base.SetUp();
     }
@@ -22,12 +26,17 @@ public class InsertControl : MenuBarItemControl
     void Start()
     {
         lights.onClick.AddListener(delegate {
-            lightsManager.AddLightsFromFile();
+            lightPolesManager.AddLightPolesFromFile();
             gameObject.SetActive(false);
         });
 
         groundTextures.onClick.AddListener(delegate {
             groundTexturesManager.AddGroundTexturesFromFile();
+            gameObject.SetActive(false);
+        });
+
+        heightMaps.onClick.AddListener(delegate {
+            heightMapsManager.AddHeightMapFromFile();
             gameObject.SetActive(false);
         });
     }

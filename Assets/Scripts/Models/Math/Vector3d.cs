@@ -26,13 +26,6 @@ public class Vector3d
         this.altitude = 0;
     }
 
-    public Vector3d(Vector2d latLong, double altitude = 0)
-    {
-        this.latitude = latLong.latitude;
-        this.longitude = latLong.longitude;
-        this.altitude = altitude;
-    }
-
     public Vector3d(Mapbox.Utils.Vector2d latLong, double altitude)
     {
         this.latitude = latLong.x;
