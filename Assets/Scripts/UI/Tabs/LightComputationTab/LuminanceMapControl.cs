@@ -9,6 +9,7 @@ public class LuminanceMapControl : MonoBehaviour
     [SerializeField] private TMP_InputField minValue;
     [SerializeField] private TMP_InputField maxValue;
     [SerializeField] private Toggle logScale;
+    [SerializeField] private TMP_Text pointedValue;
     [SerializeField] private Toggle displayLuminanceMap;
 
     void Awake()
@@ -17,6 +18,7 @@ public class LuminanceMapControl : MonoBehaviour
         Assert.IsNotNull(minValue);
         Assert.IsNotNull(maxValue);
         Assert.IsNotNull(logScale);
+        Assert.IsNotNull(pointedValue);
         Assert.IsNotNull(displayLuminanceMap);
     }
 
@@ -29,5 +31,14 @@ public class LuminanceMapControl : MonoBehaviour
         maxValue.onEndEdit.AddListener(value => luminanceMapManager.SetMaxValue(float.Parse(value)));
         logScale.onValueChanged.AddListener(luminanceMapManager.SetScaleType);
         displayLuminanceMap.onValueChanged.AddListener(luminanceMapManager.DisplayLuminanceMap);
+    }
+
+    public void SetPointedValue(float value)
+    {
+        if (value < 0) {
+            pointedValue.text = "";
+        } else {
+            pointedValue.text = "Value pointer by cursor:\n" + value.ToString("0.00") + " cd/m²";
+        }
     }
 }

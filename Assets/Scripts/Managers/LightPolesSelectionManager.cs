@@ -37,7 +37,7 @@ public class LightPolesSelectionManager : MonoBehaviour
                 Stop();
                 lightPolesManager.ClearSelectedLightPoles();
                 
-                if (sceneCamerasManager.isView2D()) {
+                if (sceneCamerasManager.IsView2D()) {
                     lightPolesManager.SelectLightPolesWithinPositions(
                         sceneCamerasManager.ScreenToWorldPoint(dragStartPosition),
                         sceneCamerasManager.ScreenToWorldPoint(Input.mousePosition)

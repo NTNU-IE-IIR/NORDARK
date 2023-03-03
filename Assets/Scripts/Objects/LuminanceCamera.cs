@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -35,6 +34,7 @@ public class LuminanceCamera : MonoBehaviour
         this.vegetationManager = vegetationManager;
         this.lightPolesManager = lightPolesManager;
 
+        // ARGBFloat because we want the highest possible precision, Linear because we want a linear color space (that gives the "true" values of colors)
         luminanceTexture = new RenderTexture(maskTextureSize, maskTextureSize, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
         luminanceTexture.enableRandomWrite = true;
         luminanceTexture.Create();

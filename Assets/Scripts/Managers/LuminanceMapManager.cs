@@ -3,19 +3,28 @@ using UnityEngine.Assertions;
 
 public class LuminanceMapManager : MonoBehaviour
 {
+    public const int LUMINANCE_IN_LUMINANCE_MAP_LAYER = 13;
     public const float DEFAULT_MINIMUM_VALUE = MINIMUM_VALUE;
     public const float DEFAULT_MAXIMUM_VALUE = 10000;
     private const float MINIMUM_VALUE = 0.01f;
-    [SerializeField] private GameObject LuminanceMapPassAndVolume;
+    private const int NUMBER_OF_PIXELS_AROUND_CURSOR = 10;
+    [SerializeField] private SceneCamerasManager sceneCamerasManager;
+    [SerializeField] private LuminanceMapControl luminanceMapControl;
+    [SerializeField] private GameObject luminanceMapPassAndVolume;
+    [SerializeField] private UnityEngine.Rendering.HighDefinition.CustomPassVolume luminancePassAndVolume;
     [SerializeField] private Material luminanceMapPassMaterial;
     [SerializeField] private LuminanceMapLegend luminanceMapLegend;
     private float minValue;
     private float maxValue;
     private bool isLog;
+    private bool isLuminanceMapActive;
     
     void Awake()
     {
-        Assert.IsNotNull(LuminanceMapPassAndVolume);
+        Assert.IsNotNull(sceneCamerasManager);
+        Assert.IsNotNull(luminanceMapControl);
+        Assert.IsNotNull(luminanceMapPassAndVolume);
+        Assert.IsNotNull(luminancePassAndVolume);
         Assert.IsNotNull(luminanceMapPassMaterial);
         Assert.IsNotNull(luminanceMapLegend);
 
@@ -23,11 +32,34 @@ public class LuminanceMapManager : MonoBehaviour
         minValue = DEFAULT_MINIMUM_VALUE;
         maxValue = DEFAULT_MAXIMUM_VALUE;
         isLog = true;
+        isLuminanceMapActive = false;
     }
 
     void Start()
     {
         SetScale();
+    }
+
+    void Update()
+    {
+        if (isLuminanceMapActive) {
+            Color[] colors = sceneCamerasManager.GetPixelColorsOfLuminanceMapCameraPointedAroundCursor(NUMBER_OF_PIXELS_AROUND_CURSOR);
+
+            if (colors == null || colors.Length == 0) {
+                luminanceMapControl.SetPointedValue(-1);
+            } else {
+                float luminance = 0;
+                for (int i=0; i<colors.Length; ++i) {
+                    luminance += 
+                        Mathf.Round(colors[i].r * 100) * 100 +
+                        Mathf.Round(colors[i].g * 100) * 1 +
+                        Mathf.Round(colors[i].b * 100) * 0.01f
+                    ;
+                }
+                luminance /= colors.Length;
+                luminanceMapControl.SetPointedValue(luminance);
+            }
+        }
     }
 
     public void SetMinValue(float minValue)
@@ -50,8 +82,16 @@ public class LuminanceMapManager : MonoBehaviour
 
     public void DisplayLuminanceMap(bool display)
     {
-        LuminanceMapPassAndVolume.SetActive(display);
+        luminanceMapPassAndVolume.SetActive(display);
         luminanceMapLegend.SetActive(display);
+        isLuminanceMapActive = display;
+        sceneCamerasManager.CreateOrDeleteLuminanceMapCamera(display);
+        luminanceMapControl.SetPointedValue(-1);
+    }
+
+    public void AddCameraToLuminancePass(Camera camera)
+    {
+        luminancePassAndVolume.targetCamera = camera;
     }
 
     private void SetScale()

@@ -19,7 +19,9 @@ public class SceneCamera : MonoBehaviour
 
     void OnDestroy()
     {
-        vegetationManager.RemoveCamera(sceneCamera);
+        if (vegetationManager != null) {
+            vegetationManager.RemoveCamera(sceneCamera);
+        }
         RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
     }
 
@@ -34,13 +36,9 @@ public class SceneCamera : MonoBehaviour
         }
     }
 
-    public void Create(Rect viewport, bool orthographic, float orthographicSize, LightPolesManager lightPolesManager, VegetationManager vegetationManager, int configurationIndex)
+    public void Create(Rect viewport, LightPolesManager lightPolesManager, VegetationManager vegetationManager, int configurationIndex)
     {
         sceneCamera.rect = viewport;
-        sceneCamera.orthographic = orthographic;
-        if (sceneCamera.orthographic) {
-            sceneCamera.orthographicSize = orthographicSize;
-        }
 
         vegetationManager.AddCamera(sceneCamera);
         

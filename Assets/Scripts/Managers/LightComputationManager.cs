@@ -13,8 +13,8 @@ public class LightComputationManager : MonoBehaviour
     [SerializeField] private LightConfigurationsManager lightConfigurationsManager;
     [SerializeField] private ObjectVisualizationControl lineVisualizationControl;
     [SerializeField] private ObjectVisualizationControl gridVisualizationControl;
-    [SerializeField] private GameObject luminancePass;
     [SerializeField] private GameObject luminanceCameraPrefab;
+    [SerializeField] private GameObject luminancePassAndVolume;
     [SerializeField] private ComputeShader luminanceSumShader;
     private int indexOfLuminanceSumShader;
     private List<IComputationObject> computationObjects;
@@ -27,8 +27,8 @@ public class LightComputationManager : MonoBehaviour
         Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(lineVisualizationControl);
         Assert.IsNotNull(gridVisualizationControl);
-        Assert.IsNotNull(luminancePass);
         Assert.IsNotNull(luminanceCameraPrefab);
+        Assert.IsNotNull(luminancePassAndVolume);
         Assert.IsNotNull(luminanceSumShader);
 
         indexOfLuminanceSumShader = luminanceSumShader.FindKernel("CSMain");
@@ -139,7 +139,7 @@ public class LightComputationManager : MonoBehaviour
 
     private IEnumerator Compute(IComputationObject computationObject)
     {
-        luminancePass.SetActive(true);
+        luminancePassAndVolume.SetActive(true);
 
         LuminanceCamera luminanceCamera = Instantiate(luminanceCameraPrefab, transform).GetComponent<LuminanceCamera>();
         luminanceCamera.Create(
@@ -154,7 +154,7 @@ public class LightComputationManager : MonoBehaviour
         computationObject.GetPositionsAnglesAlongObject(out positions, out angles);
         float[,] luminances = new float[numberOfConfigurations, positions.Length];
 
-        // Skip frame to let luminancePass turning on
+        // Skip frame to let luminancePassAndVolume turning on
         yield return null;
 
         for (int i = 0; i<numberOfConfigurations; ++i) {
@@ -191,7 +191,7 @@ public class LightComputationManager : MonoBehaviour
         }
 
         Destroy(luminanceCamera.gameObject);
-        luminancePass.SetActive(false);
+        luminancePassAndVolume.SetActive(false);
 
         computationObject.ResultsComputed(positions, luminances);
     }

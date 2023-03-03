@@ -20,6 +20,10 @@ public class AdditionalBuildCommands : UnityEditor.Build.IPostprocessBuildWithRe
         foreach (string directoryToCopy in directoriesToCopy) {
             Utils.CopyDirectory(directoryToCopy, Path.Combine(resourceFolder, Path.GetFileName(directoryToCopy)), true);
         }
+
+    #if UNITY_STANDALONE_OSX
+        UnityEditor.OSXStandalone.MacOSCodeSigning.CodeSignAppBundle(report.summary.outputPath);
+    #endif
     }
 
     private List<string> GetFilesToCopy()
@@ -42,7 +46,7 @@ public class AdditionalBuildCommands : UnityEditor.Build.IPostprocessBuildWithRe
     private string CreateAndGetResourceFolder(UnityEditor.Build.Reporting.BuildReport report)
     {
         string folder = report.summary.platform == UnityEditor.BuildTarget.StandaloneOSX ?
-            Path.Combine(Path.GetDirectoryName(report.summary.outputPath), UnityEditor.PlayerSettings.productName + ".app", "Contents", GameManager.RESOURCES_FOLDER_NAME) :
+            Path.Combine(report.summary.outputPath, "Contents", GameManager.RESOURCES_FOLDER_NAME) :
             Path.Combine(Path.ChangeExtension(report.summary.outputPath, null) + "_Data", GameManager.RESOURCES_FOLDER_NAME)
         ;
         Directory.CreateDirectory(folder);

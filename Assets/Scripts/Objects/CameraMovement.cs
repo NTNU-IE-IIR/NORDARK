@@ -1,6 +1,6 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 
-[RequireComponent(typeof(SceneCamerasManager))]
 public class CameraMovement : MonoBehaviour
 {
     [SerializeField] private float lookSpeedH = 5f;
@@ -17,6 +17,8 @@ public class CameraMovement : MonoBehaviour
     void Start()
     {
         sceneCamerasManager = GetComponent<SceneCamerasManager>();
+        Assert.IsNotNull(sceneCamerasManager);
+
         yaw = transform.eulerAngles.y;
         pitch = transform.eulerAngles.x;
         orthographic = false;
