@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+// To be added on any UI component that should display a tooltip when hovered
 public class TooltipDisplayerUI : MonoBehaviour
 {
     private string text;

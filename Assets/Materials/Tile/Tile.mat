@@ -32,6 +32,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _Diffuse0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Diffuse1:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -73,6 +77,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Emission_Map:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _HeightMap0:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -120,6 +128,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Mask0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Mask1:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -157,6 +169,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Mask9:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MaskMap0:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -202,6 +218,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _Mask_Map:
         m_Texture: {fileID: 2800000, guid: d36e1e8470470c24db8334456b80cb27, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap0:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap1:
@@ -304,6 +324,7 @@ Material:
     - _StencilWriteMaskMV: 41
     - _SupportDecals: 1
     - _SurfaceType: 0
+    - _Texture0: -1
     - _Texture1: -1
     - _Texture10: -1
     - _Texture2: -1
@@ -336,6 +357,7 @@ Material:
     - _Size1: {r: 40, g: 40, b: 0, a: 0}
     - _Size2: {r: 40, g: 40, b: 0, a: 0}
     - _Snow_Direction: {r: 0, g: 1, b: 0, a: 0}
+    - _Tiling0: {r: 100, g: 100, b: 0, a: 0}
     - _Tiling1: {r: 100, g: 100, b: 0, a: 0}
     - _Tiling10: {r: 100, g: 100, b: 0, a: 0}
     - _Tiling2: {r: 100, g: 100, b: 0, a: 0}

@@ -1,22 +1,27 @@
+using System.Collections.Generic;
+
 public class LightPole
 {
-    public Vector3d Coordinates { get; set; }
+    public Coordinate Coordinate { get; set; }
     public string Name { get; set; }
     public LightPrefab Light { get; set; }
     public string PrefabName { get; set; }
     public int ConfigurationIndex { get; set; }
+    public List<string> Groups { get; set; }
 
     public LightPole()
     {
-        Coordinates = new Vector3d();
+        Coordinate = new Coordinate();
         Name = "";
         PrefabName = "";
         ConfigurationIndex = 0;
+        Groups = new List<string>();
     }
 
-    public LightPole(Vector3d coordinates, int configurationIndex): base()
+    public LightPole(Coordinate coordinate, int configurationIndex, List<string> groups): base()
     {
-        Coordinates = coordinates;
+        Coordinate = coordinate;
         ConfigurationIndex = configurationIndex;
+        Groups = groups;
     }
 }

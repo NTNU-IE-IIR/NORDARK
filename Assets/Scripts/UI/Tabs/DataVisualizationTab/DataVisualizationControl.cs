@@ -48,7 +48,7 @@ public class DataVisualizationControl : MonoBehaviour
                 if (dataVisualizationManager.AddVariable(datasetName, variable, path)) {
                     DialogControl.CreateDialog(variable + " variable added.");
                 } else {
-                    DialogControl.CreateDialog("Variable not added. An existing variable with the same name already exists.");
+                    DialogControl.CreateDialog("Variable not added. A variable with the same name already exists.");
                 }
             });
         }, () => {
@@ -114,7 +114,7 @@ public class DataVisualizationControl : MonoBehaviour
             foreach (string file in notAddedDatasets) {
                 message += file + "\n";
             }
-            message += "Datasets with the same name already exist, no indicator value has been found, or the EPSG:4326 coordinate system was not used (longitude from -180° to 180° / latitude from -90° to 90°).";
+            message += "Datasets with the same name already exist, no variable with values between 0 and 1 has been found, or the EPSG:4326 coordinate system was not used (longitude from -180° to 180° / latitude from -90° to 90°).";
         }
         
         if (message != "") {
@@ -126,7 +126,7 @@ public class DataVisualizationControl : MonoBehaviour
     {
         WeightControl weightControl = Instantiate(weightPrefab, weightsHolder).GetComponent<WeightControl>();
         weightControl.Create(variable, weight => {
-            dataVisualizationManager.SetIndicatorWeight(datasetName, variable, weight);
+            dataVisualizationManager.SetVariableWeight(datasetName, variable, weight);
         });
         datasetUIs[datasetName].WeightControls.Add(weightControl);
         weightsHolder.sizeDelta += new Vector2(0, weightControl.GetHeight());

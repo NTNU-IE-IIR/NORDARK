@@ -4,6 +4,7 @@ using UnityEngine.Assertions;
 [RequireComponent(typeof(Renderer))]
 public class LightPrefab : MonoBehaviour
 {
+    public const float DEFAULT_HEIGHT = 5;
     [SerializeField] private Light unityLight;
     private const float LIGHT_TEMPERATURE = 6500;
     private bool isMoving;
@@ -13,6 +14,7 @@ public class LightPrefab : MonoBehaviour
     private Material defaultMaterial;
     private SceneCamerasManager sceneCamerasManager;
     private int defaultLayer;
+    private MeshFilter meshFilter;
 
     void Awake()
     {
@@ -23,6 +25,7 @@ public class LightPrefab : MonoBehaviour
         objectRenderer = GetComponent<Renderer>();
         defaultMaterial = objectRenderer.material;
         defaultLayer = gameObject.layer;
+        meshFilter = GetComponent<MeshFilter>();
     }
 
     void Update()
@@ -51,6 +54,20 @@ public class LightPrefab : MonoBehaviour
     public bool IsMoving()
     {
         return isMoving;
+    }
+
+    public float GetHeight()
+    {
+        return (meshFilter.mesh.bounds.center.y + meshFilter.mesh.bounds.extents.y) * transform.localScale.y;
+    }
+
+    public void SetHeight(float height)
+    {
+        transform.localScale = new Vector3(
+            transform.localScale.x,
+            height / (meshFilter.mesh.bounds.center.y + meshFilter.mesh.bounds.extents.y),
+            transform.localScale.z
+        );
     }
 
     public void SetPosition(Vector3 position)
@@ -100,7 +117,7 @@ public class LightPrefab : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void Hightlight(bool hightlight, Material highlightMaterial)
+    public void Highlight(bool hightlight, Material highlightMaterial)
     {
         if (hightlight) {
             objectRenderer.material = highlightMaterial;

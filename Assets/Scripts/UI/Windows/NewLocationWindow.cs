@@ -9,6 +9,7 @@ public class NewLocationWindow : MonoBehaviour
 {
     private const float MAX_LATITUDE_DIFFERENCE = 0.2f;
     private const float MAX_LONGITUDE_DIFFERENCE = 0.2f;
+    private const float DEFAULT_CAMERA_HEIGHT = 10;
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private Button close;
     [SerializeField] private TMP_InputField locationName;
@@ -73,7 +74,7 @@ public class NewLocationWindow : MonoBehaviour
         if (isOn) {
             cameraLatitude.text = locationLatitude.text;
             cameraLongitude.text = locationLongitude.text;
-            cameraAltitude.text = locationAltitude.text;
+            cameraAltitude.text = (float.Parse(locationAltitude.text) + DEFAULT_CAMERA_HEIGHT).ToString();
         }
     }
 
@@ -84,12 +85,12 @@ public class NewLocationWindow : MonoBehaviour
         if (errorMessage == "") {
             Location location = new Location();
             location.Name = locationName.text;
-            location.Coordinates = new Vector3d(
+            location.Coordinate = new Coordinate(
                 double.Parse(locationLatitude.text),
                 double.Parse(locationLongitude.text),
                 double.Parse(locationAltitude.text)
             );
-            location.CameraCoordinates = new Vector3d(
+            location.CameraCoordinates = new Coordinate(
                 double.Parse(cameraLatitude.text),
                 double.Parse(cameraLongitude.text),
                 double.Parse(cameraAltitude.text)

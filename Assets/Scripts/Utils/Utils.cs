@@ -59,4 +59,17 @@ public static class Utils
             }
         }
     }
+
+    public static void AddFolderFromResources(string folder)
+    {
+        string resourcePath = System.IO.Path.Combine(Application.dataPath, GameManager.RESOURCES_FOLDER_NAME, folder);
+        string dataPath = System.IO.Path.Combine(Application.persistentDataPath, folder);
+
+        // Delete existing folder so that everything is updated
+        if (System.IO.Directory.Exists(dataPath)) {
+            System.IO.Directory.Delete(dataPath, true);
+        }
+        
+        Utils.CopyDirectory(resourcePath, dataPath, true);
+    }
 }

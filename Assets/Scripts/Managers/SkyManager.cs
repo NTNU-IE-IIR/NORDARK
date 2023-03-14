@@ -1,11 +1,9 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class SkyManager : MonoBehaviour
 {
     private const float MOON_MAX_INTENSITY = 0.5f;
-    [SerializeField] private MapManager mapManager;
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private Transform sun;
     [SerializeField] private Transform moon;
@@ -23,7 +21,6 @@ public class SkyManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(mapManager);
         Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(sun);
         Assert.IsNotNull(moon);
@@ -47,14 +44,14 @@ public class SkyManager : MonoBehaviour
     private void SetSunAndMoonPosition()
     {
 
-        Vector3d coordinates = new Vector3d();
+        Coordinate coordinate = new Coordinate();
         Location currentLocation = locationsManager.GetCurrentLocation();
         if (currentLocation != null) {
-            coordinates = currentLocation.Coordinates;
+            coordinate = currentLocation.Coordinate;
         }
 
         Sampa.Sampa sampa = new Sampa.Sampa();
-        sampa.Calculate(_dateTime, coordinates);
+        sampa.Calculate(_dateTime, coordinate);
         
         sun.localEulerAngles = new Vector3((float) sampa.spa.e, (float) sampa.spa.azimuth, 0);
         moon.localEulerAngles = new Vector3((float) sampa.mpa.e, (float) sampa.mpa.azimuth, 0);

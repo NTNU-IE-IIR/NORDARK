@@ -28,7 +28,7 @@ public class SceneCamera : MonoBehaviour
     void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {
         if (camera == sceneCamera && lightPolesManager != null) {
-            List<LightPole> mainCameraLights = lightPolesManager.GetLights();
+            List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
 
             foreach (LightPole lightPole in mainCameraLights) {
                 lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);

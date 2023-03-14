@@ -30,7 +30,7 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
         if (point.Coordinates.Altitude != null) {
             altitude = (double) point.Coordinates.Altitude;
         }
-        location.Coordinates = new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude);
+        location.Coordinate = new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude);
 
         List<double> cameraCoordinates = new List<double>();
         if (feature.Properties.ContainsKey("cameraCoordinates")) {
@@ -39,7 +39,7 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
         if (cameraCoordinates.Count < 3) {
             cameraCoordinates = new List<double>{ 0, 0, 0 };
         }
-        location.CameraCoordinates = new Vector3d(cameraCoordinates[0], cameraCoordinates[1], cameraCoordinates[2]);
+        location.CameraCoordinates = new Coordinate(cameraCoordinates[0], cameraCoordinates[1], cameraCoordinates[2]);
 
         List<float> cameraAngles = new List<float>();
         if (feature.Properties.ContainsKey("cameraAngles")) {
@@ -72,17 +72,18 @@ public class LocationsManager : MonoBehaviour, IObjectsManager
 
         foreach (Location location in locations) {
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                location.Coordinates.latitude,
-                location.Coordinates.longitude,
-                location.Coordinates.altitude
+                location.Coordinate.latitude,
+                location.Coordinate.longitude,
+                location.Coordinate.altitude
             ));
             
-            Dictionary<string, object> properties = new Dictionary<string, object>();
-            properties.Add("type", "location");
-            properties.Add("name", location.Name);
-            properties.Add("cameraCoordinates", new List<double>{location.CameraCoordinates.latitude, location.CameraCoordinates.longitude, location.CameraCoordinates.altitude});
-            properties.Add("cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z});
-
+            Dictionary<string, object> properties = new Dictionary<string, object>() {
+                {"type", "location"},
+                {"name", location.Name},
+                {"cameraCoordinates", new List<double>{location.CameraCoordinates.latitude, location.CameraCoordinates.longitude, location.CameraCoordinates.altitude}},
+                {"cameraAngles", new List<float>{location.CameraAngles.x, location.CameraAngles.y, location.CameraAngles.z}},
+            };
+            
             features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
 

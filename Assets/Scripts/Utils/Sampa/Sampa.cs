@@ -39,7 +39,7 @@ namespace Sampa {
         public Mpa mpa;     // Moon
         public Spa spa;     // Sun
 
-        public void Calculate(System.DateTime dateTime, Vector3d coordinates)
+        public void Calculate(System.DateTime dateTime, Coordinate coordinates)
         {
             int i=0;
             while (i < Timescales.timescales.Count-1 && dateTime > Timescales.timescales[i].DateTime) {

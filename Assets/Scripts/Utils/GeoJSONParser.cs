@@ -6,6 +6,7 @@ public class GeoJSONParser
 {
     public static GeoJSON.Net.Feature.FeatureCollection FileToFeatureCollection(string filename)
     {
+        // This function can throw an exception if the file is already opened by another application
         StreamReader rd = new StreamReader(filename);
         GeoJSON.Net.Feature.FeatureCollection featureCollection = JsonConvert.DeserializeObject<GeoJSON.Net.Feature.FeatureCollection>(rd.ReadToEnd());
         rd.Close();

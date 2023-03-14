@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+// CameraParameters but JSON-serializable
 public class CameraParametersSerialized
 {
     public List<float> SensorSize { get; set; }

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -19,6 +18,11 @@ public class HeightMapsManager : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(mapManager);
+    }
+
+    public void AddHeightMapsFromResources()
+    {
+        Utils.AddFolderFromResources(HEIGHTMAPS_FOLDER);
     }
 
     public void AddHeightMapFromFile()
@@ -48,7 +52,7 @@ public class HeightMapsManager : MonoBehaviour
         mapManager.UpdateMapTerrain();
 
         string message = "";
-        if (addedFiles.Count == paths.Length) {
+        if (addedFiles.Count == paths.Length && paths.Length > 0) {
             message += "All files added.";
         } else {
             if (addedFiles.Count > 0) {
@@ -95,6 +99,7 @@ public class HeightMapsManager : MonoBehaviour
             numberOfPixelsX = tiff.ScanlineSize() / 4;
             numberOfPixelsY = tiff.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
 
+            // The tag values/types come from the GeoTIFF specifications
             FieldValue[] modelPixelScaleTag = tiff.GetField((TiffTag)33550);
             FieldValue[] modelTiepointTag = tiff.GetField((TiffTag)33922);
             FieldValue[] noDataTag = tiff.GetField((TiffTag)42113);
@@ -126,10 +131,12 @@ public class HeightMapsManager : MonoBehaviour
 
     private bool CreateHeatmapTile(Tiff tiff, Tile tile)
     {
+        // Each geotiff pixel is represented by a 4 bytes float, but the libtiff library returns an array of one byte values.
+        // So a conversion has to be done
         byte[] scanline = new byte[4*numberOfPixelsX];
         float[] scanline32Bit = new float[numberOfPixelsX];
 
-        (Vector3d, Vector3d) boundaries = mapManager.GetTileBoundaries(tile);
+        (Coordinate, Coordinate) boundaries = mapManager.GetTileBoundaries(tile);
 
         int startingIndexX = Mathf.Max(0, (int) (numberOfPixelsX * (boundaries.Item1.longitude - startLon) / (endLon - startLon)));
         int endingIndexX = Mathf.Min(numberOfPixelsX, (int) (numberOfPixelsX * (boundaries.Item2.longitude - startLon) / (endLon - startLon)));
@@ -148,6 +155,7 @@ public class HeightMapsManager : MonoBehaviour
                 for (int i = startingIndexX; i<endingIndexX; ++i) {
                     double elevation = scanline32Bit[i] == noDataValue ? 0 : scanline32Bit[i];
                     
+                    // See https://docs.mapbox.com/data/tilesets/guides/access-elevation-data/#decode-data
                     double elevationScaled = (elevation + 10000) * 10 ;
                     int red = (int) (elevationScaled / (256 * 256));
                     int green = (int) ((elevationScaled - red * (256 * 256)) / 256);

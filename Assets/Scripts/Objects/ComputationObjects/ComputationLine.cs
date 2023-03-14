@@ -45,11 +45,10 @@ public class ComputationLine : MonoBehaviour, IComputationObject
             if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
                 if (line.positionCount >= 2) {
                     line.SetPosition(line.positionCount-1, hit.point + new Vector3(0, LINE_HEIGHT, 0));
+                    
                     float distance = Utils.GetLineDistance(line);
                     Vector3 lastLineVector = line.GetPosition(line.positionCount-1) - line.GetPosition(line.positionCount-2);
-                    float angle = Utils.GetAngleBetweenPositions(new Vector2(lastLineVector.x, lastLineVector.z), new Vector2(0, 1));
-
-                    angle = 360 - (Mathf.Rad2Deg * Mathf.Atan2(lastLineVector.z, lastLineVector.x) + 270 ) % 360;
+                    float angle = 360 - (Mathf.Rad2Deg * Mathf.Atan2(lastLineVector.z, lastLineVector.x) + 270 ) % 360;
 
                     TooltipControl.DisplayTooltip(true, distance.ToString("0.0") + "m\n" + angle.ToString("0.0") + "°");
                 }
@@ -153,7 +152,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                     }
 
                     if (point != null && Utils.IsEPSG4326(point.Coordinates) && feature.Properties.ContainsKey("luminance")) {
-                        positions.Add(mapManager.GetUnityPositionFromCoordinates(new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude), true));
+                        positions.Add(mapManager.GetUnityPositionFromCoordinates(new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude), true));
                         luminances.Add(System.Convert.ToSingle(feature.Properties["luminance"]));
                     }
                 }

@@ -23,6 +23,8 @@ public class Heatmap : MaskableGraphic
             }
  
             heatmapTexture = value;
+
+            // Those 2 functions will require OnPopulateMesh() to be called
             SetVerticesDirty();
             SetMaterialDirty();
         }

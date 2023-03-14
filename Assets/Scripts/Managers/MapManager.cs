@@ -32,7 +32,7 @@ public class MapManager : MonoBehaviour
         map.OnTileFinished += TileFinished;
 
         Mapbox.Unity.Map.RangeTileProviderOptions extentOptions = (Mapbox.Unity.Map.RangeTileProviderOptions) map.Options.extentOptions.GetTileProviderOptions();
-        numberOfTiles = (extentOptions.north + 1 + extentOptions.south) * (extentOptions.west + 1 + extentOptions.east);;
+        numberOfTiles = (extentOptions.north + 1 + extentOptions.south) * (extentOptions.west + 1 + extentOptions.east);
 
         numberOfTilesInitialized = 0;
         isMapInitialized = false;
@@ -52,17 +52,13 @@ public class MapManager : MonoBehaviour
         if (location != null) {
             numberOfTilesInitialized = 0;
 
-            map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(location.Coordinates.latitude, location.Coordinates.longitude));
+            map.SetCenterLatitudeLongitude(new Mapbox.Utils.Vector2d(location.Coordinate.latitude, location.Coordinate.longitude));
             map.UpdateMap();
 
             // There is a Mapbox bug with the roads, buildings and elevation, so we reset them 
             bool buildingLayerActive = mapControl.IsBuildingLayerActive();
             DisplayBuildings(!buildingLayerActive);
             DisplayBuildings(buildingLayerActive);
-
-            bool roadLayerActive = mapControl.IsRoadLayerActive();
-            DisplayRoads(!roadLayerActive);
-            DisplayRoads(roadLayerActive);
 
             bool isTerrainElevated = map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation;
             if (isTerrainElevated) {
@@ -75,24 +71,35 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    public Vector3 GetUnityPositionFromCoordinates(Vector3d coordinates, bool stickToGround = false)
+    public Vector3 GetUnityPositionFromCoordinates(Coordinate coordinates, bool stickToGround = false)
     {
         Vector3 position = Conversions.GeoToWorldPosition(coordinates.latitude, coordinates.longitude, map.CenterMercator, map.WorldRelativeScale).ToVector3xz();
 
         if (stickToGround) {
-            position.y = map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(coordinates.latitude, coordinates.longitude));
+            bool isTerrainElevated = map.Terrain.ElevationType == ElevationLayerType.TerrainWithElevation;
+            if (isTerrainElevated) {
+                RaycastHit hit = new RaycastHit();
+                if (Physics.Raycast(position + new Vector3(0, 10000, 0), Vector3.down, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+                    position.y = hit.point.y; 
+                } else {
+                    // Fall back to Mapbox elevation if raycast failed
+                    position.y = map.QueryElevationInUnityUnitsAt(new Mapbox.Utils.Vector2d(coordinates.latitude, coordinates.longitude));
+                }
+            } else {
+                position.y = 0; 
+            }
         } else {
             position.y = (float) coordinates.altitude;
         }
         return position;
     }
 
-    public Vector3d GetCoordinatesFromUnityPosition(Vector3 position)
+    public Coordinate GetCoordinatesFromUnityPosition(Vector3 position)
     {
-        return new Vector3d(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale), position.y);
+        return new Coordinate(position.GetGeoPosition(map.CenterMercator, map.WorldRelativeScale), position.y);
     }
 
-    public bool IsCoordinateOnMap(Vector3d coordinates)
+    public bool IsCoordinateOnMap(Coordinate coordinates)
     {
         Mapbox.Unity.MeshGeneration.Data.UnityTile tile;
 		return map.MapVisualizer.ActiveTiles.TryGetValue(Conversions.LatitudeLongitudeToTileId(coordinates.latitude, coordinates.longitude, (int)map.Zoom), out tile);
@@ -121,11 +128,6 @@ public class MapManager : MonoBehaviour
         map.VectorData.GetFeatureSubLayerAtIndex(0).SetActive(display);
     }
 
-    public void DisplayRoads(bool display)
-    {
-        map.VectorData.GetFeatureSubLayerAtIndex(1).SetActive(display);
-    }
-
     public List<Tile> GetTiles()
     {
         if (tiles.Count == 0) {
@@ -141,7 +143,7 @@ public class MapManager : MonoBehaviour
         return tiles;
     }
 
-    public (Vector3d, Vector3d) GetTileBoundaries(Tile tile)
+    public (Coordinate, Coordinate) GetTileBoundaries(Tile tile)
     {
         return (GetCoordinatesFromUnityPosition(new Vector3(
             tile.Transform.position.x - tile.MeshFilter.mesh.bounds.size.x / 2,
@@ -170,7 +172,7 @@ public class MapManager : MonoBehaviour
     public string GetGroundFromPosition(Vector3 position)
     {
         RaycastHit hit = new RaycastHit();
-        if (Physics.Raycast(position + new Vector3(0, 100, 0), Vector3.down, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+        if (Physics.Raycast(position + new Vector3(0, 10000, 0), Vector3.down, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
             string ground = groundTexturesManager.GetPositionTexture(hit.transform.gameObject.GetComponent<Renderer>().material, hit.textureCoord);
             if (ground != "") {
                 return ground;
@@ -194,19 +196,18 @@ public class MapManager : MonoBehaviour
 
     private void TileFinished(Mapbox.Unity.MeshGeneration.Data.UnityTile tile)
     {
-        if (tile.TileState == Mapbox.Unity.MeshGeneration.Enums.TilePropertyState.Loaded) {
-            if (!isMapInitialized) {
-                isMapInitialized = true;
-            }
+        if (!isMapInitialized) {
+            isMapInitialized = true;
+        }
 
-            numberOfTilesInitialized++;
-            if (numberOfTilesInitialized == numberOfTiles) {
-                foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
-                    objectsManager.OnLocationChanged();
-                }
-                skyManager.OnLocationChanged();
-                lightComputationManager.OnLocationChanged();
+        numberOfTilesInitialized++;
+
+        if (numberOfTilesInitialized == numberOfTiles) {
+            foreach (IObjectsManager objectsManager in sceneManager.GetObjectsManagers()) {
+                objectsManager.OnLocationChanged();
             }
+            skyManager.OnLocationChanged();
+            lightComputationManager.OnLocationChanged();
         }
     }
 }

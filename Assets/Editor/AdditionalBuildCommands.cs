@@ -21,6 +21,7 @@ public class AdditionalBuildCommands : UnityEditor.Build.IPostprocessBuildWithRe
             Utils.CopyDirectory(directoryToCopy, Path.Combine(resourceFolder, Path.GetFileName(directoryToCopy)), true);
         }
 
+    // Needed for MacOS, see https://issuetracker.unity3d.com/issues/macos-build-is-damaged-and-cannot-be-opened-error-when-downloading-unity-build-from-internet
     #if UNITY_STANDALONE_OSX
         UnityEditor.OSXStandalone.MacOSCodeSigning.CodeSignAppBundle(report.summary.outputPath);
     #endif

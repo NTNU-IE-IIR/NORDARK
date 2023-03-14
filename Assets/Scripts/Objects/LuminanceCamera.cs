@@ -23,7 +23,7 @@ public class LuminanceCamera : MonoBehaviour
         vegetationManager.RemoveCamera(luminanceCamera);
         luminanceTexture.Release();
 
-        List<LightPole> mainCameraLights = lightPolesManager.GetLights();
+        List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
         foreach (LightPole lightPole in mainCameraLights) {
             lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
         }
@@ -67,7 +67,7 @@ public class LuminanceCamera : MonoBehaviour
     private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {   
         if (luminanceCamera == camera) {
-            List<LightPole> mainCameraLights = lightPolesManager.GetLights();
+            List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
 
             foreach (LightPole lightPole in mainCameraLights) {
                 lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);

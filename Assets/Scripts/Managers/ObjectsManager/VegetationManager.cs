@@ -30,6 +30,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
 
     public void Create(GeoJSON.Net.Feature.Feature feature)
     {
+        // Only Polygons are supported
         if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Polygon")) {
             BiomeArea biomeArea = new BiomeArea();
 
@@ -42,10 +43,11 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
 
             GeoJSON.Net.Geometry.Polygon polygon = feature.Geometry as GeoJSON.Net.Geometry.Polygon;
-            // In a GeoJSON polygon, the first and last points are be same
+
+            // In a GeoJSON polygon, the first and last points are be same (hence the -1)
             for (int i=0; i<polygon.Coordinates[0].Coordinates.Count-1; i++) {
                 GeoJSON.Net.Geometry.IPosition coordinate = polygon.Coordinates[0].Coordinates[i];
-                biomeArea.Coordinates.Add(new Vector3d(coordinate.Latitude, coordinate.Longitude));
+                biomeArea.Coordinates.Add(new Coordinate(coordinate.Latitude, coordinate.Longitude));
             }
 
             AddBiomeArea(biomeArea);
@@ -70,7 +72,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
         foreach (BiomeArea biomeArea in biomeAreas) {
             
             List<List<List<double>>> coordinates = new List<List<List<double>>> {new List<List<double>>()};
-            foreach (Vector3d coordinate in biomeArea.Coordinates) {
+            foreach (Coordinate coordinate in biomeArea.Coordinates) {
                 coordinates[0].Add(new List<double>{coordinate.longitude, coordinate.latitude, 0});
             }
             // In a GeoJSON polygon, the first and last points should be same
@@ -79,10 +81,11 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Polygon(coordinates);
 
-            Dictionary<string, object> properties = new Dictionary<string, object>();
-            properties.Add("type", "biomeArea");
-            properties.Add("biome", biomeArea.Biome);
-            properties.Add("name", biomeArea.Name);
+            Dictionary<string, object> properties = new Dictionary<string, object>() {
+                {"type", "biomeArea"},
+                {"biome", biomeArea.Biome},
+                {"name", biomeArea.Name}
+            };
 
             features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
@@ -143,7 +146,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
             }
             
             biomeArea.BiomeMaskArea.ClearNodes();
-            foreach(Vector3d coordinate in biomeArea.Coordinates) {
+            foreach(Coordinate coordinate in biomeArea.Coordinates) {
                 AwesomeTechnologies.VegetationSystem.Biomes.Node node = new AwesomeTechnologies.VegetationSystem.Biomes.Node();
                 node.Position = mapManager.GetUnityPositionFromCoordinates(coordinate);
                 biomeArea.BiomeMaskArea.Nodes.Add(node);
@@ -187,7 +190,7 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
     {
         int biomeAreaIndex = vegetationControl.GetBiomeAreaIndex();
         if (biomeAreaIndex > -1 && biomeAreaIndex < biomeAreas.Count) {
-            Vector3d coordinate = mapManager.GetCoordinatesFromUnityPosition(position);
+            Coordinate coordinate = mapManager.GetCoordinatesFromUnityPosition(position);
 
             biomeAreas[biomeAreaIndex].Coordinates.Add(coordinate);
 
@@ -216,13 +219,13 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public List<Vector3d> GetCoordinateOfCurrentBiomeArea()
+    public List<Coordinate> GetCoordinateOfCurrentBiomeArea()
     {
         int biomeAreaIndex = vegetationControl.GetBiomeAreaIndex();
         if (biomeAreaIndex > -1 && biomeAreaIndex < biomeAreas.Count) {
             return biomeAreas[biomeAreaIndex].Coordinates;
         } else {
-            return new List<Vector3d>();
+            return new List<Coordinate>();
         }
     }
 
@@ -233,6 +236,12 @@ public class VegetationManager : MonoBehaviour, IObjectsManager
 
     public void RemoveCamera(Camera camera)
     {
-        vegetationSystemPro.RemoveCamera(camera);
+        // This function may be called on the application shut down
+        // So an exception may occurs if VegetationSystemPro is already deleted
+        try {
+            vegetationSystemPro.RemoveCamera(camera);
+        }
+        catch (System.Exception)
+        {}
     }
 }

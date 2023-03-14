@@ -17,12 +17,13 @@ Shader "FullScreen/LuminanceCustomPass"
         if (_CustomPassInjectionPoint != CUSTOMPASSINJECTIONPOINT_BEFORE_RENDERING)
             color = float4(CustomPassLoadCameraColor(varyings.positionCS.xy, 0), 1);
 
-        float lum = Luminance(color) / GetCurrentExposureMultiplier();
+        float luminance = Luminance(color) / GetCurrentExposureMultiplier();
 
-        int firstDecomposition = lum / 100.0;
-        int secondDecomposition = (lum - firstDecomposition * 100) / 1.0;
-        int thirdDecomposition = (lum - firstDecomposition * 100 - secondDecomposition * 1.0) / 0.01;
+        int firstDecomposition = luminance / 100.0;                               // For luminance between 100 and 10000
+        int secondDecomposition = (luminance - firstDecomposition * 100) / 1.0;   // For luminance between 1 and 100
+        int thirdDecomposition = (luminance - firstDecomposition * 100 - secondDecomposition * 1.0) / 0.01;   // For luminance between 0.01 and 1
 
+        // Each component must be between 0 and 1 
         return float4(
             firstDecomposition / 100.0,
             secondDecomposition / 100.0,

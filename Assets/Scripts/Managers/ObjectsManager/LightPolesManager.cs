@@ -5,35 +5,35 @@ using UnityEngine.Assertions;
 
 public class LightPolesManager : MonoBehaviour, IObjectsManager
 {
-    private const string LIGHTS_RESOURCES_FOLDER = "Lights";
+    [SerializeField] private LightPolesGroupsManager lightPolesGroupsManager;
     [SerializeField] private MapManager mapManager;
     [SerializeField] private IESManager iesManager;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
-    [SerializeField] private LightControl lightControl;
-    [SerializeField] private LightsTabControl lightsTabControl;
+    [SerializeField] private LightPolesControl lightPolesControl;
     [SerializeField] private GameObject selectionPinPrefab;
     [SerializeField] private Material highlightMaterial;
+    [SerializeField] private List<GameObject> lightPolePrefabs;
     private List<LightPole> lightPoles;
     private List<(LightPole, SelectionPin)> selectedLightPoles;
     private List<string> lightPrefabNames;
 
     void Awake()
     {
+        Assert.IsNotNull(lightPolesGroupsManager);
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(iesManager);
         Assert.IsNotNull(sceneCamerasManager);
-        Assert.IsNotNull(lightControl);
-        Assert.IsNotNull(lightsTabControl);
+        Assert.IsNotNull(lightPolesControl);
         Assert.IsNotNull(selectionPinPrefab);
         Assert.IsNotNull(highlightMaterial);
+        Assert.IsNotNull(lightPolePrefabs);
         
         lightPoles = new List<LightPole>();
         selectedLightPoles = new List<(LightPole, SelectionPin)>();
 
         lightPrefabNames = new List<string>();
-        Object[] lights = Resources.LoadAll(LIGHTS_RESOURCES_FOLDER);
-        foreach (Object light in lights) {
-            lightPrefabNames.Add(light.name);
+        foreach (GameObject lightPolePrefab in lightPolePrefabs) {
+            lightPrefabNames.Add(lightPolePrefab.name);
         }
     }
 
@@ -50,13 +50,14 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
             lightPole.Light.Destroy();
         }
         lightPoles.Clear();
+        lightPolesGroupsManager.Clear();
     }
 
     public void OnLocationChanged()
     {
         foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.SetPosition(mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true));
-            lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinates));
+            lightPole.Light.SetPosition(mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinate, true));
+            lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinate));
         }
 
         foreach (var item in selectedLightPoles) {
@@ -69,21 +70,25 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
 
         foreach (LightPole lightPole in lightPoles) {
+            // Only save light poles of the main configuration
             if (lightPole.ConfigurationIndex == 0) {
                 GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                    lightPole.Coordinates.latitude,
-                    lightPole.Coordinates.longitude,
-                    lightPole.Coordinates.altitude
+                    lightPole.Coordinate.latitude,
+                    lightPole.Coordinate.longitude,
+                    lightPole.Coordinate.altitude
                 ));
                 
                 Vector3 eulerAngles = lightPole.Light.transform.eulerAngles;
                 
-                Dictionary<string, object> properties = new Dictionary<string, object>();
-                properties.Add("type", "light");
-                properties.Add("name", lightPole.Name);
-                properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
-                properties.Add("IESfileName", lightPole.Light.GetIESLight().Name);
-                properties.Add("prefabName", lightPole.PrefabName);
+                Dictionary<string, object> properties = new Dictionary<string, object>() {
+                    {"type", "light"},
+                    {"name", lightPole.Name},
+                    {"eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z}},
+                    {"IESfileName", lightPole.Light.GetIESLight().Name},
+                    {"prefabName", lightPole.PrefabName},
+                    {"height", lightPole.Light.GetHeight()},
+                    {"groups", lightPole.Groups}
+                };
 
                 features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
             }            
@@ -106,7 +111,23 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
             if (point.Coordinates.Altitude != null) {
                 altitude = (double) point.Coordinates.Altitude;
             }
-            LightPole lightPole = new LightPole(new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude), configurationIndex);
+            
+            List<string> newGroups = new List<string>();
+
+            // Groups are only relevant for the main configuration
+            if (configurationIndex == 0) {
+                try {
+                    newGroups = (feature.Properties["groups"] as Newtonsoft.Json.Linq.JArray).ToObject<List<string>>();
+                } catch (System.Exception) {}
+
+                lightPolesGroupsManager.AddGroups(newGroups);
+            }
+
+            LightPole lightPole = new LightPole(
+                new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude),
+                configurationIndex,
+                newGroups
+            );
 
             if (feature.Properties.ContainsKey("name")) {
                 lightPole.Name = feature.Properties["name"] as string;
@@ -116,13 +137,16 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
                 lightPole.PrefabName = feature.Properties["prefabName"] as string;
             }
 
+            float height = LightPrefab.DEFAULT_HEIGHT;
+            try {
+                // The property must be converted to double first, otherwise an error occurs
+                height = (float) (double) feature.Properties["height"];
+            } catch (System.Exception) {}
+
             List<float> eulerAngles = new List<float>();
-            try
-            {
+            try {
                 eulerAngles = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
-            }
-            catch (System.Exception)
-            {}
+            } catch (System.Exception) {}
             if (eulerAngles.Count < 3) {
                 eulerAngles = new List<float>{ 0, 0, 0 };
             }
@@ -132,7 +156,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
                 IESName = feature.Properties["IESfileName"] as string;
             }
 
-            CreateLight(lightPole, new Vector3(eulerAngles[0], eulerAngles[1], eulerAngles[2]), IESName);
+            CreateLight(lightPole, height, new Vector3(eulerAngles[0], eulerAngles[1], eulerAngles[2]), IESName);
         }
     }
 
@@ -148,6 +172,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
                 bool atLeastOneValidFeature = false;
 
                 foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+                    // Only Point or MultiPoint are supported
                     GeoJSON.Net.Geometry.Point point = null;
                     if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
                         point = feature.Geometry as GeoJSON.Net.Geometry.Point;
@@ -185,6 +210,10 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         }
 
         lightPoles.RemoveAll(lightPole => lightPole.ConfigurationIndex == configurationIndex);
+
+        if (configurationIndex == 0) {
+            lightPolesGroupsManager.Clear();
+        }
     }
 
     public bool AddLightPrefabToSelectedLightPoles(LightPrefab lightPrefab, bool addToSelected)
@@ -200,7 +229,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         return false;
     }
 
-    public void SelectLightPoleFromPointerByCursor(bool addToSelected)
+    public void SelectLightPolePointerByCursor(bool addToSelected)
     {
         bool lightPoleSelected = false;
 
@@ -244,10 +273,33 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         }
     }
 
+    public void ChangeSelectedLightPolesHeight(float height)
+    {
+        foreach (var item in selectedLightPoles) {
+            item.Item1.Light.SetHeight(height);
+        }
+    }
+
     public void RotateSelectedLightPoles(float rotation)
     {
         foreach (var item in selectedLightPoles) {
             item.Item1.Light.Rotate(rotation);
+        }
+    }
+
+    public void AddGroupToSelectedLightPoles(string group)
+    {
+        foreach (var item in selectedLightPoles) {
+            if (!item.Item1.Groups.Contains(group)) {
+                item.Item1.Groups.Add(group);
+            }
+        }
+    }
+
+    public void RemoveGroupFromSelectedLightPoles(string group)
+    {
+        foreach (var item in selectedLightPoles) {
+            item.Item1.Groups.Remove(group);
         }
     }
 
@@ -264,24 +316,23 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
     public void Change3DModelOfSelectedLightPoles(string model)
     {
         foreach (var item in selectedLightPoles) {
+            float height = item.Item1.Light.GetHeight();
             Vector3 eulerAngles = item.Item1.Light.transform.eulerAngles;
             IESLight iesLight = item.Item1.Light.GetIESLight();
 
             item.Item1.Light.Destroy();
             item.Item1.PrefabName = model;
 
-            CreateLightPrefab(item.Item1, eulerAngles, iesLight);
+            CreateLightPrefab(item.Item1, height, eulerAngles, iesLight);
         }
     }
 
     public void AddLightPole()
     {
-        if (lightsTabControl.IsActive()) {
-            LightPole lightPole = new LightPole(mapManager.GetCoordinatesFromUnityPosition(new Vector3()), 0);
-            CreateLight(lightPole, new Vector3(0, 0), "");
-            AddLightPoleToSelected(lightPole);
-            MoveSelectedLightPoles();
-        }
+        LightPole lightPole = new LightPole();
+        CreateLight(lightPole, LightPrefab.DEFAULT_HEIGHT, new Vector3(0, 0), "");
+        AddLightPoleToSelected(lightPole);
+        MoveSelectedLightPoles();
     }
 
     public void MoveSelectedLightPoles()
@@ -299,32 +350,46 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
             lightPoles.Remove(item.Item1);
         }
 
+        lightPolesGroupsManager.SetGroupsFromLightPoles(lightPoles);
         ClearSelectedLightPoles();
     }
 
     public void HighlightLights(bool hightlight)
     {
         foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.Hightlight(hightlight, highlightMaterial);
+            lightPole.Light.Highlight(hightlight, highlightMaterial);
         }
     }
 
     public void ShowLightPoles(bool show)
     {
         foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.Show(show && mapManager.IsCoordinateOnMap(lightPole.Coordinates));
+            lightPole.Light.Show(show && mapManager.IsCoordinateOnMap(lightPole.Coordinate));
         }
     }
 
     public void ClearSelectedLightPoles()
     {
         foreach (var item in selectedLightPoles) {
-            item.Item1.Coordinates = mapManager.GetCoordinatesFromUnityPosition(item.Item1.Light.transform.position);
+            item.Item1.Coordinate = mapManager.GetCoordinatesFromUnityPosition(item.Item1.Light.transform.position);
             item.Item1.Light.SetMoving(false);
             Destroy(item.Item2.gameObject);
         }
         selectedLightPoles.Clear();
-        lightControl.ClearSelectedLight();
+        lightPolesControl.ClearSelectedLights();
+    }
+
+    public void SelectFromGroup(string group)
+    {
+        ClearSelectedLightPoles();
+
+        foreach (LightPole lightPole in lightPoles) {
+            if (lightPole.Groups.Contains(group)) {
+                AddLightPoleToSelected(lightPole, true);
+            }
+        }
+
+        lightPolesControl.SetCurrentGroup(group);
     }
 
     public List<string> GetLightPrefabNames()
@@ -332,12 +397,12 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         return lightPrefabNames;
     }
 
-    public List<LightPole> GetLights()
+    public List<LightPole> GetLightPoles()
     {
         return lightPoles;
     }
 
-    private void CreateLight(LightPole lightPole, Vector3 eulerAngles, string IESName)
+    private void CreateLight(LightPole lightPole, float height, Vector3 eulerAngles, string IESName)
     {
         if (lightPole.Name == "") {
             lightPole.Name = Utils.DetermineNewName(lightPoles.Select(light => light.Name).ToList(), "Light");
@@ -347,7 +412,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
             lightPole.PrefabName = lightPrefabNames[0];
         }
 
-        CreateLightPrefab(lightPole, eulerAngles, iesManager.GetIESLightFromName(IESName));
+        CreateLightPrefab(lightPole, height, eulerAngles, iesManager.GetIESLightFromName(IESName));
 
         lightPoles.Add(lightPole);
     }
@@ -367,23 +432,34 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
             selectionPin.SetPosition(lightPole.Light.transform.position);
             selectedLightPoles.Add((lightPole, selectionPin));
 
-            lightControl.LightSelected(lightPole, selectedLightPoles.Count > 1);
+            lightPolesControl.LightSelected(lightPole, selectedLightPoles.Count > 1);
         }
     }
 
-    private void CreateLightPrefab(LightPole lightPole, Vector3 eulerAngles, IESLight iESLight)
+    private void CreateLightPrefab(LightPole lightPole, float height, Vector3 eulerAngles, IESLight iESLight)
     {
+        GameObject lightPrefab = null;
+        foreach (GameObject light in lightPolePrefabs) {
+            if (light.name == lightPole.PrefabName) {
+                lightPrefab = light;
+            }
+        }
+        if (lightPrefab == null) {
+            lightPrefab = lightPolePrefabs[0];
+        }
+
         lightPole.Light = Instantiate(
-            Resources.Load<GameObject>(LIGHTS_RESOURCES_FOLDER + "/" + lightPole.PrefabName),
-            mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinates, true),
+            lightPrefab,
+            mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinate, true),
             Quaternion.Euler(eulerAngles),
             transform
         ).GetComponent<LightPrefab>();
 
         lightPole.Light.Create(sceneCamerasManager);
         lightPole.Light.SetIESLight(iESLight);
-        lightPole.Light.Hightlight(lightControl.IsHighlighted(), highlightMaterial);
+        lightPole.Light.SetHeight(height);
+        lightPole.Light.Highlight(lightPolesControl.IsHighlighted(), highlightMaterial);
         lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
-        lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinates));
+        lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinate));
     }
 }

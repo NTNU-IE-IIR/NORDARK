@@ -4,15 +4,15 @@ using System.Collections.ObjectModel;
 public class GroundTexture
 {
     public string Texture;
-    public List<Vector3d> Coordinates;
+    public List<Coordinate> Coordinates;
 
     public GroundTexture(string texture, ReadOnlyCollection<GeoJSON.Net.Geometry.IPosition> coordinates)
     {
         Texture = texture;
 
-        Coordinates = new List<Vector3d>();
+        Coordinates = new List<Coordinate>();
         foreach (GeoJSON.Net.Geometry.Position coordinate in coordinates) {
-            Coordinates.Add(new Vector3d(coordinate.Latitude, coordinate.Longitude));
+            Coordinates.Add(new Coordinate(coordinate.Latitude, coordinate.Longitude));
         }
     }
 }

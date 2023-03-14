@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public class GroundTextureCollection
 {
-    public string Id;
+    public string Id;   // unique id to identify each ground texture collection
     public List<GroundTexture> GroundTextures;
     public GeoJSON.Net.Feature.FeatureCollection FeatureCollection;
 

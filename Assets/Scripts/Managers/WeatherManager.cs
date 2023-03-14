@@ -22,6 +22,7 @@ public class WeatherManager : MonoBehaviour
         Assert.IsNotNull(snowParticles);
         Assert.IsNotNull(cloudsParent);
 
+        // Dynamically get all cloud presets
         clouds = new Dictionary<string, Volume>();
         foreach (Transform cloudVolume in cloudsParent) {
             clouds.Add(cloudVolume.name, cloudVolume.GetComponent<Volume>());

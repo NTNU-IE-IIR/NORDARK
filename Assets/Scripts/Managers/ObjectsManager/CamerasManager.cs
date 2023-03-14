@@ -8,11 +8,11 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     [SerializeField] private MapManager mapManager;
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private VegetationManager vegetationManager;
+    [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private CameraControl cameraControl;
     [SerializeField] private CameraParametersControl cameraParametersControl;
     [SerializeField] private GameObject cameraPreview;
     [SerializeField] private GameObject cameraObject;
-    [SerializeField] private GameObject mainCamera;
     private List<CameraNode> cameras;
     private CameraNode currentCamera;
 
@@ -21,11 +21,11 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         Assert.IsNotNull(mapManager);
         Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(vegetationManager);
+        Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(cameraControl);
         Assert.IsNotNull(cameraParametersControl);
         Assert.IsNotNull(cameraPreview);
         Assert.IsNotNull(cameraObject);
-        Assert.IsNotNull(mainCamera);
 
         cameras = new List<CameraNode>();
         currentCamera = null;
@@ -39,23 +39,17 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         }
 
         List<float> eulerAngles = new List<float>();
-        try
-        {
+        try {
             eulerAngles = (feature.Properties["eulerAngles"] as Newtonsoft.Json.Linq.JArray).ToObject<List<float>>();
-        }
-        catch (System.Exception)
-        {}
+        } catch (System.Exception) {}
         if (eulerAngles.Count < 3) {
             eulerAngles = new List<float>{ 0, 0, 0 };
         }
 
         CameraParameters cameraParameters = new CameraParameters();
-        try
-        {
+        try {
             cameraParameters = new CameraParameters((feature.Properties["parameters"] as Newtonsoft.Json.Linq.JObject).ToObject<CameraParametersSerialized>());
-        }
-        catch (System.Exception)
-        {}
+        } catch (System.Exception) {}
 
         GeoJSON.Net.Geometry.Point point = feature.Geometry as GeoJSON.Net.Geometry.Point;
         double altitude = 0;
@@ -65,7 +59,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
 
         CameraNode cameraNode = new CameraNode(
             name,
-            new Vector3d(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude)
+            new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude)
         );
         CreateCamera(
             cameraNode,
@@ -88,12 +82,12 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     public void OnLocationChanged()
     {
         foreach (CameraNode camera in cameras) {
-            camera.Camera.SetPosition(mapManager.GetUnityPositionFromCoordinates(camera.Coordinates));
+            camera.Camera.SetPosition(mapManager.GetUnityPositionFromCoordinates(camera.Coordinate));
         }
         Location currentLocation = locationsManager.GetCurrentLocation();
         if (currentLocation != null) {
-            mainCamera.transform.position = mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates);
-            mainCamera.transform.eulerAngles = currentLocation.CameraAngles;
+            sceneCamerasManager.SetPosition(mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates));
+            sceneCamerasManager.SetEulerAngles(currentLocation.CameraAngles);
         }
     }
 
@@ -103,15 +97,16 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
 
         foreach (CameraNode camera in cameras) {
             GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                camera.Coordinates.latitude, camera.Coordinates.longitude, camera.Coordinates.altitude
+                camera.Coordinate.latitude, camera.Coordinate.longitude, camera.Coordinate.altitude
             ));
 
-            Dictionary<string, object> properties = new Dictionary<string, object>();
-            properties.Add("type", "camera");
-            properties.Add("name", camera.Name);
             Vector3 eulerAngles = camera.Camera.GetEulerAngles();
-            properties.Add("eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z});
-            properties.Add("parameters", camera.Camera.GetParametersSerialized());
+            Dictionary<string, object> properties = new Dictionary<string, object> {
+                {"type", "camera"},
+                {"name", camera.Name},
+                {"eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z}},
+                {"parameters", camera.Camera.GetParametersSerialized()}
+            };
             
             features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
         }
@@ -124,9 +119,9 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         CreateCamera(
             new CameraNode(
                 Utils.DetermineNewName(cameras.Select(camera => camera.Name).ToList(), "Camera"),
-                mapManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position)
+                mapManager.GetCoordinatesFromUnityPosition(sceneCamerasManager.GetPosition())
             ),
-            mainCamera.transform.eulerAngles,
+            sceneCamerasManager.GetEulerAngles(),
             cameraParametersControl.GetCameraParameters()
         );
     }
@@ -145,17 +140,17 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
     public void SetCurrentCameraPositionFromMainCamera()
     {
         if (currentCamera != null) {
-            currentCamera.Coordinates = mapManager.GetCoordinatesFromUnityPosition(mainCamera.transform.position);
-            currentCamera.Camera.SetPosition(mainCamera.transform.position);
-            currentCamera.Camera.SetEulerAngles(mainCamera.transform.eulerAngles);
+            currentCamera.Coordinate = mapManager.GetCoordinatesFromUnityPosition(sceneCamerasManager.GetPosition());
+            currentCamera.Camera.SetPosition(sceneCamerasManager.GetPosition());
+            currentCamera.Camera.SetEulerAngles(sceneCamerasManager.GetEulerAngles());
         }
     }
     
     public void SetMainCameraPositionFromCurrentCamera()
     {
         if (currentCamera != null) {
-            mainCamera.transform.position = currentCamera.Camera.GetPosition();
-            mainCamera.transform.eulerAngles = currentCamera.Camera.GetEulerAngles();
+            sceneCamerasManager.SetPosition(currentCamera.Camera.GetPosition());
+            sceneCamerasManager.SetEulerAngles(currentCamera.Camera.GetEulerAngles());
         }
     }
 
@@ -198,7 +193,7 @@ public class CamerasManager : MonoBehaviour, IObjectsManager
         cameraControl.AddCameraToList(camera.Name);
         camera.Camera = Instantiate(
             cameraObject,
-            mapManager.GetUnityPositionFromCoordinates(camera.Coordinates),
+            mapManager.GetUnityPositionFromCoordinates(camera.Coordinate),
             Quaternion.Euler(eulerAngles),
             transform
         ).GetComponent<CameraPrefab>();

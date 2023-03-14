@@ -1,19 +1,28 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-[RequireComponent(typeof(MeshRenderer))]
-[RequireComponent(typeof(TooltipDisplayer))]
+[RequireComponent(typeof(TooltipDisplayer), typeof(MeshRenderer))]
 public class VisualizationFeature : MonoBehaviour
 {
-    private const float VISUALIZATION_BLOCK_WIDTH = 5;
-    private const float VISUALIZATION_BLOCK_HEIGHT = 5;
+    private enum Shape
+    {
+        Line,
+        Bar
+    }
+    private const float LINE_VISUALIZATION_WIDTH = 5;
+    private const float LINE_VISUALIZATION_HEIGHT = 5;
+    private const float BAR_VISUALIZATION_WIDTH = 5;
+    private const float BAR_VISUALIZATION_HEIGHT = 100;
     [SerializeField] private Material material;
     private TooltipDisplayer tooltipDisplayer;
     private MeshRenderer meshRenderer;
-    private Dictionary<string, float> indicatorValues;
+    private Dictionary<string, float> variableValues;
     private string datasetName;
     private bool isCreated;
+    private Shape shape;
 
     void Awake()
     {
@@ -22,7 +31,7 @@ public class VisualizationFeature : MonoBehaviour
         tooltipDisplayer = GetComponent<TooltipDisplayer>();
         meshRenderer = GetComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = new Material(material);
-        indicatorValues = new Dictionary<string, float>();
+        variableValues = new Dictionary<string, float>();
         isCreated = false;
     }
 
@@ -30,120 +39,53 @@ public class VisualizationFeature : MonoBehaviour
     {
         this.datasetName = datasetName;
 
-        foreach (string indicator in feature.Properties.Keys) {
+        foreach (string variable in feature.Properties.Keys) {
             try {
-                indicatorValues[indicator] = (float) (double) feature.Properties[indicator];
+                // A float property must first be converted to double, if not an error occurs
+                variableValues[variable] = (float) (double) feature.Properties[variable];
             } catch (System.Exception) {}
         }
-        foreach (string indicator in indicatorValues.Keys) {
-            weights[indicator] = 1;
-        }
 
-        List<Vector3> vertices = new List<Vector3>();
-        List<Vector2> uv = new List<Vector2>();
-        List<int> triangles = new List<int>();
-        int trianglesOffset = 0;
-        Vector3 lastShift = new Vector3();
-
-        GeoJSON.Net.Geometry.LineString lineString = string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.LineString") ?
-            (feature.Geometry as GeoJSON.Net.Geometry.LineString) :
-            (feature.Geometry as GeoJSON.Net.Geometry.MultiLineString).Coordinates[0]
-        ;
-
-        for (int i=0; i<lineString.Coordinates.Count-1; ++i) {
-            Vector3d currentCoordinate = new Vector3d(lineString.Coordinates[i]);
-            Vector3d nextCoordinate = new Vector3d(lineString.Coordinates[i+1]);
-
-            if (mapManager.IsCoordinateOnMap(currentCoordinate) && mapManager.IsCoordinateOnMap(nextCoordinate)) {
-                Vector3 currentPosition = mapManager.GetUnityPositionFromCoordinates(currentCoordinate, true);
-                Vector3 nextPosition = mapManager.GetUnityPositionFromCoordinates(nextCoordinate, true);
-
-                float angle = Mathf.Atan2(nextPosition.z - currentPosition.z, nextPosition.x - currentPosition.x);
-                float xShift = VISUALIZATION_BLOCK_WIDTH * Mathf.Sin(angle);
-                float zShift = VISUALIZATION_BLOCK_WIDTH * Mathf.Cos(angle);
-
-                if (i > 0) {
-                    vertices.AddRange(new List<Vector3> {
-                        currentPosition + lastShift,
-                        nextPosition + new Vector3(xShift, 0, -zShift),
-                        nextPosition + new Vector3(-xShift, 0, zShift),
-                        currentPosition - lastShift,
-
-                        currentPosition + lastShift + new Vector3(0, VISUALIZATION_BLOCK_HEIGHT, 0),
-                        nextPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
-                        nextPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
-                        currentPosition - lastShift + new Vector3(0, VISUALIZATION_BLOCK_HEIGHT, 0),
-                    });
-                } else {
-                    vertices.AddRange(new List<Vector3> {
-                        currentPosition + new Vector3(xShift, 0, -zShift),
-                        nextPosition + new Vector3(xShift, 0, -zShift),
-                        nextPosition + new Vector3(-xShift, 0, zShift),
-                        currentPosition + new Vector3(-xShift, 0, zShift),
-
-                        currentPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
-                        nextPosition + new Vector3(xShift, VISUALIZATION_BLOCK_HEIGHT, -zShift),
-                        nextPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
-                        currentPosition + new Vector3(-xShift, VISUALIZATION_BLOCK_HEIGHT, zShift),
-                    });
+        Mesh mesh = null;
+        switch (feature.Geometry)
+        {
+            case GeoJSON.Net.Geometry.Point point:
+                mesh = CreateBarMesh(new Coordinate(point.Coordinates), mapManager);
+                break;
+            case GeoJSON.Net.Geometry.MultiPoint multiPoint:
+                if (multiPoint.Coordinates.Count > 0) {
+                    mesh = CreateBarMesh(new Coordinate(multiPoint.Coordinates[0].Coordinates), mapManager);
                 }
-
-                lastShift = new Vector3(xShift, 0, -zShift);
-
-                uv.AddRange(new List<Vector2> {
-                    new Vector2 (0, 0),
-                    new Vector2 (1, 0),
-                    new Vector2 (1, 1),
-                    new Vector2 (0, 1),
-                    
-                    new Vector2 (0, 0),
-                    new Vector2 (1, 0),
-                    new Vector2 (1, 1),
-                    new Vector2 (0, 1),
-                });
-
-                triangles.AddRange(new List<int> {
-                    // bottom
-                    trianglesOffset + 0, trianglesOffset + 1, trianglesOffset + 3,
-                    trianglesOffset + 3, trianglesOffset + 1, trianglesOffset + 2,
-                    
-                    // top
-                    trianglesOffset + 4, trianglesOffset + 7, trianglesOffset + 5,
-                    trianglesOffset + 7, trianglesOffset + 6, trianglesOffset + 5,
-                    
-                    // left
-                    trianglesOffset + 4, trianglesOffset + 5, trianglesOffset + 1,
-                    trianglesOffset + 4, trianglesOffset + 1, trianglesOffset + 0,
-                    
-                    // right
-                    trianglesOffset + 6, trianglesOffset + 7, trianglesOffset + 2,
-                    trianglesOffset + 7, trianglesOffset + 3, trianglesOffset + 2,
-                    
-                    // front
-                    trianglesOffset + 7, trianglesOffset + 4, trianglesOffset + 0,
-                    trianglesOffset + 7, trianglesOffset + 0, trianglesOffset + 3,
-                    
-                    // back
-                    trianglesOffset + 5, trianglesOffset + 6, trianglesOffset + 2,
-                    trianglesOffset + 5, trianglesOffset + 2, trianglesOffset + 1
-                });
-                trianglesOffset += 8;
-            }
+                break;
+            case GeoJSON.Net.Geometry.LineString lineString:
+                mesh = CreateLineMesh(lineString.Coordinates, mapManager);
+                break;
+            case GeoJSON.Net.Geometry.MultiLineString multiLineString:
+                if (multiLineString.Coordinates.Count > 0) {
+                    mesh = CreateLineMesh(multiLineString.Coordinates[0].Coordinates, mapManager);
+                }
+                break;
+            case GeoJSON.Net.Geometry.Polygon polygon:
+                mesh = CreateBarMeshFromPolygon(polygon, mapManager);
+                break;
+            case GeoJSON.Net.Geometry.MultiPolygon multiPolygon:
+                if (multiPolygon.Coordinates.Count > 0) {
+                    mesh = CreateBarMeshFromPolygon(multiPolygon.Coordinates[0], mapManager);
+                }
+                break;
+            default:
+                break;
         }
 
-        if (vertices.Count < 1) {
-            Destroy(gameObject);
-        } else {
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices.ToArray();
-            mesh.uv = uv.ToArray();
-            mesh.triangles = triangles.ToArray();
+        isCreated = mesh != null && mesh.vertexCount > 0;
+        if (isCreated) {
             GetComponent<MeshFilter>().mesh = mesh;
             GetComponent<MeshCollider>().sharedMesh = mesh;
+            SetWeights(weights);
+        } else {
+            Destroy(gameObject);
         }
-        isCreated = vertices.Count > 0;
 
-        SetWeights(weights);
     }
 
     public bool IsCreated()
@@ -153,23 +95,18 @@ public class VisualizationFeature : MonoBehaviour
 
     public void SetWeights(Dictionary<string, float> weights)
     {
-        float weightSum = 0;
-        foreach (string indicator in weights.Keys) {
-            if (indicatorValues.ContainsKey(indicator)) {
-                weightSum += weights[indicator];
-            }
-        }
+        float weightSum = weights.Keys.Sum(variable => variableValues.ContainsKey(variable) ? weights[variable] : 0);
 
         Dictionary<string, float> weightsNormalized = new Dictionary<string, float>();
-        foreach (string indicator in weights.Keys) {
-            if (indicatorValues.ContainsKey(indicator)) {
-                weightsNormalized[indicator] = weights[indicator] / weightSum;
+        foreach (string variable in weights.Keys) {
+            if (variableValues.ContainsKey(variable)) {
+                weightsNormalized[variable] = weights[variable] / weightSum;
             }
         }
 
         float value = 0;
-        foreach (string indicator in weightsNormalized.Keys) {
-            value += weightsNormalized[indicator] * indicatorValues[indicator];
+        foreach (string variable in weightsNormalized.Keys) {
+            value += weightsNormalized[variable] * variableValues[variable];
         }
         
         tooltipDisplayer.SetText(datasetName + "\n" + value.ToString());
@@ -179,5 +116,172 @@ public class VisualizationFeature : MonoBehaviour
         value = Mathf.Min(value, 0.99f);
 
         meshRenderer.sharedMaterial.SetTextureOffset("_UnlitColorMap", new Vector2(value, 0.5f));
+
+        if (shape == Shape.Bar) {
+            transform.localScale = new Vector3(
+                transform.localScale.x,
+                value,
+                transform.localScale.z
+            );
+        }
+    }
+
+    private Mesh CreateBarMeshFromPolygon(GeoJSON.Net.Geometry.Polygon polygon, MapManager mapManager)
+    {
+        // See https://www.rfc-editor.org/rfc/rfc7946#section-3.1.6:
+        // A polygon is an array of "linear rings", the first one being
+        // the exterior ring of the polygon
+        if (polygon.Coordinates.Count > 0) {
+            Coordinate centroid = new Coordinate();
+            foreach (GeoJSON.Net.Geometry.IPosition point in polygon.Coordinates[0].Coordinates) {
+                centroid += new Coordinate(point);
+            }
+            centroid /= polygon.Coordinates[0].Coordinates.Count;
+            return CreateBarMesh(centroid, mapManager);
+        } else {
+            return null;
+        }
+    }
+
+    private Mesh CreateLineMesh(ReadOnlyCollection<GeoJSON.Net.Geometry.IPosition> coordinates, MapManager mapManager)
+    {
+        shape = Shape.Line;
+
+        List<Vector3> vertices = new List<Vector3>();
+        List<Vector2> uv = new List<Vector2>();
+        List<int> triangles = new List<int>();
+        int trianglesOffset = 0;
+        Vector3 lastShift = new Vector3();
+
+        for (int i=0; i<coordinates.Count-1; ++i) {
+            Coordinate currentCoordinate = new Coordinate(coordinates[i]);
+            Coordinate nextCoordinate = new Coordinate(coordinates[i+1]);
+
+            if (mapManager.IsCoordinateOnMap(currentCoordinate) && mapManager.IsCoordinateOnMap(nextCoordinate)) {
+                Vector3 currentPosition = mapManager.GetUnityPositionFromCoordinates(currentCoordinate, true);
+                Vector3 nextPosition = mapManager.GetUnityPositionFromCoordinates(nextCoordinate, true);
+
+                float angle = Mathf.Atan2(nextPosition.z - currentPosition.z, nextPosition.x - currentPosition.x);
+                float xShift = LINE_VISUALIZATION_WIDTH * Mathf.Sin(angle);
+                float zShift = LINE_VISUALIZATION_WIDTH * Mathf.Cos(angle);
+
+                if (i > 0) {
+                    vertices.AddRange(new List<Vector3> {
+                        currentPosition + lastShift,
+                        nextPosition + new Vector3(xShift, 0, -zShift),
+                        nextPosition + new Vector3(-xShift, 0, zShift),
+                        currentPosition - lastShift,
+
+                        currentPosition + lastShift + new Vector3(0, LINE_VISUALIZATION_HEIGHT, 0),
+                        nextPosition + new Vector3(xShift, LINE_VISUALIZATION_HEIGHT, -zShift),
+                        nextPosition + new Vector3(-xShift, LINE_VISUALIZATION_HEIGHT, zShift),
+                        currentPosition - lastShift + new Vector3(0, LINE_VISUALIZATION_HEIGHT, 0),
+                    });
+                } else {
+                    vertices.AddRange(new List<Vector3> {
+                        currentPosition + new Vector3(xShift, 0, -zShift),
+                        nextPosition + new Vector3(xShift, 0, -zShift),
+                        nextPosition + new Vector3(-xShift, 0, zShift),
+                        currentPosition + new Vector3(-xShift, 0, zShift),
+
+                        currentPosition + new Vector3(xShift, LINE_VISUALIZATION_HEIGHT, -zShift),
+                        nextPosition + new Vector3(xShift, LINE_VISUALIZATION_HEIGHT, -zShift),
+                        nextPosition + new Vector3(-xShift, LINE_VISUALIZATION_HEIGHT, zShift),
+                        currentPosition + new Vector3(-xShift, LINE_VISUALIZATION_HEIGHT, zShift),
+                    });
+                }
+                lastShift = new Vector3(xShift, 0, -zShift);
+
+                uv.AddRange(CreateCubeUVs());
+                triangles.AddRange(CreateCubeTriangles(trianglesOffset));
+                trianglesOffset += 8;
+            }
+        }
+
+        Mesh mesh = new Mesh();
+        mesh.vertices = vertices.ToArray();
+        mesh.uv = uv.ToArray();
+        mesh.triangles = triangles.ToArray();
+
+        return mesh;
+    }
+
+    private Mesh CreateBarMesh(Coordinate coordinate, MapManager mapManager)
+    {
+        shape = Shape.Bar;
+
+        List<Vector3> vertices = new List<Vector3>();
+        List<Vector2> uv = new List<Vector2>();
+        List<int> triangles = new List<int>();
+
+        if (mapManager.IsCoordinateOnMap(coordinate)) {
+            transform.position = mapManager.GetUnityPositionFromCoordinates(coordinate, true);
+
+            vertices.AddRange(new List<Vector3> {
+                new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),
+                new Vector3(BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),
+                new Vector3(BAR_VISUALIZATION_WIDTH/2, 0, BAR_VISUALIZATION_WIDTH/2),
+                new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, BAR_VISUALIZATION_WIDTH/2),
+
+                new Vector3(-BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, -BAR_VISUALIZATION_WIDTH/2),
+                new Vector3(BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, -BAR_VISUALIZATION_WIDTH/2),
+                new Vector3(BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, BAR_VISUALIZATION_WIDTH/2),
+                 new Vector3(-BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, BAR_VISUALIZATION_WIDTH/2)
+            });
+
+            uv.AddRange(CreateCubeUVs());
+            triangles.AddRange(CreateCubeTriangles(0));
+        }
+
+        Mesh mesh = new Mesh();
+        mesh.vertices = vertices.ToArray();
+        mesh.uv = uv.ToArray();
+        mesh.triangles = triangles.ToArray();
+
+        return mesh;
+    }
+
+    private List<Vector2> CreateCubeUVs()
+    {
+        return new List<Vector2> {
+            new Vector2 (0, 0),
+            new Vector2 (1, 0),
+            new Vector2 (1, 1),
+            new Vector2 (0, 1),
+            
+            new Vector2 (0, 0),
+            new Vector2 (1, 0),
+            new Vector2 (1, 1),
+            new Vector2 (0, 1),
+        };
+    }
+
+    private List<int> CreateCubeTriangles(int offset)
+    {
+        return new List<int> {
+            // bottom
+            offset + 0, offset + 1, offset + 3,
+            offset + 3, offset + 1, offset + 2,
+            
+            // top
+            offset + 4, offset + 7, offset + 5,
+            offset + 7, offset + 6, offset + 5,
+            
+            // left
+            offset + 4, offset + 5, offset + 1,
+            offset + 4, offset + 1, offset + 0,
+            
+            // right
+            offset + 6, offset + 7, offset + 2,
+            offset + 7, offset + 3, offset + 2,
+            
+            // front
+            offset + 7, offset + 4, offset + 0,
+            offset + 7, offset + 0, offset + 3,
+            
+            // back
+            offset + 5, offset + 6, offset + 2,
+            offset + 5, offset + 2, offset + 1
+        };
     }
 }

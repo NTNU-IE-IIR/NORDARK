@@ -12,6 +12,7 @@ public class SceneCamerasManager : MonoBehaviour
     [SerializeField] private VegetationManager vegetationManager;
     [SerializeField] private LuminanceMapManager luminanceMapManager;
     [SerializeField] private Transform additionalSceneCamerasContainer;
+    [SerializeField] private Minimap minimap;
     private Camera mainCamera;
     private CameraMovement cameraMovement;
     private Rect viewportRect;
@@ -24,12 +25,15 @@ public class SceneCamerasManager : MonoBehaviour
         Assert.IsNotNull(vegetationManager);
         Assert.IsNotNull(luminanceMapManager);
         Assert.IsNotNull(additionalSceneCamerasContainer);
+        Assert.IsNotNull(minimap);
 
         mainCamera = GetComponent<Camera>();
         cameraMovement = GetComponent<CameraMovement>();
         viewportRect = mainCamera.rect;
+
+        // OnBeginCameraRendering is called before each camera render
         RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-    }
+    }    
 
     void OnDestroy()
     {
@@ -134,12 +138,13 @@ public class SceneCamerasManager : MonoBehaviour
             // See LuminanceCamera.Create() for an explanation of the parameters
             luminanceMapCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
             
+            // To make the camera affected by the LuminanceMapManager/LuminancePassAndVolume object
             luminanceMapHDCamera.volumeLayerMask = 1 << 0 | 1 << LuminanceMapManager.LUMINANCE_IN_LUMINANCE_MAP_LAYER;
-
             luminanceMapManager.AddCameraToLuminancePass(luminanceMapCamera);
         }
     }
 
+    // To be used instead of the Unity Camera.ScreenPointToRay() function
     public Ray ScreenPointToRay(Vector3 position)
     {
         Camera camera = GetCameraPointedByPosition(position);
@@ -150,6 +155,7 @@ public class SceneCamerasManager : MonoBehaviour
         }
     }
 
+    // To be used instead of the Unity Camera.ScreenToWorldPoint() function
     public Vector3 ScreenToWorldPoint(Vector3 position)
     {
         Camera camera = GetCameraPointedByPosition(position);
@@ -178,11 +184,11 @@ public class SceneCamerasManager : MonoBehaviour
             pixelTexture.ReadPixels(new Rect(
                 Mathf.Min(
                     Mathf.Max(Input.mousePosition.x - numberOfPixelsAroundCenter/2, viewportRect.xMin * Screen.width),
-                    viewportRect.xMax * Screen.width - numberOfPixelsAroundCenter
+                    viewportRect.xMax * Screen.width - numberOfPixelsAroundCenter - 1
                 ),
                 Mathf.Min(
                     Mathf.Max(Screen.height - Input.mousePosition.y - numberOfPixelsAroundCenter/2, viewportRect.yMin * Screen.height),
-                    viewportRect.yMax * Screen.height - numberOfPixelsAroundCenter
+                    viewportRect.yMax * Screen.height - numberOfPixelsAroundCenter - 1
                 ),
                 numberOfPixelsAroundCenter+1,
                 numberOfPixelsAroundCenter+1
@@ -198,6 +204,26 @@ public class SceneCamerasManager : MonoBehaviour
         }
     }
 
+    public void SetPosition(Vector3 position)
+    {
+        transform.position = position;
+    }
+
+    public Vector3 GetPosition()
+    {
+        return transform.position;
+    }
+
+    public void SetEulerAngles(Vector3 eulerAngles)
+    {
+        transform.eulerAngles = eulerAngles;
+    }
+
+    public Vector3 GetEulerAngles()
+    {
+        return transform.eulerAngles;
+    }
+
     private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
     {
         if (numberOfScreens > 1 && camera == mainCamera) {
@@ -207,7 +233,7 @@ public class SceneCamerasManager : MonoBehaviour
 
     private void ShowOnlyMainCameraLights()
     {
-        List<LightPole> mainCameraLights = lightPolesManager.GetLights();
+        List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
 
         foreach (LightPole lightPole in mainCameraLights) {
             lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
@@ -216,6 +242,7 @@ public class SceneCamerasManager : MonoBehaviour
 
     private SceneCamera CreateSceneCamera(Transform parent)
     {
+        // Duplicate MainCamera and remove unused components
         GameObject sceneCameraObject = Instantiate(gameObject, parent);
         sceneCameraObject.transform.localPosition = new Vector3();
         sceneCameraObject.transform.localRotation = Quaternion.identity;

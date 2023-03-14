@@ -2,6 +2,7 @@ Shader "FullScreen/LuminanceMapCustomPass"
 {
     HLSLINCLUDE
 
+    // Parameters set from script
     int numberOfColors;
     float4 colors[50];
     float values[50];
@@ -21,17 +22,18 @@ Shader "FullScreen/LuminanceMapCustomPass"
         if (_CustomPassInjectionPoint != CUSTOMPASSINJECTIONPOINT_BEFORE_RENDERING)
             color = float4(CustomPassLoadCameraColor(varyings.positionCS.xy, 0), 1);
 
-        float lum = Luminance(color) / GetCurrentExposureMultiplier();
+        float luminance = Luminance(color) / GetCurrentExposureMultiplier();
 
+        // Find highest i such that luminance < values[i]
         int i;
         if (values[0] < values[1]) {
             i = 0;
-            while (i < numberOfColors-1 && lum > values[i]) {
+            while (i < numberOfColors-1 && luminance > values[i]) {
                 i++;
             }
         } else {
             i = numberOfColors-1;
-            while (i > 0 && lum > values[i]) {
+            while (i > 0 && luminance > values[i]) {
                 i--;
             }
         }

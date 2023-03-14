@@ -9,7 +9,6 @@ public class MapControl : MonoBehaviour
     [SerializeField] private TMP_Dropdown mapStyle;
     [SerializeField] private Toggle mapElevation;
     [SerializeField] private Toggle mapBuildings;
-    [SerializeField] private Toggle mapRoads;
 
     void Awake()
     {
@@ -17,7 +16,6 @@ public class MapControl : MonoBehaviour
         Assert.IsNotNull(mapStyle);
         Assert.IsNotNull(mapElevation);
         Assert.IsNotNull(mapBuildings);
-        Assert.IsNotNull(mapRoads);
     }
 
     void Start()
@@ -25,16 +23,10 @@ public class MapControl : MonoBehaviour
         mapStyle.onValueChanged.AddListener(mapManager.SetStyle);
         mapElevation.onValueChanged.AddListener(mapManager.SetElevationType);
         mapBuildings.onValueChanged.AddListener(mapManager.DisplayBuildings);
-        mapRoads.onValueChanged.AddListener(mapManager.DisplayRoads);
     }
 
     public bool IsBuildingLayerActive()
     {
         return mapBuildings.isOn;
-    }
-
-    public bool IsRoadLayerActive()
-    {
-        return mapRoads.isOn;
     }
 }

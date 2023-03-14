@@ -11,13 +11,27 @@ public class Dataset
         FeatureCollection = featureCollection;
         VisualizationFeatures = new List<VisualizationFeature>();
 
-        Weights = new Dictionary<string, float>();
+        // Only add a variable if all values are between 0 and 1
+        HashSet<string> potentiallyValidVariables = new HashSet<string>();
+        HashSet<string> nonValidVariables = new HashSet<string>();
         foreach (GeoJSON.Net.Feature.Feature feature in FeatureCollection.Features) {
-            foreach (KeyValuePair<string, object> property in feature.Properties) {
+            foreach (string property in feature.Properties.Keys) {
+                // An exception is thrown if the property is not a double
                 try {
-                    double indicator = (double) property.Value;
-                    Weights[property.Key] = 1;
+                    double propertyValue = (double) feature.Properties[property];
+                    if (propertyValue >= 0 && propertyValue <= 1) {
+                        potentiallyValidVariables.Add(property);
+                    } else {
+                        nonValidVariables.Add(property);
+                    }
                 } catch (System.Exception) {}
+            }
+        }
+        
+        Weights = new Dictionary<string, float>();
+        foreach (string variable in potentiallyValidVariables) {
+            if (!nonValidVariables.Contains(variable)) {
+                Weights.Add(variable, 1);
             }
         }
     }
