@@ -6,7 +6,9 @@ using TMPro;
 public class ObjectVisualizationControl : MonoBehaviour
 {
     [SerializeField] private GameObject computationObjectGameObject;
-    [SerializeField] private Button createMeasureObject;
+    [SerializeField] private GameObject measureParametersWindow;
+    [SerializeField] private Button createMeasureObjectManually;
+    [SerializeField] private Button createMeasureObjectWithParameters;
     [SerializeField] private Button importResults;
     [SerializeField] private Button exportResultsGeoJSON;
     [SerializeField] private Button exportResultsCSV;
@@ -22,7 +24,7 @@ public class ObjectVisualizationControl : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(computationObjectGameObject);
-        Assert.IsNotNull(createMeasureObject);
+        Assert.IsNotNull(createMeasureObjectManually);
         Assert.IsNotNull(exportResultsGeoJSON);
         Assert.IsNotNull(exportResultsCSV);
         Assert.IsNotNull(minValue);
@@ -35,7 +37,13 @@ public class ObjectVisualizationControl : MonoBehaviour
 
     void Start()
     {
-        createMeasureObject.onClick.AddListener(computationObject.Draw);
+        createMeasureObjectManually.onClick.AddListener(computationObject.Draw);
+
+        if (createMeasureObjectWithParameters != null) {
+            createMeasureObjectWithParameters.onClick.AddListener(() => {
+                measureParametersWindow.SetActive(true);
+            });
+        }
 
         if (importResults != null) {
             importResults.onClick.AddListener(computationObject.ImportResults);
@@ -66,6 +74,11 @@ public class ObjectVisualizationControl : MonoBehaviour
     public int GetResolution()
     {
         return System.Int32.Parse(resolution.text);
+    }
+
+    public void SetResolution(int newResolution)
+    {
+        resolution.text = newResolution.ToString();
     }
 
     public bool isMinAuto()

@@ -5,29 +5,29 @@ using TMPro;
 public class UIController : MonoBehaviour
 {
     [SerializeField] private ToolBarTabsControl toolBarTabsControl;
-    [SerializeField] private VegetationControl vegetationControl;
+    [SerializeField] private BiomeAreasControl biomeAreasControl;
     [SerializeField] private SkyControl skyControl;
-    [SerializeField] private GameObject loadingPanel;
     [SerializeField] private TMP_Text version;
+    [SerializeField] private GameObject loadingPanel;
 
     void Awake()
     {
         Assert.IsNotNull(toolBarTabsControl);
-        Assert.IsNotNull(vegetationControl);
+        Assert.IsNotNull(biomeAreasControl);
         Assert.IsNotNull(skyControl);
         Assert.IsNotNull(version);
+        Assert.IsNotNull(loadingPanel);
     }
 
     public void SetUpUI()
     {
         version.text = Application.version;
         toolBarTabsControl.ActivateDefaultTab();
-        vegetationControl.SetUpUI();
+        biomeAreasControl.SetUpUI();
         skyControl.SetUpUI();
-        DisplayLoadingScreen(true);
     }
 
-    public void DisplayLoadingScreen(bool display)
+    public void DisplayLoadingPanel(bool display)
     {
         loadingPanel.SetActive(display);
     }

@@ -16,7 +16,7 @@ public class SelectionPin : MonoBehaviour
             bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
             Ray ray = sceneCamerasManager.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit = new RaycastHit();
-            if (!isOverUI && Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+            if (!isOverUI && Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << TerrainManager.TERRAIN_LAYER)) {
                 transform.position = hit.point;
             }
         }

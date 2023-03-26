@@ -3,10 +3,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class LightPolesManager : MonoBehaviour, IObjectsManager
+public class LightPolesManager : ObjectsManager
 {
     [SerializeField] private LightPolesGroupsManager lightPolesGroupsManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private IESManager iesManager;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private LightPolesControl lightPolesControl;
@@ -19,8 +19,9 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
 
     void Awake()
     {
+        Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(lightPolesGroupsManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(iesManager);
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(lightPolesControl);
@@ -37,67 +38,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public void Create(GeoJSON.Net.Feature.Feature feature)
-    {
-        Create(feature, 0);
-    }
-
-    public void Clear()
-    {
-        ClearSelectedLightPoles();
-
-        foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.Destroy();
-        }
-        lightPoles.Clear();
-        lightPolesGroupsManager.Clear();
-    }
-
-    public void OnLocationChanged()
-    {
-        foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.SetPosition(mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinate, true));
-            lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinate));
-        }
-
-        foreach (var item in selectedLightPoles) {
-            item.Item2.SetPosition(item.Item1.Light.transform.position);
-        }
-    }
-
-    public List<GeoJSON.Net.Feature.Feature> GetFeatures()
-    {
-        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
-
-        foreach (LightPole lightPole in lightPoles) {
-            // Only save light poles of the main configuration
-            if (lightPole.ConfigurationIndex == 0) {
-                GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
-                    lightPole.Coordinate.latitude,
-                    lightPole.Coordinate.longitude,
-                    lightPole.Coordinate.altitude
-                ));
-                
-                Vector3 eulerAngles = lightPole.Light.transform.eulerAngles;
-                
-                Dictionary<string, object> properties = new Dictionary<string, object>() {
-                    {"type", "light"},
-                    {"name", lightPole.Name},
-                    {"eulerAngles", new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z}},
-                    {"IESfileName", lightPole.Light.GetIESLight().Name},
-                    {"prefabName", lightPole.PrefabName},
-                    {"height", lightPole.Light.GetHeight()},
-                    {"groups", lightPole.Groups}
-                };
-
-                features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
-            }            
-        }
-
-        return features;
-    }
-
-    public void Create(GeoJSON.Net.Feature.Feature feature, int configurationIndex)
+    public void Create(GeoJSON.Net.Feature.Feature feature, int configurationIndex, Location location)
     {
         GeoJSON.Net.Geometry.Point point = null;
         if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
@@ -125,6 +66,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
 
             LightPole lightPole = new LightPole(
                 new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude, altitude),
+                location,
                 configurationIndex,
                 newGroups
             );
@@ -160,44 +102,82 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public void AddLightPolesFromFile()
+    public void AddLightPolesFromGeoJSONFile()
     {
-        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
-        foreach (string path in paths) {
-            string message = "";
+        Location currentLocation = locationsManager.GetCurrentLocation();
+        if (currentLocation != null) {
+            string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "geojson", true);
+            foreach (string path in paths) {
+                string message = "";
 
-            try {
-                GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
+                try {
+                    GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
 
-                bool atLeastOneValidFeature = false;
+                    bool atLeastOneValidFeature = false;
 
-                foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
-                    // Only Point or MultiPoint are supported
-                    GeoJSON.Net.Geometry.Point point = null;
-                    if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
-                        point = feature.Geometry as GeoJSON.Net.Geometry.Point;
-                    } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiPoint")) {
-                        point = (feature.Geometry as GeoJSON.Net.Geometry.MultiPoint).Coordinates[0];
+                    foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
+                        // Only Point or MultiPoint are supported
+                        GeoJSON.Net.Geometry.Point point = null;
+                        if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.Point")) {
+                            point = feature.Geometry as GeoJSON.Net.Geometry.Point;
+                        } else if (string.Equals(feature.Geometry.GetType().FullName, "GeoJSON.Net.Geometry.MultiPoint")) {
+                            point = (feature.Geometry as GeoJSON.Net.Geometry.MultiPoint).Coordinates[0];
+                        }
+                        feature.Properties.Add("location", currentLocation.Name);
+
+                        if (point != null && Utils.IsEPSG4326(point.Coordinates)) {
+                            atLeastOneValidFeature = true;
+                            Create(feature);
+                        }
                     }
 
-                    if (point != null && Utils.IsEPSG4326(point.Coordinates)) {
-                        atLeastOneValidFeature = true;
-                        Create(feature);
+                    if (atLeastOneValidFeature) {
+                        message = "Lights from " + path + " added.";
+                    } else {
+                        message = "Lights from " + path + " not added.";
+                        message += "The GeoJSON file should be made of Point or MultiPoint.\n";
+                        message += "The EPSG:4326 coordinate system should be used (longitude from -180° to 180° / latitude from -90° to 90°).";
                     }
+                } catch (System.Exception e) {
+                    message = e.Message;
                 }
-
-                if (atLeastOneValidFeature) {
-                    message = "Lights added.";
-                } else {
-                    message = "Lights not added.\n";
-                    message += "The GeoJSON file should be made of Point or MultiPoint.\n";
-                    message += "The EPSG:4326 coordinate system should be used (longitude from -180° to 180° / latitude from -90° to 90°).";
-                }
-            } catch (System.Exception e) {
-                message = e.Message;
+                
+                DialogControl.CreateDialog(message);
             }
-            
-            DialogControl.CreateDialog(message);
+        }
+    }
+
+    public void AddLightPolesFromCSVFile()
+    {
+        Location currentLocation = locationsManager.GetCurrentLocation();
+        if (currentLocation != null) {
+            string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Insert lights to the scene", "", "csv", true);
+            foreach (string path in paths) {
+                string message;
+
+                string[] lines = System.IO.File.ReadAllLines(path);
+                try {
+                    for (int i=1; i<lines.Length; ++i) {
+                        string[] values = lines[i].Split(',');
+                        GeoJSON.Net.Geometry.Point point = new GeoJSON.Net.Geometry.Point(
+                            new GeoJSON.Net.Geometry.Position(float.Parse(values[0]), float.Parse(values[1]))
+                        );
+                        Create(new GeoJSON.Net.Feature.Feature(
+                            new GeoJSON.Net.Geometry.Point(
+                                new GeoJSON.Net.Geometry.Position(float.Parse(values[0]), float.Parse(values[1]))
+                            ), new Dictionary<string, object>() {
+                                {"type", "light"},
+                                {"location", currentLocation.Name}
+                            }
+                        ));
+                    }
+                    message = "Lights from " + path + " added.";
+                } catch (System.Exception e) {
+                    message = e.Message;
+                }
+                
+                DialogControl.CreateDialog(message);
+            }
         }
     }
 
@@ -205,7 +185,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
     {
         foreach (LightPole lightPole in lightPoles) {
             if (lightPole.ConfigurationIndex == configurationIndex) {
-                lightPole.Light.Destroy();
+                lightPole.GameObject.Destroy();
             }
         }
 
@@ -216,49 +196,66 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         }
     }
 
-    public bool AddLightPrefabToSelectedLightPoles(LightPrefab lightPrefab, bool addToSelected)
+    public void AddLightPrefabToSelectedLightPoles(LightPrefab lightPrefab, bool addToSelected)
     {
         if (lightPrefab != null) {
             foreach (LightPole lightPole in lightPoles) {
-                if (lightPole.Light == lightPrefab && lightPole.ConfigurationIndex == 0) {
+                if (lightPole.GameObject == lightPrefab && lightPole.ConfigurationIndex == 0) {
                     AddLightPoleToSelected(lightPole, addToSelected);
-                    return true;
                 }
             }
         }
-        return false;
     }
 
-    public void SelectLightPolePointerByCursor(bool addToSelected)
+    public void StopLightPolesMovement()
     {
-        bool lightPoleSelected = false;
+        foreach (var item in selectedLightPoles) {
+            item.Item1.Coordinate = terrainManager.GetCoordinatesFromUnityPosition(item.Item1.GameObject.transform.position);
+            item.Item1.GameObject.SetMoving(false);
+            item.Item2.SetMoving(false);
+        }
+    }
 
+    public LightPole GetLightPolePointedByCursor()
+    {
         RaycastHit hitInfo = new RaycastHit();
         bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
         if (!isOverUI && Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hitInfo)) {
-            lightPoleSelected = lightPoleSelected || AddLightPrefabToSelectedLightPoles(
+            LightPrefab lightPrefab = hitInfo.transform.gameObject.GetComponent<LightPrefab>();
+            if (lightPrefab != null) {
+                foreach (LightPole lightPole in lightPoles) {
+                    if (lightPole.GameObject == lightPrefab && lightPole.ConfigurationIndex == 0) {
+                        return lightPole;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void SelectLightPolePointedByCursor(bool addToSelected)
+    {
+        RaycastHit hitInfo = new RaycastHit();
+        bool isOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+        if (!isOverUI && Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hitInfo)) {
+            AddLightPrefabToSelectedLightPoles(
                 hitInfo.transform.gameObject.GetComponent<LightPrefab>(),
                 addToSelected
             );
-        }
-
-        if (!lightPoleSelected) {
-            foreach (var item in selectedLightPoles) {
-                item.Item1.Light.SetMoving(false);
-                item.Item2.SetMoving(false);
-            }
         }
     }
 
     public void SelectLightPolesWithinPositions(Vector3 positionA, Vector3 positionB)
     {
+        ClearSelectedObjects();
+
         int xMin = (int) (positionA.x < positionB.x ? positionA.x : positionB.x);
         int xMax = (int) (positionA.x < positionB.x ? positionB.x : positionA.x);
         int zMin = (int) (positionA.z < positionB.z ? positionA.z : positionB.z);
         int zMax = (int) (positionA.z < positionB.z ? positionB.z : positionA.z);
 
         foreach (LightPole lightPole in lightPoles) {
-            Vector3 position = lightPole.Light.transform.position;
+            Vector3 position = lightPole.GameObject.transform.position;
 
             if (position.x > xMin && position.x < xMax && position.z > zMin && position.z < zMax) {
                 AddLightPoleToSelected(lightPole);
@@ -276,14 +273,14 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
     public void ChangeSelectedLightPolesHeight(float height)
     {
         foreach (var item in selectedLightPoles) {
-            item.Item1.Light.SetHeight(height);
+            item.Item1.GameObject.SetHeight(height);
         }
     }
 
-    public void RotateSelectedLightPoles(float rotation)
+    public void RotateSelectedObjects(float rotation)
     {
         foreach (var item in selectedLightPoles) {
-            item.Item1.Light.Rotate(rotation);
+            item.Item1.GameObject.Rotate(rotation);
         }
     }
 
@@ -308,7 +305,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         IESLight iesLight = iesManager.GetIESLightFromName(iesFile);
         if (iesLight != null) {
             foreach (var item in selectedLightPoles) {
-                item.Item1.Light.SetIESLight(iesLight);
+                item.Item1.GameObject.SetIESLight(iesLight);
             }
         }
     }
@@ -316,11 +313,11 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
     public void Change3DModelOfSelectedLightPoles(string model)
     {
         foreach (var item in selectedLightPoles) {
-            float height = item.Item1.Light.GetHeight();
-            Vector3 eulerAngles = item.Item1.Light.transform.eulerAngles;
-            IESLight iesLight = item.Item1.Light.GetIESLight();
+            float height = item.Item1.GameObject.GetHeight();
+            Vector3 eulerAngles = item.Item1.GameObject.transform.eulerAngles;
+            IESLight iesLight = item.Item1.GameObject.GetIESLight();
 
-            item.Item1.Light.Destroy();
+            item.Item1.GameObject.Destroy();
             item.Item1.PrefabName = model;
 
             CreateLightPrefab(item.Item1, height, eulerAngles, iesLight);
@@ -329,50 +326,51 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
 
     public void AddLightPole()
     {
-        LightPole lightPole = new LightPole();
+        LightPole lightPole = new LightPole(locationsManager.GetCurrentLocation());
         CreateLight(lightPole, LightPrefab.DEFAULT_HEIGHT, new Vector3(0, 0), "");
-        AddLightPoleToSelected(lightPole);
-        MoveSelectedLightPoles();
+        AddLightPoleToSelected(lightPole, false);
+        MoveSelectedObjects();
     }
 
-    public void MoveSelectedLightPoles()
+    public void MoveSelectedObjects()
     {
         foreach (var item in selectedLightPoles) {
-            item.Item1.Light.SetMoving(!item.Item1.Light.IsMoving());
-            item.Item2.SetMoving(item.Item1.Light.IsMoving());
+            item.Item1.GameObject.Show(true);
+            item.Item1.GameObject.SetMoving(true);
+            item.Item2.SetMoving(true);
         }
     }
 
-    public void DeleteSelectedLightPoles()
+    public void DeleteSelectedObjects()
     {
         foreach (var item in selectedLightPoles) {
-            item.Item1.Light.Destroy();
+            item.Item1.GameObject.Destroy();
             lightPoles.Remove(item.Item1);
         }
 
         lightPolesGroupsManager.SetGroupsFromLightPoles(lightPoles);
-        ClearSelectedLightPoles();
+        ClearSelectedObjects();
     }
 
     public void HighlightLights(bool hightlight)
     {
         foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.Highlight(hightlight, highlightMaterial);
+            lightPole.GameObject.Highlight(hightlight, highlightMaterial);
         }
     }
 
-    public void ShowLightPoles(bool show)
+    public void ShowObjects(bool show)
     {
         foreach (LightPole lightPole in lightPoles) {
-            lightPole.Light.Show(show && mapManager.IsCoordinateOnMap(lightPole.Coordinate));
+            lightPole.GameObject.Show(show && terrainManager.IsCoordinateOnMap(lightPole.Coordinate));
         }
     }
 
-    public void ClearSelectedLightPoles()
+    public void ClearSelectedObjects()
     {
+        StopLightPolesMovement();
+        
         foreach (var item in selectedLightPoles) {
-            item.Item1.Coordinate = mapManager.GetCoordinatesFromUnityPosition(item.Item1.Light.transform.position);
-            item.Item1.Light.SetMoving(false);
             Destroy(item.Item2.gameObject);
         }
         selectedLightPoles.Clear();
@@ -381,7 +379,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
 
     public void SelectFromGroup(string group)
     {
-        ClearSelectedLightPoles();
+        ClearSelectedObjects();
 
         foreach (LightPole lightPole in lightPoles) {
             if (lightPole.Groups.Contains(group)) {
@@ -392,7 +390,7 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
         lightPolesControl.SetCurrentGroup(group);
     }
 
-    public List<string> GetLightPrefabNames()
+    public List<string> GetObjectPrefabNames()
     {
         return lightPrefabNames;
     }
@@ -400,6 +398,58 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
     public List<LightPole> GetLightPoles()
     {
         return lightPoles;
+    }
+
+    protected override void CreateObject(GeoJSON.Net.Feature.Feature feature, Location location)
+    {
+        Create(feature, 0, location);
+    }
+
+    protected override void ClearActiveObjects()
+    {
+        ClearSelectedObjects();
+
+        foreach (LightPole lightPole in lightPoles) {
+            lightPole.GameObject.Destroy();
+        }
+        lightPoles.Clear();
+        lightPolesGroupsManager.Clear();
+    }
+
+    protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()
+    {
+        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
+
+        foreach (LightPole lightPole in lightPoles) {
+            if (lightPole.Location != null) {
+
+                // Only save light poles of the main configuration
+                if (lightPole.ConfigurationIndex == 0) {
+                    GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
+                        lightPole.Coordinate.latitude,
+                        lightPole.Coordinate.longitude,
+                        lightPole.Coordinate.altitude
+                    ));
+                    
+                    Vector3 eulerAngles = lightPole.GameObject.transform.eulerAngles;
+                    
+                    Dictionary<string, object> properties = new Dictionary<string, object>() {
+                        {"type", "light"},
+                        {"location", lightPole.Location.Name},
+                        {"name", lightPole.Name},
+                        {"eulerAngles", Newtonsoft.Json.Linq.JArray.FromObject(new List<float>{eulerAngles.x, eulerAngles.y, eulerAngles.z})},
+                        {"IESfileName", lightPole.GameObject.GetIESLight().Name},
+                        {"prefabName", lightPole.PrefabName},
+                        {"height", lightPole.GameObject.GetHeight()},
+                        {"groups", Newtonsoft.Json.Linq.JArray.FromObject(lightPole.Groups)}
+                    };
+
+                    features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
+                }
+            }
+        }
+
+        return features;
     }
 
     private void CreateLight(LightPole lightPole, float height, Vector3 eulerAngles, string IESName)
@@ -419,21 +469,16 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
 
     private void AddLightPoleToSelected(LightPole lightPole, bool addToSelected = true)
     {
-        if (selectedLightPoles.Select(item => item.Item1).Contains(lightPole)) {
-            lightPole.Light.SetMoving(false);
-            selectedLightPoles.Find(item => item.Item1 == lightPole).Item2.SetMoving(false);
-        } else {
-            if (!addToSelected) {
-                ClearSelectedLightPoles();
-            }
-
-            SelectionPin selectionPin = Instantiate(selectionPinPrefab, transform).GetComponent<SelectionPin>();
-            selectionPin.Create(sceneCamerasManager);
-            selectionPin.SetPosition(lightPole.Light.transform.position);
-            selectedLightPoles.Add((lightPole, selectionPin));
-
-            lightPolesControl.LightSelected(lightPole, selectedLightPoles.Count > 1);
+        if (!addToSelected) {
+            ClearSelectedObjects();
         }
+
+        SelectionPin selectionPin = Instantiate(selectionPinPrefab, transform).GetComponent<SelectionPin>();
+        selectionPin.Create(sceneCamerasManager);
+        selectionPin.SetPosition(lightPole.GameObject.transform.position);
+        selectedLightPoles.Add((lightPole, selectionPin));
+
+        lightPolesControl.LightSelected(lightPole, selectedLightPoles.Count > 1);
     }
 
     private void CreateLightPrefab(LightPole lightPole, float height, Vector3 eulerAngles, IESLight iESLight)
@@ -448,18 +493,18 @@ public class LightPolesManager : MonoBehaviour, IObjectsManager
             lightPrefab = lightPolePrefabs[0];
         }
 
-        lightPole.Light = Instantiate(
+        lightPole.GameObject = Instantiate(
             lightPrefab,
-            mapManager.GetUnityPositionFromCoordinates(lightPole.Coordinate, true),
+            terrainManager.GetUnityPositionFromCoordinates(lightPole.Coordinate, true),
             Quaternion.Euler(eulerAngles),
             transform
         ).GetComponent<LightPrefab>();
 
-        lightPole.Light.Create(sceneCamerasManager);
-        lightPole.Light.SetIESLight(iESLight);
-        lightPole.Light.SetHeight(height);
-        lightPole.Light.Highlight(lightPolesControl.IsHighlighted(), highlightMaterial);
-        lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
-        lightPole.Light.Show(mapManager.IsCoordinateOnMap(lightPole.Coordinate));
+        lightPole.GameObject.Create(sceneCamerasManager);
+        lightPole.GameObject.SetIESLight(iESLight);
+        lightPole.GameObject.SetHeight(height);
+        lightPole.GameObject.Highlight(lightPolesControl.IsHighlighted(), highlightMaterial);
+        lightPole.GameObject.ShowLight(lightPole.ConfigurationIndex == 0);
+        lightPole.GameObject.Show(terrainManager.IsCoordinateOnMap(lightPole.Coordinate));
     }
 }

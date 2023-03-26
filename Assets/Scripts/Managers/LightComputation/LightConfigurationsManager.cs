@@ -6,12 +6,14 @@ public class LightConfigurationsManager : MonoBehaviour
     [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private ConfigurationsControl configurationsControl;
+    [SerializeField] private LocationsManager locationsManager;
 
     void Awake()
     {
         Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(configurationsControl);
+        Assert.IsNotNull(locationsManager);
     }
 
     public void ResetConfigurations()
@@ -29,7 +31,7 @@ public class LightConfigurationsManager : MonoBehaviour
         GeoJSON.Net.Feature.FeatureCollection featureCollection = GeoJSONParser.FileToFeatureCollection(path);
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             if (feature.Properties.ContainsKey("type") && string.Equals(feature.Properties["type"] as string, "light")) {
-                lightPolesManager.Create(feature, configurationIndex);
+                lightPolesManager.Create(feature, configurationIndex, locationsManager.GetCurrentLocation());
             }
         }
     }

@@ -6,12 +6,14 @@ public class BiomeArea
     public string Name;
     public List<Coordinate> Coordinates;
     public AwesomeTechnologies.VegetationSystem.Biomes.BiomeMaskArea BiomeMaskArea;
+    public Location Location;
 
-    public BiomeArea()
+    public BiomeArea(Location location)
     {
         Biome = "";
         Name = "";
         Coordinates = new List<Coordinate>();
         BiomeMaskArea = null;
+        Location = location;
     }
 }

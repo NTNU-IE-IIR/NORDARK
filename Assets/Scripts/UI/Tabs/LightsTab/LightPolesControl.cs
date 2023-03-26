@@ -66,7 +66,7 @@ public class LightPolesControl : MonoBehaviour
         });
 
         rotation.onValueChanged.AddListener(value => {
-            lightPolesManager.RotateSelectedLightPoles(value);
+            lightPolesManager.RotateSelectedObjects(value);
             SetRotation(value);
         });
 
@@ -108,30 +108,31 @@ public class LightPolesControl : MonoBehaviour
             lightPolesManager.ChangeIESFileOfSelectedLightPoles(lightIESFile.options[value].text);
         });
 
-        light3DModel.AddOptions(lightPolesManager.GetLightPrefabNames());
+        light3DModel.AddOptions(lightPolesManager.GetObjectPrefabNames());
         light3DModel.onValueChanged.AddListener(value => {
             lightPolesManager.Change3DModelOfSelectedLightPoles(light3DModel.options[value].text);
         });
 
         select.onClick.AddListener(lightPolesSelectionManager.StartDrawing);
         add.onClick.AddListener(lightPolesManager.AddLightPole);
-        move.onClick.AddListener(lightPolesManager.MoveSelectedLightPoles);
+        move.onClick.AddListener(lightPolesManager.MoveSelectedObjects);
         delete.onClick.AddListener(() => {
-            lightPolesManager.DeleteSelectedLightPoles();
+            lightPolesManager.DeleteSelectedObjects();
             EventSystem.current.SetSelectedGameObject(null);
         });
 
         highlight.onValueChanged.AddListener(lightPolesManager.HighlightLights);
-        display.onValueChanged.AddListener(lightPolesManager.ShowLightPoles);
+        display.onValueChanged.AddListener(lightPolesManager.ShowObjects);
     }
 
     void Update()
     {   
         if (Input.GetMouseButtonDown(0)) {
-            lightPolesManager.SelectLightPolePointerByCursor(Input.GetKey(KeyCode.LeftControl));
+            lightPolesManager.StopLightPolesMovement();
+            lightPolesManager.SelectLightPolePointedByCursor(Input.GetKey(KeyCode.LeftControl));
         }
         if (Input.GetKeyDown(KeyCode.Escape)) {
-            lightPolesManager.ClearSelectedLightPoles();
+            lightPolesManager.ClearSelectedObjects();
         }
         if (Input.GetKeyDown(KeyCode.O)) {
             lightPolesSelectionManager.StartDrawing();
@@ -140,10 +141,10 @@ public class LightPolesControl : MonoBehaviour
             lightPolesManager.AddLightPole();
         }
         if (Input.GetKeyDown(KeyCode.M)) {
-            lightPolesManager.MoveSelectedLightPoles();
+            lightPolesManager.MoveSelectedObjects();
         }
         if (Input.GetKeyDown(KeyCode.Delete)) {
-            lightPolesManager.DeleteSelectedLightPoles();
+            lightPolesManager.DeleteSelectedObjects();
         }
     }
 
@@ -162,9 +163,9 @@ public class LightPolesControl : MonoBehaviour
 
     public void LightSelected(LightPole selectedLightPole, bool multipleSelectedLightPoles)
     {
-        float heightSelected = selectedLightPole.Light.GetHeight();
-        float rotationSelected = System.Math.Max(0, selectedLightPole.Light.transform.eulerAngles.y);
-        int iesFileIndex = lightIESFile.options.FindIndex(i => i.text.Equals(selectedLightPole.Light.GetIESLight().Name));
+        float heightSelected = selectedLightPole.GameObject.GetHeight();
+        float rotationSelected = System.Math.Max(0, selectedLightPole.GameObject.transform.eulerAngles.y);
+        int iesFileIndex = lightIESFile.options.FindIndex(i => i.text.Equals(selectedLightPole.GameObject.GetIESLight().Name));
         int prefabIndex = light3DModel.options.FindIndex(i => i.text.Equals(selectedLightPole.PrefabName));
         
         selectedLightPoleName.text = multipleSelectedLightPoles ? "Multiple light poles selected" : selectedLightPole.Name;

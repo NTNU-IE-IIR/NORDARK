@@ -35,7 +35,7 @@ public class LightPolesGroupsManager : MonoBehaviour
 
     public void AddGroup(string groupToAdd)
     {
-        lightPolesManager.ClearSelectedLightPoles();
+        lightPolesManager.ClearSelectedObjects();
 
         if (groupToAdd != "") {
             groups.Add(groupToAdd);
@@ -45,7 +45,7 @@ public class LightPolesGroupsManager : MonoBehaviour
 
     public void RemoveGroup(string groupToRemove)
     {
-        lightPolesManager.ClearSelectedLightPoles();
+        lightPolesManager.ClearSelectedObjects();
         List<LightPole> lightPoles = lightPolesManager.GetLightPoles();
         
         foreach (LightPole lightPole in lightPoles) {

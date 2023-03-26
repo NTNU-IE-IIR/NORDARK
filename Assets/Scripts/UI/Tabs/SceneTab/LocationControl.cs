@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -8,6 +9,7 @@ using TMPro;
 public class LocationControl : MonoBehaviour
 {
     [SerializeField] private LocationsManager locationsManager;
+    [SerializeField] private SceneManager sceneManager;
     [SerializeField] private NewLocationWindow newLocationWindow;
     [SerializeField] private TMP_Dropdown location;
     [SerializeField] private Button createLocation;
@@ -16,6 +18,7 @@ public class LocationControl : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(locationsManager);
+        Assert.IsNotNull(sceneManager);
         Assert.IsNotNull(newLocationWindow);
         Assert.IsNotNull(location);
         Assert.IsNotNull(createLocation);
@@ -24,7 +27,22 @@ public class LocationControl : MonoBehaviour
 
     void Start()
     {
-        location.onValueChanged.AddListener(locationsManager.ChangeLocation);
+        location.onValueChanged.AddListener(value => {
+            if (sceneManager.AreThereChangesUnsaved()) {
+                Location currentLocation = locationsManager.GetCurrentLocation();
+                if (currentLocation == null) {
+                    location.SetValueWithoutNotify(-1);
+                } else {
+                    location.SetValueWithoutNotify(location.options.FindIndex(option => option.text == currentLocation.Name));
+                }
+
+                DialogControl.CreateConfirmationDialog("Changes are not saved. Continue?", () => {
+                    locationsManager.ChangeLocation(value);
+                });
+            } else {
+                locationsManager.ChangeLocation(value);
+            }
+        });
 
         createLocation.onClick.AddListener(CreateLocation);
         deleteLocation.onClick.AddListener(DeleteCurrentLocation);

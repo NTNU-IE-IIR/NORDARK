@@ -9,7 +9,7 @@ public class StreetViewManager : MonoBehaviour
     private const float MAX_SCALE = 1.75f;
     private const float SCALE_TO_METER = 1.8f;
     [SerializeField] private LocationsManager locationsManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private GameObject mainCamera;
     [SerializeField] private GameObject FPSCharacter;
     [SerializeField] private float walkSpeed = 4.0f;
@@ -25,7 +25,7 @@ public class StreetViewManager : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(locationsManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(mainCamera);
         Assert.IsNotNull(FPSCharacter);
 
@@ -83,7 +83,7 @@ public class StreetViewManager : MonoBehaviour
 
             Location currentLocation = locationsManager.GetCurrentLocation();
             if (currentLocation != null) {
-                rb.MovePosition(mapManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates, true) + new Vector3(0, 5, 0));
+                rb.MovePosition(terrainManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates, true) + new Vector3(0, 5, 0));
             }
 
             // Starting with the child height (124cm)

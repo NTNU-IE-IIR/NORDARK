@@ -5,8 +5,9 @@ public class GroundTextureCollection
     public string Id;   // unique id to identify each ground texture collection
     public List<GroundTexture> GroundTextures;
     public GeoJSON.Net.Feature.FeatureCollection FeatureCollection;
+    public Location Location;
 
-    public GroundTextureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id)
+    public GroundTextureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id, Location location)
     {
         if (id == "") {
             Id = System.Guid.NewGuid().ToString();
@@ -16,5 +17,6 @@ public class GroundTextureCollection
         
         GroundTextures = new List<GroundTexture>();
         FeatureCollection = featureCollection;
+        Location = location;
     }
 }

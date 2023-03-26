@@ -8,25 +8,27 @@ public class SceneManager : MonoBehaviour
     private static readonly string DEFAULT_SCENE_NAME = "DefaultScene";
     [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private CamerasManager camerasManager;
-    [SerializeField] private VegetationManager vegetationManager;
+    [SerializeField] private BiomeAreasManager biomeAreasManager;
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private GroundTexturesManager groundTexturesManager;
     [SerializeField] private DataVisualizationManager dataVisualizationManager;
+    [SerializeField] private VegetationObjectsManager vegetationObjectsManager;
     private string currentSave;
-    private List<IObjectsManager> objectsManagers;
+    private List<ObjectsManager> objectsManagers;
 
     void Awake()
     {
         Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(camerasManager);
-        Assert.IsNotNull(vegetationManager);
+        Assert.IsNotNull(biomeAreasManager);
         Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(dataVisualizationManager);
+        Assert.IsNotNull(vegetationObjectsManager);
 
         currentSave = "";
-        objectsManagers = new List<IObjectsManager>{
-            lightPolesManager, camerasManager, vegetationManager, locationsManager, groundTexturesManager, dataVisualizationManager
+        objectsManagers = new List<ObjectsManager>{
+            lightPolesManager, camerasManager, biomeAreasManager, groundTexturesManager, dataVisualizationManager, vegetationObjectsManager
         };
     }
 
@@ -69,16 +71,29 @@ public class SceneManager : MonoBehaviour
         }
     }
 
-    public List<IObjectsManager> GetObjectsManagers()
+    public void SendOnLocationChangedToAllObjects()
     {
-        return objectsManagers;
+        foreach (ObjectsManager objectsManager in objectsManagers) {
+            objectsManager.OnLocationChanged();
+        }
+    }
+
+    public bool AreThereChangesUnsaved()
+    {
+        foreach(ObjectsManager objectsManager in objectsManagers) {
+            if (objectsManager.AreThereChangesUnsaved()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void LoadScene(GeoJSON.Net.Feature.FeatureCollection featureCollection)
     {
-        foreach(IObjectsManager objectsManager in objectsManagers) {
+        foreach(ObjectsManager objectsManager in objectsManagers) {
             objectsManager.Clear();
         }
+        locationsManager.Clear();
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             if (feature.Properties.ContainsKey("type")) {
@@ -89,11 +104,13 @@ public class SceneManager : MonoBehaviour
                 } else if (string.Equals(feature.Properties["type"] as string, "light")) {
                     lightPolesManager.Create(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "biomeArea")) {
-                    vegetationManager.Create(feature);
+                    biomeAreasManager.Create(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "groundTexture")) {
                     groundTexturesManager.Create(feature);
                 } else if (string.Equals(feature.Properties["type"] as string, "dataset")) {
                     dataVisualizationManager.Create(feature);
+                } else if (string.Equals(feature.Properties["type"] as string, "vegetationObject")) {
+                    vegetationObjectsManager.Create(feature);
                 }
             }
         }
@@ -102,10 +119,15 @@ public class SceneManager : MonoBehaviour
 
     private void SaveScene()
     {
+        foreach(ObjectsManager objectsManager in objectsManagers) {
+            objectsManager.SetChangesSaved();
+        }
+
         List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
-        foreach(IObjectsManager objectsManager in objectsManagers) {
+        foreach(ObjectsManager objectsManager in objectsManagers) {
             features.AddRange(objectsManager.GetFeatures());
         }
+        features.AddRange(locationsManager.GetFeatures());
         
         GeoJSONParser.FeaturesToFile(currentSave, features);
     }

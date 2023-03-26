@@ -6,14 +6,14 @@ public class Minimap : MonoBehaviour
 {
     private const float CAMERA_2D_HEIGHT = 50;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private MinimapUI minimapUI;
     private Camera unityCamera;
 
     void Awake()
     {
         Assert.IsNotNull(sceneCamerasManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(minimapUI);
 
         unityCamera = GetComponent<Camera>();
@@ -23,7 +23,7 @@ public class Minimap : MonoBehaviour
     {
         if (unityCamera.orthographic) {
             // Get map altitude (stickToGround parameter set to true)
-            Vector3 position = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(transform.position), true);
+            Vector3 position = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(transform.position), true);
             position.y += CAMERA_2D_HEIGHT;
             unityCamera.transform.position = position;
 

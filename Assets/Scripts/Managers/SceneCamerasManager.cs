@@ -9,8 +9,10 @@ public class SceneCamerasManager : MonoBehaviour
 {
     public const int HIDDEN_FROM_CAMERA_LAYER = 12;
     [SerializeField] private LightPolesManager lightPolesManager;
-    [SerializeField] private VegetationManager vegetationManager;
+    [SerializeField] private BiomeAreasManager biomeAreasManager;
     [SerializeField] private LuminanceMapManager luminanceMapManager;
+    [SerializeField] private LocationsManager locationsManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private Transform additionalSceneCamerasContainer;
     [SerializeField] private Minimap minimap;
     private Camera mainCamera;
@@ -22,8 +24,10 @@ public class SceneCamerasManager : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(lightPolesManager);
-        Assert.IsNotNull(vegetationManager);
+        Assert.IsNotNull(biomeAreasManager);
         Assert.IsNotNull(luminanceMapManager);
+        Assert.IsNotNull(locationsManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(additionalSceneCamerasContainer);
         Assert.IsNotNull(minimap);
 
@@ -38,6 +42,15 @@ public class SceneCamerasManager : MonoBehaviour
     void OnDestroy()
     {
         RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+    }
+
+    public void OnLocationChanged()
+    {
+        Location currentLocation = locationsManager.GetCurrentLocation();
+        if (currentLocation != null) {
+            SetPosition(terrainManager.GetUnityPositionFromCoordinates(currentLocation.CameraCoordinates));
+            SetEulerAngles(currentLocation.CameraAngles);
+        }
     }
 
     public void SplitScreen(int numberOfScreens)
@@ -60,7 +73,7 @@ public class SceneCamerasManager : MonoBehaviour
                 i < numberOfScreens/2f ? viewportRect.y + viewportRect.height * 0.5f : viewportRect.y,
                 i < numberOfScreens/2f ? mainCamera.rect.width : viewportRect.width / (numberOfScreens - i),
                 mainCamera.rect.height
-            ), lightPolesManager, vegetationManager, i);
+            ), lightPolesManager, biomeAreasManager, i);
         }
 
         if (luminanceMapCamera != null) {
@@ -129,7 +142,7 @@ public class SceneCamerasManager : MonoBehaviour
             luminanceMapSceneCamera.Create(
                 mainCamera.rect,
                 lightPolesManager,
-                vegetationManager,
+                biomeAreasManager,
                 0
             );
             HDAdditionalCameraData luminanceMapHDCamera = luminanceMapSceneCamera.GetComponent<HDAdditionalCameraData>();
@@ -236,7 +249,7 @@ public class SceneCamerasManager : MonoBehaviour
         List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
 
         foreach (LightPole lightPole in mainCameraLights) {
-            lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
+            lightPole.GameObject.ShowLight(lightPole.ConfigurationIndex == 0);
         }
     }
 

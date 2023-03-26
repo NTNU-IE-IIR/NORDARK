@@ -10,8 +10,9 @@ public class ComputationLine : MonoBehaviour, IComputationObject
 {
     private const float LINE_HEIGHT = 1;
     private const int LINE_LAYER = 11;
+    private const int MIN_RESOLUTION = 2;
     [SerializeField] private LightComputationManager lightComputationManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private ObjectVisualizationControl lineVisualizationControl;
     [SerializeField] private GraphControl graphControl;
@@ -25,7 +26,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     void Awake()
     {
         Assert.IsNotNull(lightComputationManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(lineVisualizationControl);
         Assert.IsNotNull(graphControl);
@@ -42,7 +43,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     {
         if (isCreatingLine) {
             RaycastHit hit;
-            if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+            if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << TerrainManager.TERRAIN_LAYER)) {
                 if (line.positionCount >= 2) {
                     line.SetPosition(line.positionCount-1, hit.point + new Vector3(0, LINE_HEIGHT, 0));
                     
@@ -152,7 +153,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
                     }
 
                     if (point != null && Utils.IsEPSG4326(point.Coordinates) && feature.Properties.ContainsKey("luminance")) {
-                        positions.Add(mapManager.GetUnityPositionFromCoordinates(new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude), true));
+                        positions.Add(terrainManager.GetUnityPositionFromCoordinates(new Coordinate(point.Coordinates.Latitude, point.Coordinates.Longitude), true));
                         luminances.Add(System.Convert.ToSingle(feature.Properties["luminance"]));
                     }
                 }
@@ -206,41 +207,45 @@ public class ComputationLine : MonoBehaviour, IComputationObject
 
     public void GetPositionsAnglesAlongObject(out Vector3[] positions, out float[] angles)
     {
-        int resolution = lineVisualizationControl.GetResolution();
-        positions = new Vector3[resolution+1];
-        angles = new float[resolution+1];
+        int resolution = Mathf.Max(lineVisualizationControl.GetResolution(), MIN_RESOLUTION);
+        positions = new Vector3[resolution];
+        angles = new float[resolution];
 
-        float distanceStep = Utils.GetLineDistance(line) / resolution;
+        float distanceStep = Utils.GetLineDistance(line) / (resolution-1);
 
-        int currentLinePoint = 0;
-        float currentDistance = Vector3.Distance(line.GetPosition(currentLinePoint), line.GetPosition(currentLinePoint+1));
-        float currentTotalDistance = currentDistance;
-        for (int i=0; i<=resolution; ++i) {
-            float distance = i*distanceStep;
+        if (line.positionCount > 0) {
+            int currentLinePoint = 0;
+            float currentDistance = Vector3.Distance(line.GetPosition(currentLinePoint), line.GetPosition(currentLinePoint+1));
+            float currentTotalDistance = currentDistance;
+            for (int i=0; i<resolution; ++i) {
+                float distance = i*distanceStep;
 
-            while (currentLinePoint < line.positionCount-2 && distance > currentTotalDistance) {
-                currentLinePoint++;
-                currentDistance = Vector3.Distance(line.GetPosition(currentLinePoint), line.GetPosition(currentLinePoint+1));
-                currentTotalDistance += currentDistance;
+                while (currentLinePoint < line.positionCount-2 && distance > currentTotalDistance) {
+                    currentLinePoint++;
+                    currentDistance = Vector3.Distance(line.GetPosition(currentLinePoint), line.GetPosition(currentLinePoint+1));
+                    currentTotalDistance += currentDistance;
+                }
+
+                Vector3 currentLinePointPosition = line.GetPosition(currentLinePoint);
+                Vector3 nextLinePointPosition = line.GetPosition(currentLinePoint+1);
+
+                positions[i] = Vector3.Lerp(
+                    currentLinePointPosition,
+                    nextLinePointPosition,
+                    (distance - (currentTotalDistance-currentDistance)) / currentDistance
+                );
+                angles[i] = Utils.GetAngleBetweenPositions(
+                    new Vector2(currentLinePointPosition.x, currentLinePointPosition.z),
+                    new Vector2(nextLinePointPosition.x, nextLinePointPosition.z)
+                );
             }
-
-            Vector3 currentLinePointPosition = line.GetPosition(currentLinePoint);
-            Vector3 nextLinePointPosition = line.GetPosition(currentLinePoint+1);
-
-            positions[i] = Vector3.Lerp(
-                currentLinePointPosition,
-                nextLinePointPosition,
-                (distance - (currentTotalDistance-currentDistance)) / currentDistance
-            );
-            angles[i] = Utils.GetAngleBetweenPositions(
-                new Vector2(currentLinePointPosition.x, currentLinePointPosition.z),
-                new Vector2(nextLinePointPosition.x, nextLinePointPosition.z)
-            );
         }
     }
     
     public void ResultsComputed(Vector3[] positions, float[,] luminances)
     {
+        calculatedResults.Clear();
+
         List<float> distances = positions.Select((position, index) => {
             return index > 0 ? Vector3.Distance(position, positions[index-1]) : 0;
         }).Aggregate(new List<float>(), (distances, distance) => {
@@ -279,6 +284,23 @@ public class ComputationLine : MonoBehaviour, IComputationObject
         graphControl.CreateGraph(graphSets, () => {
             lightComputationManager.ComputeAlongObject(this);
         }, yMinimum, yMaximum);
+    }
+
+    public void CreateLineFromPositionsAndCompute(Vector3 startingPosition, Vector3 endingPosition, int resolution)
+    {
+        lineVisualizationControl.SetResolution(resolution);
+
+        isCreatingLine = false;
+        TooltipControl.DisplayTooltip(false);
+
+        line.positionCount = 2;
+        line.SetPositions(new Vector3[] {
+            startingPosition + new Vector3(0, LINE_HEIGHT, 0),
+            endingPosition + new Vector3(0, LINE_HEIGHT, 0)
+        });
+        SetMeshCollider();
+
+        lightComputationManager.ComputeAlongObject(this);
     }
 
     private void SetMeshCollider()

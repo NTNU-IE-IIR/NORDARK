@@ -3,9 +3,9 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class DataVisualizationManager : MonoBehaviour, IObjectsManager
+public class DataVisualizationManager : ObjectsManager
 {
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private DataVisualizationControl dataVisualizationControl;
     [SerializeField] private GameObject visualizationFeaturePrefab;
     [SerializeField] private Transform datasetsParent;
@@ -13,7 +13,8 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
 
     void Awake()
     {
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(locationsManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(dataVisualizationControl);
         Assert.IsNotNull(visualizationFeaturePrefab);
         Assert.IsNotNull(datasetsParent);
@@ -21,57 +22,9 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         datasets = new Dictionary<string, Dataset>();
     }
 
-    public void Create(GeoJSON.Net.Feature.Feature feature)
-    {
-        string name = "";
-        if (feature.Properties.ContainsKey("name")) {
-            name = feature.Properties["name"] as string;
-        }
-        string content = "";
-        if (feature.Properties.ContainsKey("content")) {
-            content = feature.Properties["content"] as string;
-        }
-
-        AddDataset(name, new Dataset(GeoJSONParser.StringToFeatureCollection(content)));
-    }
-
-    public void Clear()
-    {
-        ClearVisualizationFeatures();
-        datasets.Clear();
-    }
-
-    public void OnLocationChanged()
-    {
-        ClearVisualizationFeatures();
-
-        foreach (KeyValuePair<string, Dataset> dataset in datasets) {
-            CreateVisualizationFeatures(dataset.Key, dataset.Value);
-        }
-    }
-
-    public List<GeoJSON.Net.Feature.Feature> GetFeatures()
-    {
-        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
-
-        foreach (KeyValuePair<string, Dataset> dataset in datasets) {            
-            GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(0, 0, 0));
-
-            Dictionary<string, object> properties = new Dictionary<string, object> {
-                {"type", "dataset"},
-                {"name", dataset.Key},
-                {"content", GeoJSONParser.FeatureCollectionToString(dataset.Value.FeatureCollection)}
-            };
-            
-            features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
-        }
-
-        return features;
-    }
-
     public bool CreateDatasetFromNameAndPath(string datasetName, string path)
     {
-        return AddDataset(datasetName, new Dataset(GeoJSONParser.FileToFeatureCollection(path)));
+        return AddDataset(datasetName, new Dataset(GeoJSONParser.FileToFeatureCollection(path), locationsManager.GetCurrentLocation()));
     }
 
     public bool AddVariable(string datasetName, string variable, string path)
@@ -162,6 +115,48 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
         datasetsParent.gameObject.SetActive(display);
     }
 
+    protected override void CreateObject(GeoJSON.Net.Feature.Feature feature, Location location)
+    {
+        string name = "";
+        if (feature.Properties.ContainsKey("name")) {
+            name = feature.Properties["name"] as string;
+        }
+        string content = "";
+        if (feature.Properties.ContainsKey("content")) {
+            content = feature.Properties["content"] as string;
+        }
+
+        AddDataset(name, new Dataset(GeoJSONParser.StringToFeatureCollection(content), location));
+    }
+
+    protected override void ClearActiveObjects()
+    {
+        ClearVisualizationFeatures();
+        datasets.Clear();
+    }
+
+    protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()
+    {
+        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
+
+        foreach (KeyValuePair<string, Dataset> dataset in datasets) {
+            if (dataset.Value.Location != null) {
+                GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(0, 0, 0));
+
+                Dictionary<string, object> properties = new Dictionary<string, object> {
+                    {"type", "dataset"},
+                    {"location", dataset.Value.Location.Name},
+                    {"name", dataset.Key},
+                    {"content", GeoJSONParser.FeatureCollectionToString(dataset.Value.FeatureCollection)}
+                };
+                
+                features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
+            }
+        }
+        
+        return features;
+    }
+
     private bool AddDataset(string datasetName, Dataset dataset)
     {
         if (datasets.ContainsKey(datasetName) || dataset.Weights.Count == 0) {
@@ -204,7 +199,7 @@ public class DataVisualizationManager : MonoBehaviour, IObjectsManager
 
         foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
             VisualizationFeature visualizationFeature = Instantiate(visualizationFeaturePrefab, datasetsParent).GetComponent<VisualizationFeature>();
-            visualizationFeature.Create(datasetName, dataset.Weights, feature, mapManager);
+            visualizationFeature.Create(datasetName, dataset.Weights, feature, terrainManager);
             
             if (visualizationFeature.IsCreated()) {
                 dataset.VisualizationFeatures.Add(visualizationFeature);

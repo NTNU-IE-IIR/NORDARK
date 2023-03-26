@@ -10,7 +10,7 @@ public class GroundTextureMasksManager : MonoBehaviour
     private const string MASK_FOLDER = "ground-textures";
     private const int MASK_TEXTURE_SIZE = 512;
     [SerializeField] private GroundTexturesManager groundTexturesManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private GroundTexturesWindow groundTexturesWindow;
     [SerializeField] private GameObject maskMeshPrefab;
     [SerializeField] private GameObject maskCameraPrefab;
@@ -22,7 +22,7 @@ public class GroundTextureMasksManager : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(groundTexturesManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(groundTexturesWindow);
         Assert.IsNotNull(maskMeshPrefab);
         Assert.IsNotNull(maskCameraPrefab);
@@ -41,7 +41,7 @@ public class GroundTextureMasksManager : MonoBehaviour
     public IEnumerator CreateMasksIfDontExist(GroundTextureCollection groundTextureCollection)
     {
         if (!AreMasksCreated(groundTextureCollection)) {
-            List<Tile> tiles = mapManager.GetTiles();
+            List<Tile> tiles = terrainManager.GetTiles();
             List<GroundTexture> groundTexturesOnMap = new List<GroundTexture>();
             foreach (GroundTexture groundTexture in groundTextureCollection.GroundTextures) {
                 if (IsGroundTextureOnMap(groundTexture)) {
@@ -101,7 +101,7 @@ public class GroundTextureMasksManager : MonoBehaviour
 
     private bool AreMasksCreated(GroundTextureCollection groundTextureCollection)
     {
-        List<Tile> tiles = mapManager.GetTiles();
+        List<Tile> tiles = terrainManager.GetTiles();
         foreach (Tile tile in tiles) {
             string path = System.IO.Path.Combine(Application.persistentDataPath, MASK_FOLDER, tile.Id, groundTextureCollection.Id);
             if (!System.IO.Directory.Exists(path)) {
@@ -113,10 +113,10 @@ public class GroundTextureMasksManager : MonoBehaviour
 
     private bool IsGroundTextureOnMap(GroundTexture groundTexture)
     {
-        Vector3 mapBounds = mapManager.GetMapSize();
+        Vector3 mapBounds = terrainManager.GetMapSize();
 
         List<Vector3> points = groundTexture.Coordinates.Select(
-            coordinate => mapManager.GetUnityPositionFromCoordinates(coordinate)
+            coordinate => terrainManager.GetUnityPositionFromCoordinates(coordinate)
         ).ToList();
 
         foreach (Vector3 point in points) {
@@ -182,23 +182,11 @@ public class GroundTextureMasksManager : MonoBehaviour
 
         foreach (GroundTexture groundTexture in groundTextures) {
             if (groundTexture.Texture == texture) {
-                List<Vector3> points = groundTexture.Coordinates.Select(
-                    coordinate => mapManager.GetUnityPositionFromCoordinates(coordinate)
-                ).ToList();
+                maskMeshes.Add(CreateAndReturnMaskMesh(groundTexture.Coordinates, false));
 
-                // Create triangles representing the polygon
-                var flatData = EarcutLibrary.Flatten(new List<List<Vector3>>() { points });
-                List<int> triangles = EarcutLibrary.Earcut(flatData.Vertices, flatData.Holes, flatData.Dim);
-
-                GameObject maskMesh = Instantiate(maskMeshPrefab, transform);
-
-                Mesh mesh = new Mesh();
-                mesh.vertices = points.ToArray();
-                mesh.triangles = triangles.ToArray();
-                mesh.normals = points.Select(point => Vector3.up).ToArray();
-                maskMesh.GetComponent<MeshFilter>().mesh = mesh;
-
-                maskMeshes.Add(maskMesh);
+                foreach (List<Coordinate> holeCoordinates in groundTexture.HolesCoordinates) {
+                    maskMeshes.Add(CreateAndReturnMaskMesh(holeCoordinates, true));
+                }
             }
         }
         
@@ -209,5 +197,32 @@ public class GroundTextureMasksManager : MonoBehaviour
     {
         currentStep += numberOfStepsDone;
         groundTexturesWindow.SetProgress((float) currentStep / numberOfSteps);
+    }
+
+    private GameObject CreateAndReturnMaskMesh(List<Coordinate> coordinates, bool isHole)
+    {
+        List<Vector3> points = coordinates.Select(
+            coordinate => terrainManager.GetUnityPositionFromCoordinates(coordinate)
+        ).ToList();
+
+        // Create triangles representing the polygon
+        var flatData = EarcutLibrary.Flatten(new List<List<Vector3>>() { points });
+        List<int> triangles = EarcutLibrary.Earcut(flatData.Vertices, flatData.Holes, flatData.Dim);
+
+        GameObject maskMesh = Instantiate(maskMeshPrefab, transform);
+
+        Mesh mesh = new Mesh();
+        mesh.vertices = points.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.normals = points.Select(point => Vector3.up).ToArray();
+        maskMesh.GetComponent<MeshFilter>().mesh = mesh;
+        maskMesh.GetComponent<MeshRenderer>().material.color = isHole ? Color.black : Color.white;
+        
+        // Place holes above exterior ring
+        if (isHole) {
+            maskMesh.transform.position += new Vector3(0, 1, 0);
+        }
+
+        return maskMesh;
     }
 }

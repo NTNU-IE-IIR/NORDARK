@@ -7,7 +7,7 @@ public class SceneCamera : MonoBehaviour
 {
     private Camera sceneCamera;
     private LightPolesManager lightPolesManager;
-    private VegetationManager vegetationManager;
+    private BiomeAreasManager biomeAreasManager;
     private int configurationIndex;
 
     void Awake()
@@ -19,8 +19,8 @@ public class SceneCamera : MonoBehaviour
 
     void OnDestroy()
     {
-        if (vegetationManager != null) {
-            vegetationManager.RemoveCamera(sceneCamera);
+        if (biomeAreasManager != null) {
+            biomeAreasManager.RemoveCamera(sceneCamera);
         }
         RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
     }
@@ -31,19 +31,19 @@ public class SceneCamera : MonoBehaviour
             List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
 
             foreach (LightPole lightPole in mainCameraLights) {
-                lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
+                lightPole.GameObject.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
             }
         }
     }
 
-    public void Create(Rect viewport, LightPolesManager lightPolesManager, VegetationManager vegetationManager, int configurationIndex)
+    public void Create(Rect viewport, LightPolesManager lightPolesManager, BiomeAreasManager biomeAreasManager, int configurationIndex)
     {
         sceneCamera.rect = viewport;
 
-        vegetationManager.AddCamera(sceneCamera);
+        biomeAreasManager.AddCamera(sceneCamera);
         
         this.lightPolesManager = lightPolesManager;
-        this.vegetationManager = vegetationManager;
+        this.biomeAreasManager = biomeAreasManager;
         this.configurationIndex = configurationIndex;
     }
 }

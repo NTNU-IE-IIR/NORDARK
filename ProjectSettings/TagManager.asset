@@ -11,7 +11,7 @@ TagManager:
   - Ground
   - Water
   - UI
-  - Map
+  - Terrain
   - Camera
   - LuminanceMap
   - MaskMesh

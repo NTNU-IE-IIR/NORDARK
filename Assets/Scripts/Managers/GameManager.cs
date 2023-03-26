@@ -31,9 +31,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        uIController.SetUpUI();
-
-        StartCoroutine(LoadDefaultScene());
+        StartCoroutine(Initialize());
     }
 
     private bool IsFirstLaunch()
@@ -48,10 +46,15 @@ public class GameManager : MonoBehaviour
         return firstLaunch;
     }
 
-    private IEnumerator LoadDefaultScene()
+    private IEnumerator Initialize()
     {
-        yield return new WaitUntil(() => mapManager.IsMapInitialized());
+        uIController.DisplayLoadingPanel(true);
+
+        // Skip frame to render loading panel
+        yield return null;
+
+        uIController.SetUpUI();
         sceneManager.LoadDefaultScene();
-        uIController.DisplayLoadingScreen(false);
+        uIController.DisplayLoadingPanel(false);
     }
 }

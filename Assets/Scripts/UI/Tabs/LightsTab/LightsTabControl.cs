@@ -17,7 +17,7 @@ public class LightsTabControl : TabControl
 
     public override void OnTabClosed()
     {
-        lightPolesManager.ClearSelectedLightPoles();
+        lightPolesManager.ClearSelectedObjects();
         lightPolesSelectionManager.Stop();
     }
 }

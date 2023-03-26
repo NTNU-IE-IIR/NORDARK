@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 public class LuminanceCamera : MonoBehaviour
 {
     private Camera luminanceCamera;
-    private VegetationManager vegetationManager;
+    private BiomeAreasManager biomeAreasManager;
     private LightPolesManager lightPolesManager;
     private int configurationIndex;
     private RenderTexture luminanceTexture;
@@ -20,18 +20,18 @@ public class LuminanceCamera : MonoBehaviour
     void OnDestroy()
     {
         RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-        vegetationManager.RemoveCamera(luminanceCamera);
+        biomeAreasManager.RemoveCamera(luminanceCamera);
         luminanceTexture.Release();
 
         List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
         foreach (LightPole lightPole in mainCameraLights) {
-            lightPole.Light.ShowLight(lightPole.ConfigurationIndex == 0);
+            lightPole.GameObject.ShowLight(lightPole.ConfigurationIndex == 0);
         }
     }
 
-    public void Create(int maskTextureSize, VegetationManager vegetationManager, LightPolesManager lightPolesManager)
+    public void Create(int maskTextureSize, BiomeAreasManager biomeAreasManager, LightPolesManager lightPolesManager)
     {
-        this.vegetationManager = vegetationManager;
+        this.biomeAreasManager = biomeAreasManager;
         this.lightPolesManager = lightPolesManager;
 
         // ARGBFloat because we want the highest possible precision, Linear because we want a linear color space (that gives the "true" values of colors)
@@ -41,7 +41,7 @@ public class LuminanceCamera : MonoBehaviour
 
         luminanceCamera = GetComponent<Camera>();
         luminanceCamera.targetTexture = luminanceTexture;
-        vegetationManager.AddCamera(luminanceCamera);
+        biomeAreasManager.AddCamera(luminanceCamera);
     }
 
     public void SetConfigurationIndex(int configurationIndex)
@@ -70,7 +70,7 @@ public class LuminanceCamera : MonoBehaviour
             List<LightPole> mainCameraLights = lightPolesManager.GetLightPoles();
 
             foreach (LightPole lightPole in mainCameraLights) {
-                lightPole.Light.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
+                lightPole.GameObject.ShowLight(lightPole.ConfigurationIndex == configurationIndex);
             }
         }
     }

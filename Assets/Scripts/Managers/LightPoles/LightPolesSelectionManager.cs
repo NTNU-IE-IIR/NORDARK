@@ -33,7 +33,7 @@ public class LightPolesSelectionManager : MonoBehaviour
 
             if (isDragging && Input.GetMouseButtonUp(0)) {
                 Stop();
-                lightPolesManager.ClearSelectedLightPoles();
+                lightPolesManager.ClearSelectedObjects();
                 
                 if (sceneCamerasManager.IsView2D()) {
                     lightPolesManager.SelectLightPolesWithinPositions(
@@ -75,6 +75,8 @@ public class LightPolesSelectionManager : MonoBehaviour
 
     private void SelectLightPolesWithRays(Vector3 vertexA, Vector3 vertexB)
     {
+        lightPolesManager.ClearSelectedObjects();
+        
         int xMin = (int) (vertexA.x < vertexB.x ? vertexA.x : vertexB.x);
         int xMax = (int) (vertexA.x < vertexB.x ? vertexB.x : vertexA.x);
         int yMin = (int) (vertexA.y < vertexB.y ? vertexA.y : vertexB.y);

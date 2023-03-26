@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -8,8 +7,9 @@ using UnityEngine.Assertions;
 public class ComputationRectangle : MonoBehaviour, IComputationObject
 {
     private const float RECTANGLE_HEIGHT = 1;
+    private const int MIN_RESOLUTION = 2;
     [SerializeField] private LightComputationManager lightComputationManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private ObjectVisualizationControl gridVisualizationControl;
     [SerializeField] private HeatmapControl heatmapControl;
@@ -24,7 +24,7 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     void Awake()
     {
         Assert.IsNotNull(lightComputationManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(gridVisualizationControl);
         Assert.IsNotNull(heatmapControl);
         Assert.IsNotNull(heatmapPositionIndicator);
@@ -40,7 +40,7 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     {
         if (isCreatingRectangle) {
             RaycastHit hit;
-            if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << MapManager.UNITY_LAYER_MAP)) {
+            if (Physics.Raycast(sceneCamerasManager.ScreenPointToRay(Input.mousePosition), out hit, Mathf.Infinity, 1 << TerrainManager.TERRAIN_LAYER)) {
                 if (Input.GetMouseButton(0)) {
                     center = hit.point;
                     centerSet = true;
@@ -53,9 +53,9 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
                     Vector3 fourthPoint = new Vector3(firstPoint.x, 0, thirdPoint.z);
 
                     // Set point altitudes
-                    secondPoint = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(secondPoint), true);
-                    thirdPoint = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(thirdPoint), true);
-                    fourthPoint = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(fourthPoint), true);
+                    secondPoint = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(secondPoint), true);
+                    thirdPoint = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(thirdPoint), true);
+                    fourthPoint = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(fourthPoint), true);
 
                     line.SetPosition(0, firstPoint + new Vector3(0, RECTANGLE_HEIGHT, 0));
                     line.SetPosition(1, secondPoint + new Vector3(0, RECTANGLE_HEIGHT, 0));
@@ -137,12 +137,12 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
 
     public void GetPositionsAnglesAlongObject(out Vector3[] positions, out float[] angles)
     {
-        int resolution = gridVisualizationControl.GetResolution();
-        positions = new Vector3[(resolution+1)*(resolution+1)];
-        angles = new float[(resolution+1)*(resolution+1)];
+        int resolution = Mathf.Max(gridVisualizationControl.GetResolution(), MIN_RESOLUTION);
+        positions = new Vector3[resolution*resolution];
+        angles = new float[resolution*resolution];
 
-        float xStep = Mathf.Abs(line.GetPosition(0).x - line.GetPosition(2).x) / resolution;
-        float zStep = Mathf.Abs(line.GetPosition(0).z - line.GetPosition(2).z) / resolution;
+        float xStep = Mathf.Abs(line.GetPosition(0).x - line.GetPosition(2).x) / (resolution-1);
+        float zStep = Mathf.Abs(line.GetPosition(0).z - line.GetPosition(2).z) / (resolution-1);
         float angle = Utils.GetAngleBetweenPositions(
             new Vector2(line.GetPosition(0).x, line.GetPosition(0).z),
             new Vector2(line.GetPosition(1).x, line.GetPosition(1).z)
@@ -153,15 +153,15 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
             line.GetPosition(0).z < line.GetPosition(2).z ? line.GetPosition(0).z : line.GetPosition(2).z
         );
 
-        for (int i=0; i<=resolution; ++i) {
-            for (int j=0; j<=resolution; ++j) {
+        for (int i=0; i<resolution; ++i) {
+            for (int j=0; j<resolution; ++j) {
                 Vector3 point = origin + new Vector3(xStep * i, 0, zStep * j);
 
                 // Set y coordinate to just above terrain
-                point = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(point), true) + new Vector3(0, RECTANGLE_HEIGHT, 0);
+                point = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(point), true) + new Vector3(0, RECTANGLE_HEIGHT, 0);
             
-                positions[i*(resolution+1) + j] = point;
-                angles[i*(resolution+1) + j] = angle;
+                positions[i*resolution + j] = point;
+                angles[i*resolution + j] = angle;
             }
         }
     }
@@ -202,7 +202,7 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
             );
 
             // Set y coordinate to terrain height
-            position = mapManager.GetUnityPositionFromCoordinates(mapManager.GetCoordinatesFromUnityPosition(position), true);
+            position = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(position), true);
 
             heatmapPositionIndicator.SetActive(true);
             heatmapPositionIndicator.transform.position = position;

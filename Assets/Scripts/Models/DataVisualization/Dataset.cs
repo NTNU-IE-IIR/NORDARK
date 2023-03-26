@@ -5,10 +5,12 @@ public class Dataset
     public GeoJSON.Net.Feature.FeatureCollection FeatureCollection;
     public List<VisualizationFeature> VisualizationFeatures;
     public Dictionary<string, float> Weights;
+    public Location Location;
 
-    public Dataset(GeoJSON.Net.Feature.FeatureCollection featureCollection)
+    public Dataset(GeoJSON.Net.Feature.FeatureCollection featureCollection, Location location)
     {
         FeatureCollection = featureCollection;
+        Location = location;
         VisualizationFeatures = new List<VisualizationFeature>();
 
         // Only add a variable if all values are between 0 and 1

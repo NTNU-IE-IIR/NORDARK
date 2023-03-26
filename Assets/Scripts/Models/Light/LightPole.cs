@@ -2,23 +2,25 @@ using System.Collections.Generic;
 
 public class LightPole
 {
-    public Coordinate Coordinate { get; set; }
     public string Name { get; set; }
-    public LightPrefab Light { get; set; }
-    public string PrefabName { get; set; }
     public int ConfigurationIndex { get; set; }
     public List<string> Groups { get; set; }
+    public Coordinate Coordinate { get; set; }
+    public LightPrefab GameObject { get; set; }
+    public string PrefabName { get; set; }
+    public Location Location { get; set; }
 
-    public LightPole()
+    public LightPole(Location location)
     {
-        Coordinate = new Coordinate();
         Name = "";
-        PrefabName = "";
         ConfigurationIndex = 0;
         Groups = new List<string>();
+        Coordinate = new Coordinate();
+        PrefabName = "";
+        Location = location;
     }
 
-    public LightPole(Coordinate coordinate, int configurationIndex, List<string> groups): base()
+    public LightPole(Coordinate coordinate, Location location, int configurationIndex, List<string> groups): this(location)
     {
         Coordinate = coordinate;
         ConfigurationIndex = configurationIndex;

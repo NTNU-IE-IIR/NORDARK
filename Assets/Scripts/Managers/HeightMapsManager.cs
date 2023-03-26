@@ -6,7 +6,8 @@ using BitMiracle.LibTiff.Classic;
 public class HeightMapsManager : MonoBehaviour
 {
     private const string HEIGHTMAPS_FOLDER = "heightmaps";
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
+    [SerializeField] private LocationsManager locationsManager;
     private int numberOfPixelsX;
     private int numberOfPixelsY;
     private float noDataValue;
@@ -17,7 +18,8 @@ public class HeightMapsManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
+        Assert.IsNotNull(locationsManager);
     }
 
     public void AddHeightMapsFromResources()
@@ -49,7 +51,8 @@ public class HeightMapsManager : MonoBehaviour
             }
         }
 
-        mapManager.UpdateMapTerrain();
+        // Update terrain
+        terrainManager.ChangeLocation(locationsManager.GetCurrentLocation());
 
         string message = "";
         if (addedFiles.Count == paths.Length && paths.Length > 0) {
@@ -120,7 +123,7 @@ public class HeightMapsManager : MonoBehaviour
             startLon = originLon + (pixelSizeX / 2);
             endLon = startLon + numberOfPixelsX * pixelSizeX;
 
-            List<Tile> tiles = mapManager.GetTiles();
+            List<Tile> tiles = terrainManager.GetTiles();
             foreach (Tile tile in tiles) {
                 atLeastOneTextureAdded = CreateHeatmapTile(tiff, tile) || atLeastOneTextureAdded;
             }
@@ -136,7 +139,11 @@ public class HeightMapsManager : MonoBehaviour
         byte[] scanline = new byte[4*numberOfPixelsX];
         float[] scanline32Bit = new float[numberOfPixelsX];
 
-        (Coordinate, Coordinate) boundaries = mapManager.GetTileBoundaries(tile);
+        (Vector3, Vector3) boundariesUnityPosition = tile.GetBoundaries();
+        (Coordinate, Coordinate) boundaries = (
+            terrainManager.GetCoordinatesFromUnityPosition(boundariesUnityPosition.Item1),
+            terrainManager.GetCoordinatesFromUnityPosition(boundariesUnityPosition.Item2)
+        );
 
         int startingIndexX = Mathf.Max(0, (int) (numberOfPixelsX * (boundaries.Item1.longitude - startLon) / (endLon - startLon)));
         int endingIndexX = Mathf.Min(numberOfPixelsX, (int) (numberOfPixelsX * (boundaries.Item2.longitude - startLon) / (endLon - startLon)));

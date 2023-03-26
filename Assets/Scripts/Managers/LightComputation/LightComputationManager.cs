@@ -7,8 +7,8 @@ public class LightComputationManager : MonoBehaviour
 {
     private const int MASK_TEXTURE_SIZE = 32;
     private const float LUMINANCE_RESOLUTION = 100;
-    [SerializeField] private MapManager mapManager;
-    [SerializeField] private VegetationManager vegetationManager;
+    [SerializeField] private TerrainManager terrainManager;
+    [SerializeField] private BiomeAreasManager biomeAreasManager;
     [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private LightConfigurationsManager lightConfigurationsManager;
     [SerializeField] private ObjectVisualizationControl lineVisualizationControl;
@@ -21,8 +21,8 @@ public class LightComputationManager : MonoBehaviour
 
     void Awake()
     {
-        Assert.IsNotNull(mapManager);
-        Assert.IsNotNull(vegetationManager);
+        Assert.IsNotNull(terrainManager);
+        Assert.IsNotNull(biomeAreasManager);
         Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(lineVisualizationControl);
@@ -80,7 +80,7 @@ public class LightComputationManager : MonoBehaviour
                             distanceFromOrigin += Vector3.Distance(positions[j-1], positions[j]);
                         }
 
-                        Coordinate coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[j]);
+                        Coordinate coordinate = terrainManager.GetCoordinatesFromUnityPosition(positions[j]);
                         GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(
                             coordinate.latitude,
                             coordinate.longitude,
@@ -89,7 +89,7 @@ public class LightComputationManager : MonoBehaviour
 
                         Dictionary<string, object> properties = new Dictionary<string, object>();
                         properties.Add("luminance", luminances[i][j]);
-                        properties.Add("ground", mapManager.GetGroundFromPosition(positions[j]));
+                        properties.Add("ground", terrainManager.GetGroundFromPosition(positions[j]));
                         properties.Add("distanceFromOrigin", distanceFromOrigin);
                         properties.Add("config", i);
 
@@ -118,14 +118,14 @@ public class LightComputationManager : MonoBehaviour
                             distanceFromOrigin += Vector3.Distance(positions[j-1], positions[j]);
                         }
 
-                        Coordinate coordinate = mapManager.GetCoordinatesFromUnityPosition(positions[j]);
+                        Coordinate coordinate = terrainManager.GetCoordinatesFromUnityPosition(positions[j]);
                         content += 
                             coordinate.latitude.ToString() + "," +
                             coordinate.longitude.ToString() + "," +
                             coordinate.altitude + "," +
                             distanceFromOrigin + "," +
                             luminances[i][j].ToString() + "," +
-                            mapManager.GetGroundFromPosition(positions[j]) + "," +
+                            terrainManager.GetGroundFromPosition(positions[j]) + "," +
                             i.ToString() + "\n";
                     }
                 }
@@ -144,7 +144,7 @@ public class LightComputationManager : MonoBehaviour
         LuminanceCamera luminanceCamera = Instantiate(luminanceCameraPrefab, transform).GetComponent<LuminanceCamera>();
         luminanceCamera.Create(
             MASK_TEXTURE_SIZE,
-            vegetationManager,
+            biomeAreasManager,
             lightPolesManager
         );
 
@@ -167,7 +167,7 @@ public class LightComputationManager : MonoBehaviour
                 yield return null;
 
                 // Skip frame to render vegetation, needed only for the first point
-                if (j ==0) {
+                if (j == 0) {
                     yield return null;
                 }
 
@@ -190,7 +190,7 @@ public class LightComputationManager : MonoBehaviour
             }
         }
 
-        Destroy(luminanceCamera.gameObject);
+        //Destroy(luminanceCamera.gameObject);
         luminancePassAndVolume.SetActive(false);
 
         computationObject.ResultsComputed(positions, luminances);

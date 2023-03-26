@@ -35,7 +35,7 @@ public class VisualizationFeature : MonoBehaviour
         isCreated = false;
     }
 
-    public void Create(string datasetName, Dictionary<string, float> weights, GeoJSON.Net.Feature.Feature feature, MapManager mapManager)
+    public void Create(string datasetName, Dictionary<string, float> weights, GeoJSON.Net.Feature.Feature feature, TerrainManager terrainManager)
     {
         this.datasetName = datasetName;
 
@@ -50,27 +50,27 @@ public class VisualizationFeature : MonoBehaviour
         switch (feature.Geometry)
         {
             case GeoJSON.Net.Geometry.Point point:
-                mesh = CreateBarMesh(new Coordinate(point.Coordinates), mapManager);
+                mesh = CreateBarMesh(new Coordinate(point.Coordinates), terrainManager);
                 break;
             case GeoJSON.Net.Geometry.MultiPoint multiPoint:
                 if (multiPoint.Coordinates.Count > 0) {
-                    mesh = CreateBarMesh(new Coordinate(multiPoint.Coordinates[0].Coordinates), mapManager);
+                    mesh = CreateBarMesh(new Coordinate(multiPoint.Coordinates[0].Coordinates), terrainManager);
                 }
                 break;
             case GeoJSON.Net.Geometry.LineString lineString:
-                mesh = CreateLineMesh(lineString.Coordinates, mapManager);
+                mesh = CreateLineMesh(lineString.Coordinates, terrainManager);
                 break;
             case GeoJSON.Net.Geometry.MultiLineString multiLineString:
                 if (multiLineString.Coordinates.Count > 0) {
-                    mesh = CreateLineMesh(multiLineString.Coordinates[0].Coordinates, mapManager);
+                    mesh = CreateLineMesh(multiLineString.Coordinates[0].Coordinates, terrainManager);
                 }
                 break;
             case GeoJSON.Net.Geometry.Polygon polygon:
-                mesh = CreateBarMeshFromPolygon(polygon, mapManager);
+                mesh = CreateBarMeshFromPolygon(polygon, terrainManager);
                 break;
             case GeoJSON.Net.Geometry.MultiPolygon multiPolygon:
                 if (multiPolygon.Coordinates.Count > 0) {
-                    mesh = CreateBarMeshFromPolygon(multiPolygon.Coordinates[0], mapManager);
+                    mesh = CreateBarMeshFromPolygon(multiPolygon.Coordinates[0], terrainManager);
                 }
                 break;
             default:
@@ -126,7 +126,7 @@ public class VisualizationFeature : MonoBehaviour
         }
     }
 
-    private Mesh CreateBarMeshFromPolygon(GeoJSON.Net.Geometry.Polygon polygon, MapManager mapManager)
+    private Mesh CreateBarMeshFromPolygon(GeoJSON.Net.Geometry.Polygon polygon, TerrainManager terrainManager)
     {
         // See https://www.rfc-editor.org/rfc/rfc7946#section-3.1.6:
         // A polygon is an array of "linear rings", the first one being
@@ -137,13 +137,13 @@ public class VisualizationFeature : MonoBehaviour
                 centroid += new Coordinate(point);
             }
             centroid /= polygon.Coordinates[0].Coordinates.Count;
-            return CreateBarMesh(centroid, mapManager);
+            return CreateBarMesh(centroid, terrainManager);
         } else {
             return null;
         }
     }
 
-    private Mesh CreateLineMesh(ReadOnlyCollection<GeoJSON.Net.Geometry.IPosition> coordinates, MapManager mapManager)
+    private Mesh CreateLineMesh(ReadOnlyCollection<GeoJSON.Net.Geometry.IPosition> coordinates, TerrainManager terrainManager)
     {
         shape = Shape.Line;
 
@@ -157,9 +157,9 @@ public class VisualizationFeature : MonoBehaviour
             Coordinate currentCoordinate = new Coordinate(coordinates[i]);
             Coordinate nextCoordinate = new Coordinate(coordinates[i+1]);
 
-            if (mapManager.IsCoordinateOnMap(currentCoordinate) && mapManager.IsCoordinateOnMap(nextCoordinate)) {
-                Vector3 currentPosition = mapManager.GetUnityPositionFromCoordinates(currentCoordinate, true);
-                Vector3 nextPosition = mapManager.GetUnityPositionFromCoordinates(nextCoordinate, true);
+            if (terrainManager.IsCoordinateOnMap(currentCoordinate) && terrainManager.IsCoordinateOnMap(nextCoordinate)) {
+                Vector3 currentPosition = terrainManager.GetUnityPositionFromCoordinates(currentCoordinate, true);
+                Vector3 nextPosition = terrainManager.GetUnityPositionFromCoordinates(nextCoordinate, true);
 
                 float angle = Mathf.Atan2(nextPosition.z - currentPosition.z, nextPosition.x - currentPosition.x);
                 float xShift = LINE_VISUALIZATION_WIDTH * Mathf.Sin(angle);
@@ -206,7 +206,7 @@ public class VisualizationFeature : MonoBehaviour
         return mesh;
     }
 
-    private Mesh CreateBarMesh(Coordinate coordinate, MapManager mapManager)
+    private Mesh CreateBarMesh(Coordinate coordinate, TerrainManager terrainManager)
     {
         shape = Shape.Bar;
 
@@ -214,8 +214,8 @@ public class VisualizationFeature : MonoBehaviour
         List<Vector2> uv = new List<Vector2>();
         List<int> triangles = new List<int>();
 
-        if (mapManager.IsCoordinateOnMap(coordinate)) {
-            transform.position = mapManager.GetUnityPositionFromCoordinates(coordinate, true);
+        if (terrainManager.IsCoordinateOnMap(coordinate)) {
+            transform.position = terrainManager.GetUnityPositionFromCoordinates(coordinate, true);
 
             vertices.AddRange(new List<Vector3> {
                 new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),

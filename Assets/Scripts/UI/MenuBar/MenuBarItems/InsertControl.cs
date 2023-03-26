@@ -7,7 +7,8 @@ public class InsertControl : MenuBarItemControl
     [SerializeField] private LightPolesManager lightPolesManager;
     [SerializeField] private GroundTexturesManager groundTexturesManager;
     [SerializeField] private HeightMapsManager heightMapsManager;
-    [SerializeField] private Button lights;
+    [SerializeField] private Button lightsGeoJSON;
+    [SerializeField] private Button lightsCSV;
     [SerializeField] private Button groundTextures;
     [SerializeField] private Button heightMaps;
 
@@ -16,7 +17,8 @@ public class InsertControl : MenuBarItemControl
         Assert.IsNotNull(lightPolesManager);
         Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(heightMapsManager);
-        Assert.IsNotNull(lights);
+        Assert.IsNotNull(lightsGeoJSON);
+        Assert.IsNotNull(lightsCSV);
         Assert.IsNotNull(groundTextures);
         Assert.IsNotNull(heightMaps);
 
@@ -25,8 +27,13 @@ public class InsertControl : MenuBarItemControl
     
     void Start()
     {
-        lights.onClick.AddListener(delegate {
-            lightPolesManager.AddLightPolesFromFile();
+        lightsGeoJSON.onClick.AddListener(delegate {
+            lightPolesManager.AddLightPolesFromGeoJSONFile();
+            gameObject.SetActive(false);
+        });
+        
+        lightsCSV.onClick.AddListener(delegate {
+            lightPolesManager.AddLightPolesFromCSVFile();
             gameObject.SetActive(false);
         });
 

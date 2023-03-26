@@ -4,21 +4,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class GroundTexturesManager : MonoBehaviour, IObjectsManager
+public class GroundTexturesManager : ObjectsManager
 {
-    private const string TEXTURE_PROPERTY = "_Texture";
+    private const string TILING_BASE_PROPERTY = "_TilingBase";
+    private const string DIFFUSE_BASE_PROPERTY = "_MainTex";
+    private const string NORMAL_MAP_BASE_PROPERTY = "_NormalMapBase";
+    private const string MASK_MAP_BASE_PROPERTY = "_MaskMapBase";
     private const string DIFFUSE_PROPERTY = "_Diffuse";
     private const string NORMAL_MAP_PROPERTY = "_NormalMap";
-    private const string HEIGHT_MAP_PROPERTY = "_HeightMap";
     private const string MASK_MAP_PROPERTY = "_MaskMap";
     private const string MASK_PROPERTY = "_Mask";
+    private const string TEXTURE_PROPERTY = "_Texture";
     private const int MAX_NUMBER_OF_TEXTURES_PER_MATERIAL = 8;
+    private const float GROUND_TILING = 100;
     [SerializeField] private GroundTextureMasksManager groundTextureMasksManager;
-    [SerializeField] private MapManager mapManager;
+    [SerializeField] private TerrainManager terrainManager;
+    [SerializeField] private Texture2D baseMaskMap;
     [SerializeField] private List<string> textureNames;
     [SerializeField] private List<Texture2D> diffuseMaps;
     [SerializeField] private List<Texture2D> normalMaps;
-    [SerializeField] private List<Texture2D> heightMaps;
     [SerializeField] private List<Texture2D> maskMaps;
     [SerializeField] private ComputeShader detectBlackMaskShader;
     private List<GroundTextureCollection> groundTextureCollections;
@@ -26,12 +30,13 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
     
     void Awake()
     {
+        Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(groundTextureMasksManager);
-        Assert.IsNotNull(mapManager);
+        Assert.IsNotNull(terrainManager);
+        Assert.IsNotNull(baseMaskMap);
         Assert.IsNotNull(textureNames);
         Assert.IsNotNull(diffuseMaps);
         Assert.IsNotNull(normalMaps);
-        Assert.IsNotNull(heightMaps);
         Assert.IsNotNull(maskMaps);
         Assert.IsNotNull(detectBlackMaskShader);
 
@@ -39,63 +44,11 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
             Assert.IsNotNull(textureNames[i]);
             Assert.IsNotNull(diffuseMaps[i]);
             Assert.IsNotNull(normalMaps[i]);
-            Assert.IsNotNull(heightMaps[i]);
             Assert.IsNotNull(maskMaps[i]);
         }
 
         groundTextureCollections = new List<GroundTextureCollection>();
         indexOfDetectBlackMaskKernel = detectBlackMaskShader.FindKernel("CSMain");
-    }
-
-    public void Create(GeoJSON.Net.Feature.Feature feature)
-    {
-        string content = "";
-        if (feature.Properties.ContainsKey("content")) {
-            content = feature.Properties["content"] as string;
-        }
-
-        string id = "";
-        if (feature.Properties.ContainsKey("id")) {
-            id = feature.Properties["id"] as string;
-        }
-
-        if (content != "") {
-            CreateGroundTextureFromFeatureCollection(GeoJSONParser.StringToFeatureCollection(content), id);
-        }
-    }
-
-    public void Clear()
-    {
-        ResetAllTileTextures();
-        groundTextureCollections.Clear();
-    }
-
-    public void OnLocationChanged()
-    {
-        ResetAllTileTextures();
-
-        foreach (GroundTextureCollection groundTextureCollection in groundTextureCollections) {
-            StartCoroutine(DisplayGroundTextureCollection(groundTextureCollection));
-        }
-    }
-
-    public List<GeoJSON.Net.Feature.Feature> GetFeatures()
-    {
-        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
-
-        foreach (GroundTextureCollection groundTextureCollection in groundTextureCollections) {
-            GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(0, 0, 0));
-
-            Dictionary<string, object> properties = new Dictionary<string, object> {
-                {"type", "groundTexture"},
-                {"content", GeoJSONParser.FeatureCollectionToString(groundTextureCollection.FeatureCollection)},
-                {"id", groundTextureCollection.Id}
-            };
-
-            features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
-        }
-
-        return features;
     }
 
     public void AddGroundTexturesFromFile()
@@ -149,6 +102,35 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         }
     }
 
+    public void SetBaseGroundToMaterials(string groundTextureName, List<Material> materials)
+    {
+        List<Tile> tiles = terrainManager.GetTiles();
+        int textureIndex = textureNames.IndexOf(groundTextureName);
+        Vector2 tiling;
+        Texture2D diffuseMap;
+        Texture2D normalMap;
+        Texture2D maskMap;
+
+        if (textureIndex > -1) {
+            tiling = new Vector2(GROUND_TILING, GROUND_TILING);
+            diffuseMap = diffuseMaps[textureIndex];
+            normalMap = normalMaps[textureIndex];
+            maskMap = maskMaps[textureIndex];
+        } else {
+            tiling = new Vector2(1, 1);
+            diffuseMap = null;
+            normalMap = null;
+            maskMap = baseMaskMap;
+        }
+
+        foreach (Material material in materials) {
+            material.SetVector(TILING_BASE_PROPERTY, tiling);
+            material.SetTexture(DIFFUSE_BASE_PROPERTY, diffuseMap);
+            material.SetTexture(NORMAL_MAP_BASE_PROPERTY, normalMap);
+            material.SetTexture(MASK_MAP_BASE_PROPERTY, maskMap);
+        }
+    }
+
     public string GetPositionTexture(Material material, Vector2 position)
     {
         for (int i=0; i<MAX_NUMBER_OF_TEXTURES_PER_MATERIAL; ++i) {
@@ -167,6 +149,51 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
         return textureNames;
     }
 
+    protected override void CreateObject(GeoJSON.Net.Feature.Feature feature, Location location)
+    {
+        string content = "";
+        if (feature.Properties.ContainsKey("content")) {
+            content = feature.Properties["content"] as string;
+        }
+
+        string id = "";
+        if (feature.Properties.ContainsKey("id")) {
+            id = feature.Properties["id"] as string;
+        }
+
+        if (content != "") {
+            StartCoroutine(DisplayGroundTextureCollection(CreateGroundTextureFromFeatureCollection(GeoJSONParser.StringToFeatureCollection(content), id)));
+        }
+    }
+
+    protected override void ClearActiveObjects()
+    {
+        ResetAllTileTextures();
+        groundTextureCollections.Clear();
+    }
+
+    protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()
+    {
+        List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
+
+        foreach (GroundTextureCollection groundTextureCollection in groundTextureCollections) {
+            if (groundTextureCollection.Location != null) {
+                GeoJSON.Net.Geometry.IGeometryObject geometry = new GeoJSON.Net.Geometry.Point(new GeoJSON.Net.Geometry.Position(0, 0, 0));
+
+                Dictionary<string, object> properties = new Dictionary<string, object> {
+                    {"type", "groundTexture"},
+                    {"location", groundTextureCollection.Location.Name},
+                    {"content", GeoJSONParser.FeatureCollectionToString(groundTextureCollection.FeatureCollection)},
+                    {"id", groundTextureCollection.Id}
+                };
+
+                features.Add(new GeoJSON.Net.Feature.Feature(geometry, properties));
+            }
+        }
+
+        return features;
+    }
+
     private GroundTextureCollection CreateGroundTextureFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id = "")
     {
         GroundTextureCollection groundTextureCollection = CreateGroundTextureCollectionFromFeatureCollection(featureCollection, id);
@@ -176,7 +203,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 
     private void ResetAllTileTextures()
     {
-        List<Tile> tiles = mapManager.GetTiles();
+        List<Tile> tiles = terrainManager.GetTiles();
         foreach (Tile tile in tiles) {
             for (int i=0; i<MAX_NUMBER_OF_TEXTURES_PER_MATERIAL; ++i) {
                 // The mask is destroyed because otherwise would create a memory leak
@@ -185,7 +212,6 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                 tile.MeshRenderer.material.SetTexture(MASK_PROPERTY + i.ToString(), null);
                 tile.MeshRenderer.material.SetTexture(DIFFUSE_PROPERTY + i.ToString(), null);
                 tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + i.ToString(), null);
-                tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + i.ToString(), null);
                 tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + i.ToString(), null);
                 tile.MeshRenderer.material.SetFloat(TEXTURE_PROPERTY + i.ToString(), -1);
             }
@@ -200,7 +226,11 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 
     private GroundTextureCollection CreateGroundTextureCollectionFromFeatureCollection(GeoJSON.Net.Feature.FeatureCollection featureCollection, string id)
     {
-        GroundTextureCollection groundTextureCollection = new GroundTextureCollection(featureCollection, id);
+        GroundTextureCollection groundTextureCollection = new GroundTextureCollection(
+            featureCollection,
+            id,
+            locationsManager.GetCurrentLocation()
+        );
 
         foreach (GeoJSON.Net.Feature.Feature feature in featureCollection.Features) {
             string texture = feature.Properties.Values.First() as string;
@@ -215,8 +245,8 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
             }
 
             foreach (GeoJSON.Net.Geometry.Polygon polygon in polygons) {
-                if (polygon.Coordinates[0].Coordinates.Count > 1) {
-                    GroundTexture groundTexture = new GroundTexture(texture, polygon.Coordinates[0].Coordinates);
+                if (polygon.Coordinates.Count > 0 && polygon.Coordinates[0].Coordinates.Count > 3) {
+                    GroundTexture groundTexture = new GroundTexture(texture, polygon.Coordinates);
                     groundTextureCollection.GroundTextures.Add(groundTexture);
                 }
             }
@@ -227,7 +257,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 
     public void SetMasks(GroundTextureCollection groundTextureCollection)
     {
-        List<Tile> tiles = mapManager.GetTiles();
+        List<Tile> tiles = terrainManager.GetTiles();
 
         foreach (Tile tile in tiles) {
             string path = System.IO.Path.Combine(groundTextureMasksManager.GetGroundTextureCollectionPath(tile.Id, groundTextureCollection.Id));
@@ -248,6 +278,7 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
 
                 if (textureNames.Contains(textureName)) {
                     Texture2D newMask = new Texture2D(1, 1);
+                    newMask.wrapMode = TextureWrapMode.Clamp;   // used to avoid artifacts on the edges of the tiles
                     newMask.LoadImage(System.IO.File.ReadAllBytes(file));
 
                     if (!IsMaskBlack(newMask)) {
@@ -267,7 +298,6 @@ public class GroundTexturesManager : MonoBehaviour, IObjectsManager
                                 int textureIndex = textureNames.FindIndex(x => x.Equals(textureName));
                                 tile.MeshRenderer.material.SetTexture(DIFFUSE_PROPERTY + indexOfGroundTextureOnMaterial.ToString(), diffuseMaps[textureIndex]);
                                 tile.MeshRenderer.material.SetTexture(NORMAL_MAP_PROPERTY + indexOfGroundTextureOnMaterial.ToString(), normalMaps[textureIndex]);
-                                tile.MeshRenderer.material.SetTexture(HEIGHT_MAP_PROPERTY + indexOfGroundTextureOnMaterial.ToString(), heightMaps[textureIndex]);
                                 tile.MeshRenderer.material.SetTexture(MASK_MAP_PROPERTY + indexOfGroundTextureOnMaterial.ToString(), maskMaps[textureIndex]);
                                 tile.MeshRenderer.material.SetFloat(TEXTURE_PROPERTY + indexOfGroundTextureOnMaterial.ToString(), textureNames.IndexOf(textureName));
                             } else {
