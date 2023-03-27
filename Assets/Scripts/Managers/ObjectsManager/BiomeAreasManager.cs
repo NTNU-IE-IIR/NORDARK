@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -36,7 +37,6 @@ public class BiomeAreasManager : ObjectsManager
         }
         biomeAreas.Add(biomeArea);
         biomeAreasControl.AddBiomeAreas(biomeArea.Name);
-        GenerateBiomes();
     }
 
     public void DeleteSelectedBiomeArea()
@@ -213,6 +213,12 @@ public class BiomeAreasManager : ObjectsManager
         biomeAreasControl.ClearBiomeAreas();
     }
 
+    protected override void OnAfterLocationChanged()
+    {
+        // A frame needs to be skipped, otherwise some vegetation spawns below the map
+        StartCoroutine(GenerateBiomesAfterOneFrame());
+    }
+
     protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()
     {
         List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
@@ -240,5 +246,11 @@ public class BiomeAreasManager : ObjectsManager
                 }
         }
         return features;
+    }
+
+    private IEnumerator GenerateBiomesAfterOneFrame()
+    {
+        yield return null;
+        GenerateBiomes();
     }
 }

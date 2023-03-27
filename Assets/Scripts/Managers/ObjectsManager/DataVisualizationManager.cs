@@ -135,6 +135,9 @@ public class DataVisualizationManager : ObjectsManager
         datasets.Clear();
     }
 
+    protected override void OnAfterLocationChanged()
+    {}
+
     protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()
     {
         List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();

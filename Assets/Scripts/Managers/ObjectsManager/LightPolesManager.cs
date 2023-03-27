@@ -416,6 +416,9 @@ public class LightPolesManager : ObjectsManager
         lightPolesGroupsManager.Clear();
     }
 
+    protected override void OnAfterLocationChanged()
+    {}
+
     protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()
     {
         List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();

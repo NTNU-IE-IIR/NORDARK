@@ -6,6 +6,7 @@ public abstract class ObjectsManager : MonoBehaviour
     protected bool changesUnsaved;
     protected abstract void CreateObject(GeoJSON.Net.Feature.Feature feature, Location location);
     protected abstract void ClearActiveObjects();
+    protected abstract void OnAfterLocationChanged();
     protected abstract List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation();
 
     protected List<GeoJSON.Net.Feature.Feature> features = new List<GeoJSON.Net.Feature.Feature>();
@@ -32,6 +33,8 @@ public abstract class ObjectsManager : MonoBehaviour
         }
 
         changesUnsaved = false;
+
+        OnAfterLocationChanged();
     }
 
     public List<GeoJSON.Net.Feature.Feature> GetFeatures()

@@ -119,6 +119,7 @@ public class BiomeAreasControl : MonoBehaviour
         BiomeArea biomeArea = new BiomeArea(locationsManager.GetCurrentLocation());
         biomeArea.Biome = biomes.options[biomes.value].text;
         biomeAreasManager.AddBiomeArea(biomeArea);
+        biomeAreasManager.GenerateBiomes();
         biomeAreas.value = biomeAreas.options.Count - 1;
         BiomeAreaChanged();
     }
