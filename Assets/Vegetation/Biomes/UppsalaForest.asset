@@ -26,7 +26,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: fbc8a2204f253d74e8c7a08f47a1da3e
     SampleDistance: 7.734991
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -64,7 +64,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: cdaa21cccfc1b1b47a89ed09137b327d, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 94a9e56c85aafd546957c75989731564,
@@ -247,7 +247,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 6d67e4bd721c477469b5fc0385b712ef
     SampleDistance: 7.6066494
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -285,7 +285,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: a6dc9db4948f41e4f9b1fd2222ca801b, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: cfd7d72f8386d384e997fd3943177959,
@@ -468,7 +468,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: a2d3a32c254cfde4593e5b5249d3ff28
     SampleDistance: 8.263618
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -506,7 +506,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 604b40948dfa59545bdf1e00919fcdb2, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 7aaea9642f4dd8e409534007f420c9d3,
@@ -689,7 +689,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: b06d3d5a344bedd4eb485d0c5dc9ac83
     SampleDistance: 8.639751
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -727,7 +727,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 353ab140dae900f47b080e516d6d8861, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 615119c191316bb45963642cbc953dd0,
@@ -910,7 +910,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e5962ccbdfe6f424db29978acbe980ea
     SampleDistance: 8.499284
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -948,7 +948,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 4eccf2d86a8f7bf48b99ee5e0e1f8600, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: d4937762fbeb9e244a5c6f1169cc0603,
@@ -1131,7 +1131,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: a03af7622ca44244e93800d584f01e49
     SampleDistance: 8.418667
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -1169,7 +1169,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 1f5eb1f06f8c8e9408fa55128407a728, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 5ddc167c3dc1a054d95fa5fa5bb9c985,
@@ -1352,7 +1352,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 099eb778a12652f48bcdcfd5b515a840
     SampleDistance: 7.9000406
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -1390,7 +1390,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: da52585ca0c7b5741acc3c56d7ff1aed, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: fb4de67dc9cb4424f97bdbd7dce6b26d,
@@ -1573,7 +1573,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: fd13751e3c034674ebb8996dc7058639
     SampleDistance: 7.0053463
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -1611,7 +1611,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: e9f6851a1982eb3479373a17e3ac7d6e, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: a2232a56f4d62f845bfeff1c01dc3680,
@@ -1794,7 +1794,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 0ec1c69bd47ad864f96cc2b516f6cd4b
     SampleDistance: 2.177744
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -2014,7 +2014,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: b273de0d6e5818a4cb3195ce4f376ccb
     SampleDistance: 2.0943224
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -2234,7 +2234,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: a18ae5a380cefaa42984dd62c858aa2b
     SampleDistance: 2.5213523
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -2454,7 +2454,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 0d2d600394cae8e4f908c5bdd1154222
     SampleDistance: 2.7658386
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -2674,7 +2674,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 176a42107ce66c44aa74a67424591597
     SampleDistance: 2.6745348
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -2894,7 +2894,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 054bf5cf244ff2e4083cbf8eca205cf0
     SampleDistance: 2.6221333
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -3114,7 +3114,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 6629880e46886724fa0107d3035304e6
     SampleDistance: 2.2850266
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -3334,7 +3334,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 5e7ace55a7bfd0d4f9ba3c05024e9d79
     SampleDistance: 2.1758971
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -3554,7 +3554,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 4786e2698ac97a949a9209febfcbd49b
     SampleDistance: 2.466561
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -3774,7 +3774,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 4e6885e0d11bd224fa27617a4657c329
     SampleDistance: 1.2258687
-    Density: 1
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -3994,7 +3994,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 7b3e6db10d22f504dbc606110b2cb5e7
     SampleDistance: 1.1658263
-    Density: 1
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -4214,7 +4214,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 4c72217d56dcb6749a897a75cad1f34e
     SampleDistance: 1.2520782
-    Density: 1
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -4434,7 +4434,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 4dfd50a1f648e984f8188be70774f281
     SampleDistance: 1.0763004
-    Density: 1
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -4654,7 +4654,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: cce04f533c148314abf74aff71206ec7
     SampleDistance: 2.4453824
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -4874,7 +4874,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: dd902ff2a6f685041be127af00c09664
     SampleDistance: 2.0288584
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -5094,7 +5094,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: dd1cb49c7d40bfb44a9b4201f7f74b6c
     SampleDistance: 4.4129806
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -5314,7 +5314,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e71b98edf7da4b448bc6ae07b82d6935
     SampleDistance: 3.3234122
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -5534,7 +5534,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 0d60a9157fc09ee4f9c059a176c8d1da
     SampleDistance: 3.4593384
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -5754,7 +5754,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 398b156fac7c6f44db09e9ad046c24dd
     SampleDistance: 3.8341885
-    Density: 0.2
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -5974,7 +5974,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 36e5e7d0d2b3fee428f56d77f4cad875
     SampleDistance: 7.734991
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6012,7 +6012,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: a49fb4041b194d9418ec9406cb33ca49, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 763bea24e40fa0b4e83d9c1144df1850,
@@ -6195,7 +6195,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: d083451678b830445b7e52fef8132c23
     SampleDistance: 7.6066494
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6233,7 +6233,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 532836d3fb6e2474fb332405b0819533, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: b070ee69a00d5984f83f6036f12aa1c8,
@@ -6416,7 +6416,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: dbb171d6f5a8ca14ea0007901bca6cdf
     SampleDistance: 8.263618
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6454,7 +6454,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 1c56f8df0862b5d4594a2b277bb69a88, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: c7064537b9673ff4dab34e1063420596,
@@ -6637,7 +6637,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 01ead5e29ed65154487e95967ef28999
     SampleDistance: 8.639751
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6675,7 +6675,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 0e43797961636fe42a219d65ecf44ff8, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 11864597a93789546b088dc3431032c2,
@@ -6858,7 +6858,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e796cab8e9fe1c44a9f7efa109d3ab42
     SampleDistance: 8.499284
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6896,7 +6896,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: a36191cd68f237943a53cd53bdfd63ed, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 11865f82676650c4cb9969fee04daed5,
@@ -7079,7 +7079,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e74ec38f9bb9dc7459a763813cc476b1
     SampleDistance: 8.418667
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -7117,7 +7117,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 95be3d4b4dbaa224fa58e9b8b2437a39, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: dae8ab05f7c70d24394c17243af06358,
@@ -7300,7 +7300,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 3e2f406ab51b0ed4c9b4084752267e5f
     SampleDistance: 7.9000406
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -7338,7 +7338,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 21d2d24c307c67a46b55a241c9477095, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 2016486dff189ba4798237b81373f3e5,
@@ -7521,7 +7521,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 9ea9477cf6636f04ab7dc7503a8f61cc
     SampleDistance: 7.0053463
-    Density: 0.25
+    Density: 0
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -7559,7 +7559,7 @@ MonoBehaviour:
     NavMeshObstacleHeight: 2
     NavMeshObstacleCarve: 1
     NavMeshArea: 0
-    UseBillboards: 1
+    UseBillboards: 0
     BillboardQuality: 0
     BillboardTexture: {fileID: 2800000, guid: 8de1eb22d13d26345ab3733d94b320d6, type: 3}
     BillboardNormalTexture: {fileID: 2800000, guid: 312289380f75fe1428f50badb16f4fc4,

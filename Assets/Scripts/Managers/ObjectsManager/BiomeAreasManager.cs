@@ -155,6 +155,34 @@ public class BiomeAreasManager : ObjectsManager
         }
     }
 
+    public void ChangeBiomeDensity(float density)
+    {
+        AwesomeTechnologies.VegetationSystem.VegetationPackagePro package = vegetationSystemPro.GetVegetationPackageFromBiome(
+            biomes[biomeAreasControl.GetCurrentBiomeName()]
+        );
+
+        if (package != null) {
+            foreach (AwesomeTechnologies.VegetationSystem.VegetationItemInfoPro vegetationItem in package.VegetationInfoList) {
+                vegetationItem.Density = density;
+            }
+        }
+
+        GenerateBiomes();
+    }
+
+    public float GetBiomeDensity(string biome)
+    {
+        AwesomeTechnologies.VegetationSystem.VegetationPackagePro package = vegetationSystemPro.GetVegetationPackageFromBiome(
+            biomes[biomeAreasControl.GetCurrentBiomeName()]
+        );
+
+        if (package != null && package.VegetationInfoList.Count > 0) {
+            return package.VegetationInfoList[0].Density;
+        } else {
+            return 0;
+        }
+    }
+
     public List<Coordinate> GetCoordinateOfCurrentBiomeArea()
     {
         int biomeAreaIndex = biomeAreasControl.GetBiomeAreaIndex();

@@ -12,13 +12,15 @@ public class BiomeAreasControl : MonoBehaviour
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private Toggle displayBiomeAreas;
+    [SerializeField] private Toggle displayNodes;
     [SerializeField] private TMP_Dropdown biomeAreas;
     [SerializeField] private Button addBiomeArea;
     [SerializeField] private Button deleteBiomeArea;
-    [SerializeField] private TMP_Dropdown biomes;
     [SerializeField] private Button addNode;
     [SerializeField] private Button deleteNode;
-    [SerializeField] private Toggle displayNodes;
+    [SerializeField] private Slider density;
+    [SerializeField] private TMP_Text densityValue;
+    [SerializeField] private TMP_Dropdown biomes;
     [SerializeField] private GameObject selectionPin;
     [SerializeField] private Transform selectionPinContainer;
     private SelectionPin movingPin;
@@ -30,13 +32,15 @@ public class BiomeAreasControl : MonoBehaviour
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(displayBiomeAreas);
+        Assert.IsNotNull(displayNodes);
         Assert.IsNotNull(biomeAreas);
         Assert.IsNotNull(addBiomeArea);
         Assert.IsNotNull(deleteBiomeArea);
-        Assert.IsNotNull(biomes);
         Assert.IsNotNull(addNode);
         Assert.IsNotNull(deleteNode);
-        Assert.IsNotNull(displayNodes);
+        Assert.IsNotNull(density);
+        Assert.IsNotNull(densityValue);
+        Assert.IsNotNull(biomes);
         Assert.IsNotNull(selectionPin);
         Assert.IsNotNull(selectionPinContainer);
 
@@ -46,13 +50,20 @@ public class BiomeAreasControl : MonoBehaviour
     void Start()
     {
         displayBiomeAreas.onValueChanged.AddListener(change => biomeAreasManager.GenerateBiomes());
+        displayNodes.onValueChanged.AddListener(change => DisplayNodes());
         biomeAreas.onValueChanged.AddListener(change => BiomeAreaChanged());
         addBiomeArea.onClick.AddListener(AddBiomeArea);
         deleteBiomeArea.onClick.AddListener(DeleteBiomeArea);
-        biomes.onValueChanged.AddListener(change => biomeAreasManager.ChangeBiome(biomes.options[biomes.value].text));
         addNode.onClick.AddListener(AddNode);
         deleteNode.onClick.AddListener(DeleteNode);
-        displayNodes.onValueChanged.AddListener(change => DisplayNodes());
+        density.onValueChanged.AddListener(change => {
+            SetDensity(change);
+            biomeAreasManager.ChangeBiomeDensity(change);
+        });
+        biomes.onValueChanged.AddListener(change => {
+            biomeAreasManager.ChangeBiome(biomes.options[change].text);
+            SetDensity(biomeAreasManager.GetBiomeDensity(biomes.options[change].text));
+        });
     }
 
     void Update()
@@ -104,6 +115,11 @@ public class BiomeAreasControl : MonoBehaviour
     public int GetBiomeAreaIndex()
     {
         return biomeAreas.value;
+    }
+
+    public string GetCurrentBiomeName()
+    {
+        return biomes.options[biomes.value].text;
     }
 
     private void BiomeAreaChanged()
@@ -165,12 +181,19 @@ public class BiomeAreasControl : MonoBehaviour
         }
     }
 
+    private void SetDensity(float newDensity)
+    {
+        density.SetValueWithoutNotify(newDensity);
+        densityValue.text = newDensity.ToString("0.00");
+    }
+
     private void UpdateBiome()
     {
         string biome = biomeAreasManager.GetBiomeOfCurrentBiomeArea();
         for (int i=0; i<biomes.options.Count; i++) {
             if (biomes.options[i].text == biome) {
                 biomes.value = i;
+                SetDensity(biomeAreasManager.GetBiomeDensity(biome));
             }
         }
     }
