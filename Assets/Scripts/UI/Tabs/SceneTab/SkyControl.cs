@@ -71,9 +71,6 @@ public class SkyControl : MonoBehaviour
 
     private void UpdateDateDropdown(int day)
     {
-        // Remove the listener to avoid trigerring it when modifying dayInput
-        dayInput.onValueChanged.RemoveAllListeners();
-
         List<string> days = new List<string>();
         for (int i=1; i<29; i++) {
             days.Add(i.ToString());
@@ -94,11 +91,9 @@ public class SkyControl : MonoBehaviour
         dayInput.ClearOptions();
         dayInput.AddOptions(days);
         if (day > 0 && day < days.Count+1) {
-            dayInput.value = day-1;
+            dayInput.SetValueWithoutNotify(day-1);
         } else {
-            dayInput.value = 0;
+            dayInput.SetValueWithoutNotify(0);
         }
-        
-        dayInput.onValueChanged.AddListener(change => ChangeDateTime());
     }
 }

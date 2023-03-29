@@ -82,12 +82,7 @@ public class ComputationRectangle : MonoBehaviour, IComputationObject
     {
         gameObject.SetActive(show);
 
-        if (show) {
-            if (IsRectangleCreated()) {
-                heatmapControl.SetComputing();
-                lightComputationManager.ComputeAlongObject(this);
-            }
-        } else {
+        if (!show) {
             isCreatingRectangle = false;
             TooltipControl.DisplayTooltip(false);
         }

@@ -174,9 +174,9 @@ public class LightPolesControl : MonoBehaviour
             selectFromGroup.SetValueWithoutNotify(0);
         }
         
-        height.value = heightSelected;
+        height.SetValueWithoutNotify(heightSelected);
         SetHeight(heightSelected);
-        rotation.value = rotationSelected;
+        rotation.SetValueWithoutNotify(rotationSelected);
         SetRotation(rotationSelected);
 
         List<string> addToGroupList = addToGroupDropdown.options.Select(option => option.text).ToList();
@@ -196,10 +196,10 @@ public class LightPolesControl : MonoBehaviour
         }
         
         if (iesFileIndex >= 0) {
-            lightIESFile.value = iesFileIndex;
+            lightIESFile.SetValueWithoutNotify(iesFileIndex);
         }
         if (prefabIndex >= 0) {
-            light3DModel.value = prefabIndex;
+            light3DModel.SetValueWithoutNotify(prefabIndex);
         }
     }
 

@@ -101,11 +101,7 @@ public class ComputationLine : MonoBehaviour, IComputationObject
     {
         gameObject.SetActive(show);
 
-        if (show) {
-            if (IsLineCreated()) {
-                lightComputationManager.ComputeAlongObject(this);
-            }
-        } else {
+        if (!show) {
             isCreatingLine = false;
             TooltipControl.DisplayTooltip(false);
         }

@@ -72,7 +72,14 @@ public class Heatmap : MaskableGraphic
     {
         valuesNormalized = new float[values.Length];
         for (int i=0; i<values.Length; ++i) {
-            valuesNormalized[i] = 1 - (values[i] - minValue) / (maxValue - minValue);
+            float value = values[i];
+            value = Mathf.Min(value, maxValue);
+            value = Mathf.Max(value, minValue);
+            valuesNormalized[i] = 1 - (value - minValue) / (maxValue - minValue);
+
+            // Values at 0 or 1 create a purple color: we prevent this from happening
+            valuesNormalized[i] = Mathf.Min(valuesNormalized[i], 0.99f);
+            valuesNormalized[i] = Mathf.Max(valuesNormalized[i], 0.01f);
         }
 
         SetVerticesDirty();
