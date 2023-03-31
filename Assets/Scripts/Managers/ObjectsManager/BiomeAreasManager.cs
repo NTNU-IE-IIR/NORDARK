@@ -45,6 +45,7 @@ public class BiomeAreasManager : ObjectsManager
         if (biomeAreaIndex > -1 && biomeAreaIndex < biomeAreas.Count) {
             biomeAreas[biomeAreaIndex].BiomeMaskArea.Destroy();
             biomeAreas.RemoveAt(biomeAreaIndex);
+            changesUnsaved = true;
         }
     }
 
@@ -119,6 +120,8 @@ public class BiomeAreasManager : ObjectsManager
             }
 
             biomeAreas[biomeAreaIndex].BiomeMaskArea.PositionNodes();
+            
+            changesUnsaved = true;
         }
     }
 
@@ -139,6 +142,8 @@ public class BiomeAreasManager : ObjectsManager
             node.Position = terrainManager.GetUnityPositionFromCoordinates(coordinate);
             biomeAreas[biomeAreaIndex].BiomeMaskArea.Nodes.Add(node);
             biomeAreas[biomeAreaIndex].BiomeMaskArea.PositionNodes();
+            
+            changesUnsaved = true;
         }
     }
 
@@ -243,8 +248,11 @@ public class BiomeAreasManager : ObjectsManager
 
     protected override void OnAfterLocationChanged()
     {
-        // A frame needs to be skipped, otherwise some vegetation spawns below the map
-        StartCoroutine(GenerateBiomesAfterOneFrame());
+        // This only concerns the map, so it's skipped when the map is inactive
+        if (gameObject.activeSelf) {
+            // A frame needs to be skipped, otherwise some vegetation spawns below the map
+            StartCoroutine(GenerateBiomesAfterOneFrame());
+        }
     }
 
     protected override List<GeoJSON.Net.Feature.Feature> GetFeaturesOfCurrentLocation()

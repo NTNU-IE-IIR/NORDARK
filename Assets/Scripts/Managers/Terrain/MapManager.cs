@@ -7,17 +7,16 @@ using Mapbox.Unity.Map;
 
 public class MapManager : TerrainTypeManager
 {
+    public const int DEFAULT_ZOOM = 17;
     private const int MAPBOX_MAX_ZOOM = 22;
     private const int MAPBOX_PIXELS_PER_TILE = 256;
     [SerializeField] private TerrainControl terrainControl;
     [SerializeField] private GameObject locationUndefinedWindow;
     public override Location.TerrainType TerrainType { get; set; }
     private AbstractMap map;
-    private bool isMapInitialized;
     private int numberOfTiles;
     private int numberOfTilesInitialized;
     private List<Tile> tiles;
-    private bool areMapCoordinatesChanging;
 
     void Awake()
     {
@@ -27,6 +26,7 @@ public class MapManager : TerrainTypeManager
         Assert.IsNotNull(groundTexturesManager);
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(locationsManager);
+        Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(terrainControl);
         Assert.IsNotNull(locationUndefinedWindow);
 
@@ -38,7 +38,6 @@ public class MapManager : TerrainTypeManager
         numberOfTiles = (extentOptions.north + 1 + extentOptions.south) * (extentOptions.west + 1 + extentOptions.east);
 
         numberOfTilesInitialized = 0;
-        isMapInitialized = false;
         tiles = new List<Tile>();
     }
 
@@ -53,15 +52,18 @@ public class MapManager : TerrainTypeManager
             if (map.CenterLatitudeLongitude.Equals(newCoordinate) && map.Zoom == location.Zoom) {
                 MapLocationChanged();
             } else {
-                // There is a Mapbox bug with the elevation, so we update the map coordinates, wait for it to complete,
-                // set the terrain to flat, and then set back the terrain to elevated
                 numberOfTilesInitialized = 0;
-                areMapCoordinatesChanging = true;
-                if (isMapInitialized) {
-                    map.UpdateMap(newCoordinate, location.Zoom);
-                } else {
-                    map.Initialize(newCoordinate, location.Zoom);
-                }                
+
+                // Buildings are not automatically destroyed, so it has to be done manually
+                foreach (Transform tile in transform) {
+                    foreach (Transform building in tile) {
+                        Destroy(building.gameObject);
+                    }
+                }
+                
+                // We initialize the map instead of just updating it because otherwise 
+                // some bug occurs with the map
+                map.Initialize(newCoordinate, location.Zoom);               
             }
         }
     }
@@ -180,28 +182,8 @@ public class MapManager : TerrainTypeManager
     {
         numberOfTilesInitialized++;
 
-        // See ChangeLocation() function: we reset the elevation when the map coordinates have changed
         if (numberOfTilesInitialized == numberOfTiles) {
-            if (areMapCoordinatesChanging) {
-                numberOfTilesInitialized = 0;
-                areMapCoordinatesChanging = false;
-                map.Terrain.SetElevationType(ElevationLayerType.FlatTerrain);
-                map.Terrain.SetElevationType(ElevationLayerType.TerrainWithElevation);
-            }
-        }
-
-        // When numberOfTilesInitialized > 2*numberOfTiles for the map initialization or numberOfTilesInitialized > 4*numberOfTiles
-        // for the map update, all tiles have "generally" been loaded with the correct elevation.
-        // "generally" because it depends on the location
-        if (isMapInitialized) {
-            if (numberOfTilesInitialized == 4*numberOfTiles) {
-                MapLocationChanged();
-            }
-        } else {
-            if (numberOfTilesInitialized == 2*numberOfTiles) {
-                MapLocationChanged();
-                isMapInitialized = true;
-            }
-        }
+            MapLocationChanged();
+        }        
     }
 }

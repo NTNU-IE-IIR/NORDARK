@@ -19,6 +19,7 @@ public abstract class TerrainTypeManager : MonoBehaviour
     [SerializeField] protected LightComputationManager lightComputationManager;
     [SerializeField] protected SceneCamerasManager sceneCamerasManager;
     [SerializeField] protected GroundTexturesManager groundTexturesManager;
+    [SerializeField] protected LightConfigurationsManager lightConfigurationsManager;
 
     public void SetActive(bool active)
     {
@@ -32,5 +33,6 @@ public abstract class TerrainTypeManager : MonoBehaviour
         skyManager.OnLocationChanged();
         lightComputationManager.OnLocationChanged();
         sceneCamerasManager.OnLocationChanged();
+        lightConfigurationsManager.OnLocationChanged();
     }
 }

@@ -12,7 +12,9 @@ public class Configuration : MonoBehaviour
     void Awake()
     {
         Assert.IsNotNull(fileName);
-        Assert.IsNotNull(browse);
+        
+        // When the location is changed, Create() might be called before Awake() and so browse may be destroyed
+        // So we don't check if it's null
     }
     
     public void Create(string name, System.Action onBrowse, bool browsable = true)

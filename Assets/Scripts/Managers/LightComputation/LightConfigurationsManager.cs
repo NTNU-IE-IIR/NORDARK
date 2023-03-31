@@ -16,7 +16,12 @@ public class LightConfigurationsManager : MonoBehaviour
         Assert.IsNotNull(locationsManager);
     }
 
-    public void ResetConfigurations()
+    public void OnLocationChanged()
+    {
+        configurationsControl.ResetConfigurations();
+    }
+
+    public void DeleteConfigurations()
     {
         // Configuration 0 is the main configuration, it shouldn't be deleted
         for (int i=1; i<ConfigurationsControl.MAX_NUMBER_OF_CONFIGURATIONS; ++i) {

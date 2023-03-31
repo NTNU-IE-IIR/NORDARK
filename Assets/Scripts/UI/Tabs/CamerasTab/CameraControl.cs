@@ -66,5 +66,6 @@ public class CameraControl : MonoBehaviour
     public void CameraChanged(int cameraIndex)
     {
         cameras.SetValueWithoutNotify(cameraIndex);
+        cameras.RefreshShownValue();    // needed to update the selected value of the dropdown
     }
 }

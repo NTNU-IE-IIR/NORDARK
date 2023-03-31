@@ -25,39 +25,44 @@ public class IESManager : MonoBehaviour
 
     public void Upload()
     {
-        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Upload an IES file", "", "ies", true);
-        List<string> addedFiles = new List<string>();
-        List<string> notAddedFiles = new List<string>();
-
-        foreach (string path in paths) {
-            string iesName = Path.GetFileNameWithoutExtension(path);
-            string destFile = Path.Combine(IESDirectory, Path.GetFileName(path));
-
-            File.Copy(path, destFile, true);
-            Cubemap cookie = LoadCookie(destFile);
-            if (cookie != null) {
-                IESs.Add(new IESLight(iesName, cookie, GetIntensity(destFile)));
-                lightPolesControl.SetIESNames(GetIESNames());
-                addedFiles.Add(iesName);
-            } else {
-                File.Delete(destFile);
-                notAddedFiles.Add(iesName);
-            }
-        }
-
         string message = "";
-        if (addedFiles.Count > 0) {
-            message += "The following IES files were added:\n";
-            foreach (string file in addedFiles) {
-                message += file + "\n";
+        try {
+            string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel("Upload an IES file", "", "ies", true);
+            List<string> addedFiles = new List<string>();
+            List<string> notAddedFiles = new List<string>();
+
+            foreach (string path in paths) {
+                string iesName = Path.GetFileNameWithoutExtension(path);
+                string destFile = Path.Combine(IESDirectory, Path.GetFileName(path));
+
+                File.Copy(path, destFile, true);
+                Cubemap cookie = LoadCookie(destFile);
+                if (cookie != null) {
+                    IESs.Add(new IESLight(iesName, cookie, GetIntensity(destFile)));
+                    lightPolesControl.SetIESNames(GetIESNames());
+                    addedFiles.Add(iesName);
+                } else {
+                    File.Delete(destFile);
+                    notAddedFiles.Add(iesName);
+                }
             }
-        }
-        if (notAddedFiles.Count > 0) {
-            message += "The following IES files were not added:\n";
-            foreach (string file in notAddedFiles) {
-                message += file + "\n";
+
+            if (addedFiles.Count > 0) {
+                message += "The following IES files were added:\n";
+                foreach (string file in addedFiles) {
+                    message += file + "\n";
+                }
             }
+            if (notAddedFiles.Count > 0) {
+                message += "The following IES files were not added:\n";
+                foreach (string file in notAddedFiles) {
+                    message += file + "\n";
+                }
+            }
+        } catch (System.Exception exception) {
+            message = exception.Message;
         }
+        
         if (message != "") {
             DialogControl.CreateDialog(message);
         }

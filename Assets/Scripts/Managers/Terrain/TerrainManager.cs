@@ -26,6 +26,10 @@ public class TerrainManager : MonoBehaviour
                     terrainTypeManager.SetActive(false);
                 }
             }
+        } else {
+            foreach (TerrainTypeManager terrainTypeManager in terrainTypeManagers) {
+                terrainTypeManager.SetActive(false);
+            }
         }
     }
 

@@ -3,6 +3,7 @@ using UnityEngine.Assertions;
 
 public class CameraMovement : MonoBehaviour
 {
+    [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private float lookSpeedH = 5f;
     [SerializeField] private float lookSpeedV = 5f;
     [SerializeField] private float zoomSpeed = 10f;
@@ -14,8 +15,10 @@ public class CameraMovement : MonoBehaviour
     private float pitch;
     private bool orthographic;
 
-    void Start()
+    void Awake()
     {
+        Assert.IsNotNull(locationsManager);
+
         sceneCamerasManager = GetComponent<SceneCamerasManager>();
         Assert.IsNotNull(sceneCamerasManager);
 
@@ -26,8 +29,9 @@ public class CameraMovement : MonoBehaviour
 
     void Update()
     {
-        KeyboardMovement();
-        MouseRotation();
+        float terrainSizeMultiplier = locationsManager.GetCurrentTerrainMultiplier();
+        KeyboardMovement(terrainSizeMultiplier);
+        MouseRotation(terrainSizeMultiplier);
     }
     
     public void SetOrthographic(bool orthographic)
@@ -35,61 +39,62 @@ public class CameraMovement : MonoBehaviour
         this.orthographic = orthographic;
     }
 
-    private void KeyboardMovement()
+    private void KeyboardMovement(float terrainSizeMultiplier)
     {
+
         if (orthographic) {
             if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) {
-            transform.Translate(new Vector3(0, -this.dragSpeedOrthographic * Time.deltaTime, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, -this.dragSpeedOrthographic * Time.deltaTime, 0));
             }
             if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) {
-                transform.Translate(new Vector3(0, this.dragSpeedOrthographic * Time.deltaTime, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, this.dragSpeedOrthographic * Time.deltaTime, 0));
             }
             if (Input.GetKey(KeyCode.Q)) {
-                transform.Translate(new Vector3(0, 0, -this.dragSpeedY * Time.deltaTime));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, 0, -this.dragSpeedY * Time.deltaTime));
             }
             if (Input.GetKey(KeyCode.E)) {
-                transform.Translate(new Vector3(0, 0, this.dragSpeedY * Time.deltaTime));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, 0, this.dragSpeedY * Time.deltaTime));
             }
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) {
-                transform.Translate(new Vector3(this.dragSpeedOrthographic * Time.deltaTime, 0, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(this.dragSpeedOrthographic * Time.deltaTime, 0, 0));
             }
             if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) {
-                transform.Translate(new Vector3(-this.dragSpeedOrthographic * Time.deltaTime, 0, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(-this.dragSpeedOrthographic * Time.deltaTime, 0, 0));
             }
         } else {
             if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) {
-            transform.Translate(new Vector3(0, 0, -this.dragSpeed * Time.deltaTime));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, 0, -this.dragSpeed * Time.deltaTime));
             }
             if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) {
-                transform.Translate(new Vector3(0, 0, this.dragSpeed * Time.deltaTime));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, 0, this.dragSpeed * Time.deltaTime));
             }
             if (Input.GetKey(KeyCode.Q)) {
-                transform.Translate(new Vector3(0, -this.dragSpeedY * Time.deltaTime, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, -this.dragSpeedY * Time.deltaTime, 0));
             }
             if (Input.GetKey(KeyCode.E)) {
-                transform.Translate(new Vector3(0, this.dragSpeedY * Time.deltaTime, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(0, this.dragSpeedY * Time.deltaTime, 0));
             }
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) {
-                transform.Translate(new Vector3(this.dragSpeed * Time.deltaTime, 0, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(this.dragSpeed * Time.deltaTime, 0, 0));
             }
             if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) {
-                transform.Translate(new Vector3(-this.dragSpeed * Time.deltaTime, 0, 0));
+                transform.Translate(terrainSizeMultiplier * new Vector3(-this.dragSpeed * Time.deltaTime, 0, 0));
             }
         }
     }
 
-    private void MouseRotation()
+    private void MouseRotation(float terrainSizeMultiplier)
     {
         if (orthographic) {
             if (Input.GetMouseButton(2)) {
-                transform.Translate(
+                transform.Translate(terrainSizeMultiplier * new Vector3(
                     -Input.GetAxisRaw("Mouse X") * Time.deltaTime * dragSpeedOrthographic,
                     -Input.GetAxisRaw("Mouse Y") * Time.deltaTime * dragSpeedOrthographic,
                     0
-                );
+                ));
             }
 
-            sceneCamerasManager.IncreaseCameraSize(-Input.GetAxis("Mouse ScrollWheel") * zoomSpeed);
+            sceneCamerasManager.IncreaseCameraSize(terrainSizeMultiplier * -Input.GetAxis("Mouse ScrollWheel") * zoomSpeed);
         } else {
             if (Input.GetMouseButton(1)) {
                 yaw += lookSpeedH * Input.GetAxis("Mouse X");
@@ -99,14 +104,14 @@ public class CameraMovement : MonoBehaviour
             }
 
             if (Input.GetMouseButton(2)) {
-                transform.Translate(
+                transform.Translate(terrainSizeMultiplier * new Vector3(
                     -Input.GetAxisRaw("Mouse X") * Time.deltaTime * dragSpeed,
                     -Input.GetAxisRaw("Mouse Y") * Time.deltaTime * dragSpeed,
                     0
-                );
+                ));
             }
 
-            transform.Translate(0, 0, Input.GetAxis("Mouse ScrollWheel") * zoomSpeed, Space.Self);
+            transform.Translate(0, 0, terrainSizeMultiplier * Input.GetAxis("Mouse ScrollWheel") * zoomSpeed, Space.Self);
         }   
     }
 }

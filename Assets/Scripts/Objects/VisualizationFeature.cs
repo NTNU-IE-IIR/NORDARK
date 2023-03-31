@@ -35,7 +35,12 @@ public class VisualizationFeature : MonoBehaviour
         isCreated = false;
     }
 
-    public void Create(string datasetName, Dictionary<string, float> weights, GeoJSON.Net.Feature.Feature feature, TerrainManager terrainManager)
+    public void Create(
+        string datasetName,
+        Dictionary<string, float> weights,
+        GeoJSON.Net.Feature.Feature feature,
+        TerrainManager terrainManager,
+        LocationsManager locationsManager)
     {
         this.datasetName = datasetName;
 
@@ -50,11 +55,11 @@ public class VisualizationFeature : MonoBehaviour
         switch (feature.Geometry)
         {
             case GeoJSON.Net.Geometry.Point point:
-                mesh = CreateBarMesh(new Coordinate(point.Coordinates), terrainManager);
+                mesh = CreateBarMesh(new Coordinate(point.Coordinates), terrainManager, locationsManager);
                 break;
             case GeoJSON.Net.Geometry.MultiPoint multiPoint:
                 if (multiPoint.Coordinates.Count > 0) {
-                    mesh = CreateBarMesh(new Coordinate(multiPoint.Coordinates[0].Coordinates), terrainManager);
+                    mesh = CreateBarMesh(new Coordinate(multiPoint.Coordinates[0].Coordinates), terrainManager, locationsManager);
                 }
                 break;
             case GeoJSON.Net.Geometry.LineString lineString:
@@ -66,11 +71,11 @@ public class VisualizationFeature : MonoBehaviour
                 }
                 break;
             case GeoJSON.Net.Geometry.Polygon polygon:
-                mesh = CreateBarMeshFromPolygon(polygon, terrainManager);
+                mesh = CreateBarMeshFromPolygon(polygon, terrainManager, locationsManager);
                 break;
             case GeoJSON.Net.Geometry.MultiPolygon multiPolygon:
                 if (multiPolygon.Coordinates.Count > 0) {
-                    mesh = CreateBarMeshFromPolygon(multiPolygon.Coordinates[0], terrainManager);
+                    mesh = CreateBarMeshFromPolygon(multiPolygon.Coordinates[0], terrainManager, locationsManager);
                 }
                 break;
             default:
@@ -126,7 +131,7 @@ public class VisualizationFeature : MonoBehaviour
         }
     }
 
-    private Mesh CreateBarMeshFromPolygon(GeoJSON.Net.Geometry.Polygon polygon, TerrainManager terrainManager)
+    private Mesh CreateBarMeshFromPolygon(GeoJSON.Net.Geometry.Polygon polygon, TerrainManager terrainManager, LocationsManager locationsManager)
     {
         // See https://www.rfc-editor.org/rfc/rfc7946#section-3.1.6:
         // A polygon is an array of "linear rings", the first one being
@@ -137,7 +142,7 @@ public class VisualizationFeature : MonoBehaviour
                 centroid += new Coordinate(point);
             }
             centroid /= polygon.Coordinates[0].Coordinates.Count;
-            return CreateBarMesh(centroid, terrainManager);
+            return CreateBarMesh(centroid, terrainManager, locationsManager);
         } else {
             return null;
         }
@@ -206,7 +211,7 @@ public class VisualizationFeature : MonoBehaviour
         return mesh;
     }
 
-    private Mesh CreateBarMesh(Coordinate coordinate, TerrainManager terrainManager)
+    private Mesh CreateBarMesh(Coordinate coordinate, TerrainManager terrainManager, LocationsManager locationsManager)
     {
         shape = Shape.Bar;
 
@@ -216,17 +221,18 @@ public class VisualizationFeature : MonoBehaviour
 
         if (terrainManager.IsCoordinateOnMap(coordinate)) {
             transform.position = terrainManager.GetUnityPositionFromCoordinates(coordinate, true);
+            float terrainMultiplier = locationsManager.GetCurrentTerrainMultiplier();
 
             vertices.AddRange(new List<Vector3> {
-                new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),
-                new Vector3(BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),
-                new Vector3(BAR_VISUALIZATION_WIDTH/2, 0, BAR_VISUALIZATION_WIDTH/2),
-                new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(BAR_VISUALIZATION_WIDTH/2, 0, -BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(BAR_VISUALIZATION_WIDTH/2, 0, BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(-BAR_VISUALIZATION_WIDTH/2, 0, BAR_VISUALIZATION_WIDTH/2),
 
-                new Vector3(-BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, -BAR_VISUALIZATION_WIDTH/2),
-                new Vector3(BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, -BAR_VISUALIZATION_WIDTH/2),
-                new Vector3(BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, BAR_VISUALIZATION_WIDTH/2),
-                 new Vector3(-BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, BAR_VISUALIZATION_WIDTH/2)
+                terrainMultiplier * new Vector3(-BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, -BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, -BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, BAR_VISUALIZATION_WIDTH/2),
+                terrainMultiplier * new Vector3(-BAR_VISUALIZATION_WIDTH/2, BAR_VISUALIZATION_HEIGHT, BAR_VISUALIZATION_WIDTH/2)
             });
 
             uv.AddRange(CreateCubeUVs());

@@ -14,7 +14,6 @@ public class SceneCamerasManager : MonoBehaviour
     [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private Transform additionalSceneCamerasContainer;
-    [SerializeField] private Minimap minimap;
     private Camera mainCamera;
     private CameraMovement cameraMovement;
     private Rect viewportRect;
@@ -29,7 +28,6 @@ public class SceneCamerasManager : MonoBehaviour
         Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(additionalSceneCamerasContainer);
-        Assert.IsNotNull(minimap);
 
         mainCamera = GetComponent<Camera>();
         cameraMovement = GetComponent<CameraMovement>();

@@ -32,6 +32,7 @@ public class CamerasManager : ObjectsManager
 
     public void CreateCamera()
     {
+        changesUnsaved = true;
         CreateCamera(
             new CameraNode(
                 Utils.DetermineNewName(cameraNodes.Select(cameraNode => cameraNode.Name).ToList(), "Camera"),
@@ -51,6 +52,7 @@ public class CamerasManager : ObjectsManager
             cameraNodes.Remove(currentCamera);
             cameraControl.RemoveCamera();
             ChangeCurrentCamera(cameraNodes.Count - 1);
+            changesUnsaved = true;
         }
     }
     
@@ -60,6 +62,7 @@ public class CamerasManager : ObjectsManager
             currentCamera.Coordinate = terrainManager.GetCoordinatesFromUnityPosition(sceneCamerasManager.GetPosition());
             currentCamera.Camera.SetPosition(sceneCamerasManager.GetPosition());
             currentCamera.Camera.SetEulerAngles(sceneCamerasManager.GetEulerAngles());
+            changesUnsaved = true;
         }
     }
     
@@ -98,6 +101,9 @@ public class CamerasManager : ObjectsManager
 
     public CameraPrefab GetCurrentCamera()
     {
+        // This function is only used to change some camera parameters
+        changesUnsaved = true;
+
         if (currentCamera == null) {
             return null;
         } else {
@@ -184,7 +190,7 @@ public class CamerasManager : ObjectsManager
     }
 
     private void CreateCamera(CameraNode cameraNode, Vector3 eulerAngles, CameraParameters cameraParameters)
-    {   
+    {
         cameraControl.AddCameraToList(cameraNode.Name);
         cameraNode.Camera = Instantiate(
             cameraObject,

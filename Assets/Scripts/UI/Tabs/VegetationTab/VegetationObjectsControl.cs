@@ -71,7 +71,7 @@ public class VegetationObjectsControl : MonoBehaviour
 
     public void ClearSelectedObjects()
     {
-        rotation.value = 0;
+        rotation.SetValueWithoutNotify(0);
         rotationValue.text = "";
     }
 
@@ -80,11 +80,11 @@ public class VegetationObjectsControl : MonoBehaviour
         float rotationSelected = System.Math.Max(0, vegetationObject.GameObject.transform.eulerAngles.y);
         int prefabIndex = object3DModel.options.FindIndex(i => i.text.Equals(vegetationObject.PrefabName));
         
-        rotation.value = rotationSelected;
+        rotation.SetValueWithoutNotify(rotationSelected);
         SetRotation(rotationSelected);
 
         if (prefabIndex >= 0) {
-            object3DModel.value = prefabIndex;
+            object3DModel.SetValueWithoutNotify(prefabIndex);
         }
     }
 

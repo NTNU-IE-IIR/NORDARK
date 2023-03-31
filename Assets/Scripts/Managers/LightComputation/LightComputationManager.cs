@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 
 public class LightComputationManager : MonoBehaviour
 {
-    private const int MASK_TEXTURE_SIZE = 32;
+    private const int MASK_TEXTURE_SIZE = 16;
     private const float LUMINANCE_RESOLUTION = 100;
     [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private BiomeAreasManager biomeAreasManager;
@@ -182,7 +182,7 @@ public class LightComputationManager : MonoBehaviour
                 luminanceSumShader.SetTexture(indexOfLuminanceSumShader, "Texture", luminanceTexture);
                 luminanceSumShader.SetFloat("LuminanceResolution", LUMINANCE_RESOLUTION);
                 luminanceSumShader.SetBuffer(indexOfLuminanceSumShader, "Result", computeBuffer);
-                luminanceSumShader.Dispatch(indexOfLuminanceSumShader, luminanceTexture.width / 32, luminanceTexture.height / 32, 1);
+                luminanceSumShader.Dispatch(indexOfLuminanceSumShader, luminanceTexture.width / 16, luminanceTexture.height / 16, 1);
 
                 computeBuffer.GetData(result);
                 luminances[i, j] = result[0] / LUMINANCE_RESOLUTION / (MASK_TEXTURE_SIZE * MASK_TEXTURE_SIZE);
@@ -190,7 +190,7 @@ public class LightComputationManager : MonoBehaviour
             }
         }
 
-        //Destroy(luminanceCamera.gameObject);
+        Destroy(luminanceCamera.gameObject);
         luminancePassAndVolume.SetActive(false);
 
         computationObject.ResultsComputed(positions, luminances);

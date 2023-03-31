@@ -16,7 +16,7 @@ public class Location
     {
         Name = "";
         Coordinate = new Coordinate();
-        Zoom = 0;
+        Zoom = MapManager.DEFAULT_ZOOM;
         CameraCoordinates = new Coordinate();
         CameraAngles = new UnityEngine.Vector3();
         Type = TerrainType.Map;

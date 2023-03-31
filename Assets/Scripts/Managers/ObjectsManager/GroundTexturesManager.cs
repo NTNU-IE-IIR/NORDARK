@@ -83,6 +83,7 @@ public class GroundTexturesManager : ObjectsManager
                 }
 
                 if (atLeastOneValidFeature) {
+                    changesUnsaved = true;
                     StartCoroutine(DisplayGroundTextureCollection(CreateGroundTextureFromFeatureCollection(featureCollection)));
                 } else {
                     string message = "Ground texture not added.\n";

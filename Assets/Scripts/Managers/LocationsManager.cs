@@ -7,6 +7,7 @@ public class LocationsManager: MonoBehaviour
 {
     [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private LocationControl locationControl;
+    [SerializeField] private GameObject locationUndefinedWindow;
     private List<Location> locations;
     private int currentLocationIndex;
 
@@ -14,6 +15,7 @@ public class LocationsManager: MonoBehaviour
     {
         Assert.IsNotNull(terrainManager);
         Assert.IsNotNull(locationControl);
+        Assert.IsNotNull(locationUndefinedWindow);
 
         locations = new List<Location>();
         currentLocationIndex = -1;
@@ -124,8 +126,17 @@ public class LocationsManager: MonoBehaviour
         }
     }
 
+    public float GetCurrentTerrainMultiplier()
+    {
+        // See https://docs.mapbox.com/help/glossary/zoom-level/ for an explanation of the formula
+        Location currentLocation = GetCurrentLocation();
+        float zoom = currentLocation == null ? MapManager.DEFAULT_ZOOM : currentLocation.Zoom;
+        return Mathf.Pow(2, MapManager.DEFAULT_ZOOM - zoom);
+    }
+
     public void ChangeLocation(int locationIndex)
     {
+        locationUndefinedWindow.SetActive(locationIndex == -1);
         currentLocationIndex = locationIndex;
         terrainManager.ChangeLocation(GetCurrentLocation());
     }
@@ -134,7 +145,7 @@ public class LocationsManager: MonoBehaviour
     {
         locations.RemoveAt(locationIndex);
 
-        if (locations.Count >= 0) {
+        if (locations.Count > 0) {
             ChangeLocation(0);
         } else {
             ChangeLocation(-1);

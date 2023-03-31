@@ -43,6 +43,11 @@ public class ConfigurationsControl : MonoBehaviour
         SetConfigurations(1);
     }
 
+    public void ResetConfigurations()
+    {
+        numberOfConfigurations.value = 0;
+    }
+
     public int GetCurrentNumberOfConfigurations()
     {
         return configurationsHolder.childCount;
@@ -54,7 +59,7 @@ public class ConfigurationsControl : MonoBehaviour
         foreach (Transform configuration in configurationsHolder) {
             Destroy(configuration.gameObject);
         }
-        lightConfigurationsManager.ResetConfigurations();
+        lightConfigurationsManager.DeleteConfigurations();
 
         for (int i=0; i<numberOfConfigs; ++i) {
             Configuration configuration = Instantiate(configurationPrefab, configurationsHolder).GetComponent<Configuration>();

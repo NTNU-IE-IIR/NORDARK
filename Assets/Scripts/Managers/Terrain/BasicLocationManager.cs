@@ -18,6 +18,7 @@ public class BasicLocationManager : TerrainTypeManager
         Assert.IsNotNull(lightComputationManager);
         Assert.IsNotNull(sceneCamerasManager);
         Assert.IsNotNull(groundTexturesManager);
+        Assert.IsNotNull(lightConfigurationsManager);
         Assert.IsNotNull(terrainControl);
 
         TerrainType = Location.TerrainType.Basic;
@@ -36,7 +37,7 @@ public class BasicLocationManager : TerrainTypeManager
 
     public override Coordinate GetCoordinatesFromUnityPosition(Vector3 position)
     {
-        return new Coordinate(position.x, position.z);
+        return new Coordinate(position.x, position.z, position.y);
     }
 
     public override bool IsCoordinateOnMap(Coordinate coordinates)

@@ -4,30 +4,28 @@ using UnityEngine.Assertions;
 [RequireComponent(typeof(Camera))]
 public class Minimap : MonoBehaviour
 {
-    private const float CAMERA_2D_HEIGHT = 50;
     [SerializeField] private SceneCamerasManager sceneCamerasManager;
-    [SerializeField] private TerrainManager terrainManager;
+    [SerializeField] private LocationsManager locationsManager;
     [SerializeField] private MinimapUI minimapUI;
     private Camera unityCamera;
+    private float defaultOrthographicSize;
 
     void Awake()
     {
         Assert.IsNotNull(sceneCamerasManager);
-        Assert.IsNotNull(terrainManager);
+        Assert.IsNotNull(locationsManager);
         Assert.IsNotNull(minimapUI);
 
         unityCamera = GetComponent<Camera>();
+        defaultOrthographicSize = unityCamera.orthographicSize;
     }
 
+    // LateUpdate and not Update because the unityCamera euler angles must be changed after those of the main camera
     void LateUpdate()
     {
         if (unityCamera.orthographic) {
-            // Get map altitude (stickToGround parameter set to true)
-            Vector3 position = terrainManager.GetUnityPositionFromCoordinates(terrainManager.GetCoordinatesFromUnityPosition(transform.position), true);
-            position.y += CAMERA_2D_HEIGHT;
-            unityCamera.transform.position = position;
-
             unityCamera.transform.eulerAngles = new Vector3(90, 0, 0);
+            unityCamera.orthographicSize = defaultOrthographicSize * locationsManager.GetCurrentTerrainMultiplier();
         } else {
             unityCamera.transform.eulerAngles = new Vector3(60, 0, 0);
         }

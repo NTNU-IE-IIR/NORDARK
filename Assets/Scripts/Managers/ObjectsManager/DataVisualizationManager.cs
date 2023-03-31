@@ -24,6 +24,7 @@ public class DataVisualizationManager : ObjectsManager
 
     public bool CreateDatasetFromNameAndPath(string datasetName, string path)
     {
+        changesUnsaved = true;
         return AddDataset(datasetName, new Dataset(GeoJSONParser.FileToFeatureCollection(path), locationsManager.GetCurrentLocation()));
     }
 
@@ -91,6 +92,7 @@ public class DataVisualizationManager : ObjectsManager
         if (datasets.ContainsKey(datasetName)) {
             ClearVisualizationFeature(datasetName);
             datasets.Remove(datasetName);
+            changesUnsaved = true;
         }
     }
 
@@ -202,7 +204,7 @@ public class DataVisualizationManager : ObjectsManager
 
         foreach (GeoJSON.Net.Feature.Feature feature in dataset.FeatureCollection.Features) {
             VisualizationFeature visualizationFeature = Instantiate(visualizationFeaturePrefab, datasetsParent).GetComponent<VisualizationFeature>();
-            visualizationFeature.Create(datasetName, dataset.Weights, feature, terrainManager);
+            visualizationFeature.Create(datasetName, dataset.Weights, feature, terrainManager, locationsManager);
             
             if (visualizationFeature.IsCreated()) {
                 dataset.VisualizationFeatures.Add(visualizationFeature);

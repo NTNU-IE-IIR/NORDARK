@@ -132,6 +132,7 @@ public class LightPolesManager : ObjectsManager
                     }
 
                     if (atLeastOneValidFeature) {
+                        changesUnsaved = true;
                         message = "Lights from " + path + " added.";
                     } else {
                         message = "Lights from " + path + " not added.";
@@ -172,6 +173,7 @@ public class LightPolesManager : ObjectsManager
                         ));
                     }
                     message = "Lights from " + path + " added.";
+                    changesUnsaved = true;
                 } catch (System.Exception e) {
                     message = e.Message;
                 }
@@ -267,6 +269,7 @@ public class LightPolesManager : ObjectsManager
     {
         if (selectedLightPoles.Count == 1) {
             selectedLightPoles[0].Item1.Name = name;
+            changesUnsaved = true;
         }
     }
 
@@ -275,6 +278,7 @@ public class LightPolesManager : ObjectsManager
         foreach (var item in selectedLightPoles) {
             item.Item1.GameObject.SetHeight(height);
         }
+        changesUnsaved = true;
     }
 
     public void RotateSelectedObjects(float rotation)
@@ -282,6 +286,7 @@ public class LightPolesManager : ObjectsManager
         foreach (var item in selectedLightPoles) {
             item.Item1.GameObject.Rotate(rotation);
         }
+        changesUnsaved = true;
     }
 
     public void AddGroupToSelectedLightPoles(string group)
@@ -291,6 +296,7 @@ public class LightPolesManager : ObjectsManager
                 item.Item1.Groups.Add(group);
             }
         }
+        changesUnsaved = true;
     }
 
     public void RemoveGroupFromSelectedLightPoles(string group)
@@ -298,6 +304,7 @@ public class LightPolesManager : ObjectsManager
         foreach (var item in selectedLightPoles) {
             item.Item1.Groups.Remove(group);
         }
+        changesUnsaved = true;
     }
 
     public void ChangeIESFileOfSelectedLightPoles(string iesFile)
@@ -308,6 +315,7 @@ public class LightPolesManager : ObjectsManager
                 item.Item1.GameObject.SetIESLight(iesLight);
             }
         }
+        changesUnsaved = true;
     }
 
     public void Change3DModelOfSelectedLightPoles(string model)
@@ -322,6 +330,7 @@ public class LightPolesManager : ObjectsManager
 
             CreateLightPrefab(item.Item1, height, eulerAngles, iesLight);
         }
+        changesUnsaved = true;
     }
 
     public void AddLightPole()
@@ -330,6 +339,7 @@ public class LightPolesManager : ObjectsManager
         CreateLight(lightPole, LightPrefab.DEFAULT_HEIGHT, new Vector3(0, 0), "");
         AddLightPoleToSelected(lightPole, false);
         MoveSelectedObjects();
+        changesUnsaved = true;
     }
 
     public void MoveSelectedObjects()
@@ -339,6 +349,7 @@ public class LightPolesManager : ObjectsManager
             item.Item1.GameObject.SetMoving(true);
             item.Item2.SetMoving(true);
         }
+        changesUnsaved = true;
     }
 
     public void DeleteSelectedObjects()
@@ -350,6 +361,7 @@ public class LightPolesManager : ObjectsManager
 
         lightPolesGroupsManager.SetGroupsFromLightPoles(lightPoles);
         ClearSelectedObjects();
+        changesUnsaved = true;
     }
 
     public void HighlightLights(bool hightlight)
