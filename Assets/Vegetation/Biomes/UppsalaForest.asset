@@ -26,7 +26,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: fbc8a2204f253d74e8c7a08f47a1da3e
     SampleDistance: 7.734991
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -247,7 +247,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 6d67e4bd721c477469b5fc0385b712ef
     SampleDistance: 7.6066494
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -468,7 +468,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: a2d3a32c254cfde4593e5b5249d3ff28
     SampleDistance: 8.263618
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -689,7 +689,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: b06d3d5a344bedd4eb485d0c5dc9ac83
     SampleDistance: 8.639751
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -910,7 +910,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e5962ccbdfe6f424db29978acbe980ea
     SampleDistance: 8.499284
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -1131,7 +1131,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: a03af7622ca44244e93800d584f01e49
     SampleDistance: 8.418667
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -1352,7 +1352,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 099eb778a12652f48bcdcfd5b515a840
     SampleDistance: 7.9000406
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -1573,7 +1573,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: fd13751e3c034674ebb8996dc7058639
     SampleDistance: 7.0053463
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -5974,7 +5974,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 36e5e7d0d2b3fee428f56d77f4cad875
     SampleDistance: 7.734991
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6195,7 +6195,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: d083451678b830445b7e52fef8132c23
     SampleDistance: 7.6066494
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6416,7 +6416,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: dbb171d6f5a8ca14ea0007901bca6cdf
     SampleDistance: 8.263618
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6637,7 +6637,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 01ead5e29ed65154487e95967ef28999
     SampleDistance: 8.639751
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -6858,7 +6858,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e796cab8e9fe1c44a9f7efa109d3ab42
     SampleDistance: 8.499284
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -7079,7 +7079,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: e74ec38f9bb9dc7459a763813cc476b1
     SampleDistance: 8.418667
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -7300,7 +7300,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 3e2f406ab51b0ed4c9b4084752267e5f
     SampleDistance: 7.9000406
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
@@ -7521,7 +7521,7 @@ MonoBehaviour:
     VegetationTexture: {fileID: 0}
     VegetationGuid: 9ea9477cf6636f04ab7dc7503a8f61cc
     SampleDistance: 7.0053463
-    Density: 0
+    Density: 0.2
     RandomizePosition: 1
     UseVegetationMasksOnStorage: 0
     UseSamplePointOffset: 0
