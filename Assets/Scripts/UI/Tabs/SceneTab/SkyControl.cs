@@ -7,7 +7,6 @@ public class SkyControl : MonoBehaviour
 {
     private const int STARTING_YEAR = 1972;
     private const int ENDING_YEAR = 2050;
-
     [SerializeField] private SkyManager skyManager;
     [SerializeField] private TMP_Dropdown dayInput;
     [SerializeField] private TMP_Dropdown monthInput;
@@ -54,10 +53,10 @@ public class SkyControl : MonoBehaviour
 
     public void SetUpUI()
     {
-        monthInput.value = skyManager.DateTime.Month-1;
-        yearInput.value = skyManager.DateTime.Year - STARTING_YEAR;
-        hourInput.value = skyManager.DateTime.Hour;
-        minuteInput.value = skyManager.DateTime.Minute;
+        monthInput.SetValueWithoutNotify(skyManager.DateTime.Month-1);
+        yearInput.SetValueWithoutNotify(skyManager.DateTime.Year - STARTING_YEAR);
+        hourInput.SetValueWithoutNotify(skyManager.DateTime.Hour);
+        minuteInput.SetValueWithoutNotify(skyManager.DateTime.Minute);
         UpdateDateDropdown(skyManager.DateTime.Day);
     }
 
