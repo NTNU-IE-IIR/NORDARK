@@ -16,3 +16,4 @@ The research questions posed by the other WPs and overall project demand the ana
 * Download [Unity](https://unity.com/) **2022.2.0f1**.
 * Open the repository with Unity.
 * If you export the project for Windows 64 bit, some computers might not recognize the *sqlite3.dll* file shipped with the executable. To fix this, replace the *NORDARK-WP5\NORDARK-WP5_Data\Plugins\x86_64\sqlite3.dll* file of the exported project with the *AdditionalResources\sqlite3.dll* file of the repository.
+* To start the Nordark DT within the Unity tool: Go to *Asset->Scenes*. Double-click on the Nordark icon to load the scene into the editor. Now klick the "play"-button, and change to the "Game" view.
