@@ -1,0 +1,49 @@
+\section{Frequently Asked Questions}
+
+The authors believe that all necessary information for using and exploring the Nordark digital twin has been provided. However, this section is included to address users' frequently asked questions and offer additional guidance where needed.
+
+\begin{itemize}
+    \item \textbf{What specifications my PC need to be able to run the digital twin software?}
+
+    It is a bit difficult to specify this, however we described the specification of our PC used for running the software in section \ref{started}. So if you can find something close (focus mostly on graphics card and memory) it should be fine.
+
+    \item \textbf{How can I add more light poles on the selected scene?}
+    
+    The answer is described in Section \ref{Lights_tab}.
+    
+    \item \textbf{Can I create my own vegetation scenario? And how?}
+    
+    Yes, the method is explained in Section \ref{Vegetation_tab}
+    
+    \item \textbf{Can I simulate as if a human (child or adult) or an insect walks on the digital twin?}
+    
+    Yes, \textit{Street view} feature aims to achieve this simulation, as described in Section \ref{Street_tab}
+    
+    \item \textbf{How can I compare my measured data with the simulated data on the digital twin?}
+    
+    For this purpose, you will use the \textit{Light computation} feature. Start by preparing a geojson file containing your measured data. Next, set the digital twin to match the conditions during your measurement, such as the location, date, time, snow and cloud conditions, and the specific IES file of the light pole. After that, create a line around the light pole, display the graph, and then import your measured data file. Detailed examples and descriptions are provided in Section \ref{comparing}.
+    
+    \item \textbf{What kind of data I can import to the digital twin? And for what purposes?}
+
+    Only data in GeoJSON format can be imported into the system. There are two main features available for working with imported data: \textit{Light computation} and \textit{Data Visualization}. 
+    
+    \textit{Light computation} feature is designed for comparing luminance data. This can serve various purposes: (i) comparing real-world light measurements with those in the digital twin, as described in \ref{comparing}, (ii) evaluating luminance data from an original versus a proposed design, as describe in \ref{designing}, (iii) comparing different types of IES files and/or lighting poles, and so on.
+
+    \textit{Data Visualization} feature allows you to display data that is quantitatively scalable. It represents values on a scale from 0 (indicating the lowest value) to 1 (indicating the highest value). It is suitable only for numerical data that can be meaningfully scaled within this range.
+    
+    \item \textbf{How can I convert my data from excel format to geojson format?}
+
+    It depends on your purpose. If you want to convert your data to geojson for \textit{Light Computation} purpose, the full answer to this question is explained in Section \ref{converting}. It covers how to find the coordinates, provides an example CSV file, and includes a Python script to help with the conversion process.
+
+    If you want to convert your data for \textit{Data Visualization} purpose, the answer to this question is described in Section \ref{formatting} including the example case. 
+    
+    \item \textbf{What the data visualization feature can and can not do?} 
+    
+    First of all, the data visualization feature only supports files in the GeoJSON format. This format requires a geometry property that specifies the location on the data. The geometry can be either a Point or a LineString, both of which use latitude and longitude coordinates. You can obtain these coordinates from Google Maps or by following the instructions provided in Section \ref{converting}.
+    
+    Secondly, the data visualization feature displays information using a scale from 0 to 1 in both the heatmap and bar chart formats. For example, as outlined in Section \ref{datavis}, the walkability score ranges from 0 (red), indicating areas that are difficult to walk in, to 1 (blue), indicating areas that are easy to walk in, based on selected variables. Similarly, in Section \ref{env}, the satisfaction metric follows the same scale: 0 (red) signifies the least satisfied, while 1 (blue) indicates the most satisfied, evaluated under three different conditions using relevant variables.
+    
+    If the data you wish to visualize cannot be represented on a scale from 0 to 1, it cannot be displayed using this digital twin's data visualization feature. For instance, the dataset from Work Package 6, which explores locations from the local species perspective, does not fit this format. In that project, youth participants imagined themselves as specific animals (e.g., frogs, dogs, ducks) and described what those species might feel while moving through a given area. These responses consist of qualitative descriptions that cannot be reduced to a numerical scale. The same limitation applies to the dataset related to the VR prototype from Work Package 6. However, such data can still be explored using \textit{Screen View} feature in the future.
+
+\end{itemize}
+

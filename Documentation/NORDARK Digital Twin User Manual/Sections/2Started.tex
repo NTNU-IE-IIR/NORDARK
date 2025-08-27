@@ -1,0 +1,54 @@
+\section{Getting Started} \label{started}
+
+Before we start to install the software, make sure you have a compatible PC. As the PC we are currently using to run the digital twin have the following specification (purchased juni 27, 2022):
+\begin{itemize}
+    \item Graphics card: Nvidia GeForce RTX 3080 10GB GDDR6X
+    \item Harddisk: 1 1TB M.2 PCIe NVMe SSD (Boot) + 1TB 7200RPM SATA 6GB/s (Storage)
+    \item Memory (RAM): 32GB DDR4 3200MHz
+    \item Processor (CPU): 1 AMD Ryzen(TM) 9 5950X (16-Core, 72MB Total Cache, Max Boost Clock of 4.9GHz)
+\end{itemize}
+So if you can find something close (focus mostly on graphics card and memory) it should be fine.
+
+\textbf{Step 1a}. If you have an access to the NORDARK github, go to release page by entering the following URL \textit{https://github.com/NTNU-IE-IIR/NORDARK/releases} in your browser. Download the \textit{Build-Standalone.zip} file for the lastest version (v0.12.2), selecting the appropriate version for your operating system. We provide builds for Linux64, macOS, and Windows64. 
+
+\textbf{Step 1b}. If you do not have access to the NORDARK github, get the \textit{Build-Standalone.zip} file corresponding to your operating system.
+%if you have access to NORDARK teams, download the \textit{Software} folder, then 
+
+\textbf{Step 2}. Extract the downloaded archive.
+
+\textbf{Step 3}. Run the software by double-clicking on the \textit{NORDARK-WP5.exe} file.
+
+\textbf{Step 4} Since this software is build in Unity, a small screen adjustment may be required to ensure all menus are visible. Try mazimizing and minimizing the software window while displaying the \textit{Light Computation} feature. Once you see the \textit{Split screen} option at the buttom of \textit{Configurations} column, the screen size is properly set for full functionality.
+
+Enjoy exploring! 
+
+
+\subsection{Mouse and Keyboard Controls}
+
+Some information on this section are also provided on the software: \textit{Help}, then \textit{Display controls}
+
+\textbf{Hold right click mouse} for rotating the camera
+
+\textbf{Scrolling mouse or W and S or up-and-down arrow} for zooming in and out 
+
+\textbf{A and D or left-and-right arrow} for moving left and right
+
+\textbf{Q and E } for moving up and down
+
+
+\subsection{The required files}
+To follow along with the examples in this user manual, you will need the following files:
+\begin{itemize}
+    \item Path1mDATAStudyCase2WGS84.geojson -- used for data visualization feature in section \ref{datavis}, representing the walkability path in Lerstad, Ålesund. 
+    \item case3.csv -- used as an example of CSV file to be converted to geojson format, for section \ref{converting}.
+    \item convert\_CSV\_to\_geojson.py -- a python script used to convert the CSV file to geojson format, for section \ref{converting}.
+    \item EnvironmentalPsychology.geojson - used for representing environmental psychology along the selected path, coming from Work Package 1 in section \ref{env},
+    \item case3.geojson -- used for comparing the measured data with the simulated data. The data came from Work Package 4, visualized in section \ref{comparing} for Scenario 1 100\% (November - no snow) in Sävja, Uppsala - evening measurements - ground level (h: 0.00 m).
+    \item case55.geojson -- also used for comparing the measured data with the simulated data, in section \ref{comparing}. Scenario 1 100\% (January - snow) in Sävja, Uppsala - evening measurements - ground level (h: 0.00 m). 
+    \item Arne\_questionnaire\_opinion.geojson -- used for visualizing Arne's questionnaire. The data came from Work Package 6, as detailed in section \ref{questionnaire}
+    \item Arne\_questionnaire\_5var.geojson -- also used for Arne's questionnaire for viewing residents’ responses to each individual question. The data came from Work Package 6, as detailed in section \ref{questionnaire}.
+    \item lifestyle\_wildlife.geojson -- used for visualizing data in exploring residents’ views on the balance between a comfortable urban lifestyle and wildlife protection. The data came from Work Package 6, as detailed in section \ref{urban}.
+
+\end{itemize}
+
+
